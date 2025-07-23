@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:15.13
+    container_name: sfit-redis-postgresDB
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sfit-backend-go
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+
+  redis:
+    image: redis:latest
+    container_name: sfit-redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: sfit-backend-go
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app
