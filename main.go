@@ -25,7 +25,32 @@ func main() {
 
 	db := infrastructures.OpenDbConnection(username, password, dbName, host)
 	if db != nil {
-		db.AutoMigrate(&entities.Users{})
+		err := db.AutoMigrate(
+			&entities.Log{},
+			&entities.Device{},
+			&entities.Users{},
+			&entities.UserProfile{},
+			&entities.Teams{},
+			&entities.Event{},
+			&entities.Course{},
+			&entities.Module{},
+			&entities.Task{},
+			&entities.Lesson{},
+			&entities.Tag{},
+			&entities.FavoriteCourse{},
+			&entities.EventAttendance{},
+			&entities.TagTemp{},
+			&entities.TeamMembers{},
+			&entities.UserEvent{},
+			&entities.UserCourse{},
+			&entities.LessonAttendance{},
+			&entities.Newsfeed{},
+			&entities.UserRate{},
+		)
+
+		if err != nil {
+			log.Fatalf("AutoMigrate failed: %v", err)
+		}
 	}
 
 	// Khởi tạo Redis
