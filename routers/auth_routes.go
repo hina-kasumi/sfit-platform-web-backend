@@ -1,7 +1,7 @@
 package routers
 
 import (
-	authcontroller "sfit-platform-web-backend/controllers/authController"
+	authcontroller "sfit-platform-web-backend/controllers/auth_controller"
 
 	"github.com/gin-gonic/gin"
 )

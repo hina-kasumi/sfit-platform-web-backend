@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"sfit-platform-web-backend/dtos"
-	jwtservice "sfit-platform-web-backend/services/jwtService"
+	jwtservice "sfit-platform-web-backend/services/jwt_service"
 
 	"github.com/gin-gonic/gin"
 )

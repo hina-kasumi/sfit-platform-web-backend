@@ -2,8 +2,8 @@ package authcontroller
 
 import (
 	"sfit-platform-web-backend/dtos"
-	authservice "sfit-platform-web-backend/services/authService"
-	jwtservice "sfit-platform-web-backend/services/jwtService"
+	authservice "sfit-platform-web-backend/services/auth_service"
+	jwtservice "sfit-platform-web-backend/services/jwt_service"
 
 	"github.com/gin-gonic/gin"
 )

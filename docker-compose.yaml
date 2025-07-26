@@ -32,3 +32,5 @@ services:
       - redis
     volumes:
       - .:/app
+
+  

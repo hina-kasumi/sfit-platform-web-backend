@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sfit-platform-web-backend/entities"
-	redisservice "sfit-platform-web-backend/services/redisService"
+	redisservice "sfit-platform-web-backend/services/redis_service"
 	"strconv"
 	"time"
 

@@ -1,8 +1,8 @@
 package authservice
 
 import (
-	jwtservice "sfit-platform-web-backend/services/jwtService"
-	userservice "sfit-platform-web-backend/services/userService"
+	jwtservice "sfit-platform-web-backend/services/jwt_service"
+	userservice "sfit-platform-web-backend/services/user_service"
 )
 
 func Register(username, email, password string) (string, string, error) {

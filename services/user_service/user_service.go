@@ -2,7 +2,7 @@ package userservice
 
 import (
 	"sfit-platform-web-backend/entities"
-	userrepository "sfit-platform-web-backend/repositories/userRepository"
+	userrepository "sfit-platform-web-backend/repositories/user_repository"
 )
 
 func GetUserByID(id string) (*entities.Users, error) {
