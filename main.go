@@ -33,6 +33,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(middlewares.Cors())
+	r.Use(middlewares.UserLoaderMiddleware())
 
 	// 1. Khởi tạo các router
 	routers.RegisterAuthRoutes(r)

@@ -22,7 +22,7 @@ func getBlackListPrefix() string {
 	return blacklistPrefix
 }
 
-func getTokenExpiration() int64 {
+func GetTokenExpiration() int64 {
 	tokenExpiration := os.Getenv("JWT_EXPIRATION")
 	if tokenExpiration == "" {
 		fmt.Println("JWT_EXPIRATION is not set")
@@ -47,7 +47,7 @@ func getSecretKey() string {
 
 func GenerateToken(user entities.Users) (string, error) {
 	secretKey := []byte(getSecretKey())
-	expSecs := getTokenExpiration()
+	expSecs := GetTokenExpiration()
 
 	exp := time.Now().Unix() + expSecs
 
@@ -112,7 +112,7 @@ func BlacklistToken(token string) error {
 	if err != nil {
 		return err
 	}
-	err = redisservice.SetRedisExpire(blacklistKey, "", getTokenExpiration())
+	err = redisservice.SetRedisExpire(blacklistKey, "", GetTokenExpiration())
 	if err != nil {
 		return fmt.Errorf("failed to blacklist token: %v", err)
 	}

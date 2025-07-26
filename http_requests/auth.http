@@ -1,0 +1,32 @@
+### Đăng ký tài khoản
+POST http://localhost:8080/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "email": "testuser@example.com",
+    "password": "TestPassword123"
+}
+
+###
+
+### Đăng nhập
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+    "email": "testuser@example.com",
+    "password": "TestPassword123"
+}
+
+###
+
+### Đăng xuất
+POST http://localhost:8080/auth/logout
+Authorization: Bearer <your_access_token>
+
+###
+
+### Làm mới token
+POST http://localhost:8080/auth/refresh
+Content-Type: application/json

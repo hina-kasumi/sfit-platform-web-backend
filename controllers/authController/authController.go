@@ -3,6 +3,7 @@ package authcontroller
 import (
 	"sfit-platform-web-backend/dtos"
 	authservice "sfit-platform-web-backend/services/authService"
+	jwtservice "sfit-platform-web-backend/services/jwtService"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +21,9 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
+	setRefreshTokenCookie(ctx, refreshToken)
 	ctx.JSON(200, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"access_token": accessToken,
 	})
 }
 func Login(ctx *gin.Context) {
@@ -38,9 +39,9 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
+	setRefreshTokenCookie(ctx, refreshToken)
 	ctx.JSON(200, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"access_token": accessToken,
 	})
 }
 func Logout(ctx *gin.Context) {
@@ -50,7 +51,7 @@ func Logout(ctx *gin.Context) {
 		return
 	}
 
-	err := authservice.Logout(token)
+	err := authservice.Logout(token[7:]) // Remove "Bearer " prefix
 	if err != nil {
 		ctx.JSON(500, dtos.NewErrorResponse(500, err.Error()))
 		return
@@ -59,5 +60,31 @@ func Logout(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{"message": "Logged out successfully"})
 }
 func RefreshToken(ctx *gin.Context) {
-	// Logic to refresh user token
+	refreshToken, err := ctx.Cookie("refresh_token")
+	if err != nil {
+		ctx.JSON(400, dtos.NewErrorResponse(400, "Refresh token is required"))
+		return
+	}
+
+	accessToken, newRefreshToken, err := authservice.RefreshToken(refreshToken)
+	if err != nil {
+		ctx.JSON(500, dtos.NewErrorResponse(500, err.Error()))
+		return
+	}
+
+	setRefreshTokenCookie(ctx, newRefreshToken)
+	ctx.JSON(200, gin.H{
+		"access_token": accessToken,
+	})
+}
+
+func setRefreshTokenCookie(ctx *gin.Context, refreshToken string) {
+	ctx.SetCookie("refresh_token",
+		refreshToken,
+		int(jwtservice.GetRefreshTokenExp()), // thời gian sống
+		"/auth/refresh",                      // cookie sẽ được gửi ở refresh
+		"",
+		false,
+		true, // http only
+	)
 }
