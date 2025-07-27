@@ -6,14 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type CustomValidator struct {
-}
-
-func NewCustomValidator() *CustomValidator {
-	return &CustomValidator{}
-}
-
-func (cv *CustomValidator) PasswordValidator(fl validator.FieldLevel) bool {
+func PasswordValidator(fl validator.FieldLevel) bool {
 	password := fl.Field().String()
 
 	var (
