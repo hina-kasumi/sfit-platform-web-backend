@@ -7,8 +7,11 @@ import (
 	"sfit-platform-web-backend/infrastructures"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/routers"
+	"sfit-platform-web-backend/utits/validation"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
@@ -60,10 +63,16 @@ func main() {
 	r.Use(middlewares.Cors())
 	r.Use(middlewares.UserLoaderMiddleware())
 
-	// 1. Khởi tạo các router
+	// Đăng ký custom_validate
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		valid := validation.NewCustomValidator()
+		v.RegisterValidation("password", valid.PasswordValidator)
+	}
+
+	// Khởi tạo các router
 	routers.RegisterAuthRoutes(r)
 
-	// 4. Chạy server
+	// Chạy server
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Không thể khởi động server:", err)
 	}
