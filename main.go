@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 	"os"
-	"sfit-platform-web-backend/controllers"
 	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/handlers"
 	"sfit-platform-web-backend/infrastructures"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/repositories"
+	"sfit-platform-web-backend/routes"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utits/validation"
 
@@ -57,9 +58,12 @@ func main() {
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 
+	baseHandler := handlers.NewBaseHandler()
+	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
+
 	//Khởi tạo Controller
-	controllerSlices := []controllers.IController{
-		controllers.NewAuthController(authSer, jwtSer, refreshSer),
+	routes := []routes.IRoute{
+		routes.NewAuthRoute(authHandler),
 	}
 
 	// Cài đặt gin
@@ -74,7 +78,7 @@ func main() {
 	}
 
 	// Khởi tạo các router
-	for _, v := range controllerSlices {
+	for _, v := range routes {
 		v.RegisterRoutes(r)
 	}
 

@@ -1,7 +1,7 @@
-package controllers
+package routes
 
 import "github.com/gin-gonic/gin"
 
-type IController interface {
+type IRoute interface {
 	RegisterRoutes(router *gin.Engine)
 }
