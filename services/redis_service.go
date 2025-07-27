@@ -1,16 +1,28 @@
-package redisservice
+package services
 
 import (
+	"context"
 	"log"
-	"sfit-platform-web-backend/infrastructures"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func SetRedisValue(key string, value any) error {
-	ctx := infrastructures.GetRedisContext()
-	redisClient := infrastructures.GetRedisClient()
+type RedisService struct {
+	redisC *redis.Client
+	ctx    context.Context
+}
+
+func NewRedisService(redisC *redis.Client, ctx context.Context) *RedisService {
+	return &RedisService{
+		redisC: redisC,
+		ctx:    ctx,
+	}
+}
+
+func (redis_ser *RedisService) SetRedisValue(key string, value any) error {
+	ctx := redis_ser.ctx
+	redisClient := redis_ser.redisC
 
 	err := redisClient.Set(ctx, key, value, 0).Err()
 	if err != nil {
@@ -21,9 +33,9 @@ func SetRedisValue(key string, value any) error {
 	return nil
 }
 
-func SetRedisExpire(key string, value any, exp int64) error {
-	ctx := infrastructures.GetRedisContext()
-	redisClient := infrastructures.GetRedisClient()
+func (redis_ser *RedisService) SetRedisExpire(key string, value any, exp int64) error {
+	ctx := redis_ser.ctx
+	redisClient := redis_ser.redisC
 
 	// Set key trước nếu chưa có
 	duration := time.Duration(exp-time.Now().Unix()) * time.Second
@@ -39,9 +51,9 @@ func SetRedisExpire(key string, value any, exp int64) error {
 	return nil
 }
 
-func GetRedisValue(key string) (any, error) {
-	ctx := infrastructures.GetRedisContext()
-	redisClient := infrastructures.GetRedisClient()
+func (redis_ser *RedisService) GetRedisValue(key string) (any, error) {
+	ctx := redis_ser.ctx
+	redisClient := redis_ser.redisC
 
 	val, err := redisClient.Get(ctx, key).Result()
 

@@ -1,13 +1,13 @@
 package middlewares
 
 import (
-	"sfit-platform-web-backend/dtos"
-	jwtservice "sfit-platform-web-backend/services/jwt_service"
+	"sfit-platform-web-backend/services"
+	"sfit-platform-web-backend/utits/response"
 
 	"github.com/gin-gonic/gin"
 )
 
-func UserLoaderMiddleware() gin.HandlerFunc {
+func UserLoaderMiddleware(jwtSer *services.JwtService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearerToken := c.GetHeader("Authorization")
 		if bearerToken == "" {
@@ -15,21 +15,9 @@ func UserLoaderMiddleware() gin.HandlerFunc {
 			return
 		}
 		tokenPart := bearerToken[len("Bearer "):]
-		err := jwtservice.ValidateToken(tokenPart)
+		sub, err := jwtSer.ParseToken(tokenPart)
 		if err != nil {
-			c.JSON(401, dtos.ErrorResponse{
-				Code:    401,
-				Message: "Invalid token",
-			})
-			c.Abort()
-			return
-		}
-
-		sub, err := jwtservice.ParseToken(tokenPart)
-		if err != nil {
-			c.JSON(401, dtos.ErrorResponse{
-				Code:    401,
-				Message: "Invalid token"})
+			response.Error(c, 401, "Invalid token")
 			c.Abort()
 			return
 		}
@@ -42,10 +30,7 @@ func EnforceAuthenticatedMiddleware() gin.HandlerFunc {
 		sub, exists := c.Get("subject")
 
 		if !exists || sub == "" {
-			c.JSON(401, dtos.ErrorResponse{
-				Code:    401,
-				Message: "Unauthorized",
-			})
+			response.Error(c, 401, "Unauthorized")
 			c.Abort()
 			return
 		}

@@ -1,4 +1,4 @@
-package jwtservice
+package services
 
 import (
 	"fmt"
@@ -11,10 +11,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetRefreshTokenExp() int64 {
+type RefreshTokenService struct {
+	expToken  int64
+	secretKey string
+}
+
+func NewRefreshTokenService() *RefreshTokenService {
 	tokenExpiration := os.Getenv("REFRESH_EXPARIATION")
 	if tokenExpiration == "" {
-		fmt.Println("JWT_EXPIRATION is not set")
+		fmt.Println("REFRESH_EXPARIATION is not set")
 		os.Exit(1)
 	}
 	exp, err := strconv.ParseInt(tokenExpiration, 10, 64)
@@ -22,21 +27,26 @@ func GetRefreshTokenExp() int64 {
 		fmt.Println("JWT_EXPIRATION is not set or invalid")
 		os.Exit(1)
 	}
-	return exp
-}
 
-func getRefreshSecretKey() string {
 	secretKey := os.Getenv("REFRESH_SECRET")
 	if secretKey == "" {
-		fmt.Println("JWT_SECRET is not set")
+		fmt.Println("REFRESH_SECRET is not set")
 		os.Exit(1)
 	}
-	return secretKey
+
+	return &RefreshTokenService{
+		expToken:  exp,
+		secretKey: secretKey,
+	}
 }
 
-func GenerateRefreshToken(user entities.Users) (string, error) {
-	secretKey := []byte(getRefreshSecretKey())
-	expSecs := GetRefreshTokenExp()
+func (refreshSer *RefreshTokenService) GetRefreshTokenExp() int64 {
+	return refreshSer.expToken
+}
+
+func (refreshSer *RefreshTokenService) GenerateRefreshToken(user entities.Users) (string, error) {
+	secretKey := []byte(refreshSer.secretKey)
+	expSecs := refreshSer.expToken
 
 	exp := time.Now().Unix() + expSecs
 
@@ -50,8 +60,8 @@ func GenerateRefreshToken(user entities.Users) (string, error) {
 	return token.SignedString(secretKey)
 }
 
-func ParseRefreshToken(token string) (jwt.Claims, error) {
-	secretKey := []byte(getRefreshSecretKey())
+func (refreshSer *RefreshTokenService) ParseRefreshToken(token string) (jwt.Claims, error) {
+	secretKey := []byte(refreshSer.secretKey)
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

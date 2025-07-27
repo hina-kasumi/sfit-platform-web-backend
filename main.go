@@ -3,10 +3,12 @@ package main
 import (
 	"log"
 	"os"
+	"sfit-platform-web-backend/controllers"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/infrastructures"
 	"sfit-platform-web-backend/middlewares"
-	"sfit-platform-web-backend/routers"
+	"sfit-platform-web-backend/repositories"
+	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utits/validation"
 
 	"github.com/gin-gonic/gin"
@@ -29,26 +31,11 @@ func main() {
 	db := infrastructures.OpenDbConnection(username, password, dbName, host)
 	if db != nil {
 		err := db.AutoMigrate(
-			&entities.Log{},
-			&entities.Device{},
-			&entities.Users{},
-			&entities.UserProfile{},
-			&entities.Teams{},
-			&entities.Event{},
-			&entities.Course{},
-			&entities.Module{},
-			&entities.Task{},
-			&entities.Lesson{},
-			&entities.Tag{},
-			&entities.FavoriteCourse{},
-			&entities.EventAttendance{},
-			&entities.TagTemp{},
-			&entities.TeamMembers{},
-			&entities.UserEvent{},
-			&entities.UserCourse{},
-			&entities.LessonAttendance{},
-			&entities.Newsfeed{},
-			&entities.UserRate{},
+			&entities.Log{}, &entities.Device{}, &entities.Users{}, &entities.UserProfile{},
+			&entities.Teams{}, &entities.Event{}, &entities.Course{}, &entities.Module{},
+			&entities.Task{}, &entities.Lesson{}, &entities.Tag{}, &entities.FavoriteCourse{},
+			&entities.EventAttendance{}, &entities.TagTemp{}, &entities.TeamMembers{}, &entities.UserEvent{},
+			&entities.UserCourse{}, &entities.LessonAttendance{}, &entities.Newsfeed{}, &entities.UserRate{},
 		)
 
 		if err != nil {
@@ -57,11 +44,28 @@ func main() {
 	}
 
 	// Khởi tạo Redis
-	infrastructures.InitRedis(os.Getenv("REDIS_ADDRESS"))
+	redisClient, redisCtx := infrastructures.InitRedis(os.Getenv("REDIS_ADDRESS"))
 
+	// Khởi tạo các dependency
+	// Khởi tạo repository
+	userRepo := repositories.NewUserRepository(db)
+
+	// Khởi tạo Service
+	userSer := services.NewUserService(userRepo)
+	redisSer := services.NewRedisService(redisClient, redisCtx)
+	jwtSer := services.NewJwtService(redisSer)
+	refreshSer := services.NewRefreshTokenService()
+	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
+
+	//Khởi tạo Controller
+	controllerSlices := []controllers.IController{
+		controllers.NewAuthController(authSer, jwtSer, refreshSer),
+	}
+
+	// Cài đặt gin
 	r := gin.Default()
 	r.Use(middlewares.Cors())
-	r.Use(middlewares.UserLoaderMiddleware())
+	r.Use(middlewares.UserLoaderMiddleware(jwtSer))
 
 	// Đăng ký custom_validate
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -70,7 +74,9 @@ func main() {
 	}
 
 	// Khởi tạo các router
-	routers.RegisterAuthRoutes(r)
+	for _, v := range controllerSlices {
+		v.RegisterRoutes(r)
+	}
 
 	// Chạy server
 	if err := r.Run(":8080"); err != nil {
