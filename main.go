@@ -3,13 +3,10 @@ package main
 import (
 	"log"
 	"os"
+	"sfit-platform-web-backend/cmd"
 	"sfit-platform-web-backend/entities"
-	"sfit-platform-web-backend/handlers"
 	"sfit-platform-web-backend/infrastructures"
 	"sfit-platform-web-backend/middlewares"
-	"sfit-platform-web-backend/repositories"
-	"sfit-platform-web-backend/routes"
-	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utits/validation"
 
 	"github.com/gin-gonic/gin"
@@ -47,29 +44,15 @@ func main() {
 	// Khởi tạo Redis
 	redisClient, redisCtx := infrastructures.InitRedis(os.Getenv("REDIS_ADDRESS"))
 
-	// Khởi tạo các dependency
-	// Khởi tạo repository
-	userRepo := repositories.NewUserRepository(db)
+	cmd.InitServer(db, redisClient, redisCtx)
 
-	// Khởi tạo Service
-	userSer := services.NewUserService(userRepo)
-	redisSer := services.NewRedisService(redisClient, redisCtx)
-	jwtSer := services.NewJwtService(redisSer)
-	refreshSer := services.NewRefreshTokenService()
-	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
-
-	baseHandler := handlers.NewBaseHandler()
-	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
-
-	//Khởi tạo Controller
-	routes := []routes.IRoute{
-		routes.NewAuthRoute(authHandler),
-	}
+	//Khởi tạo routes
+	cmd.InitRoutes()
 
 	// Cài đặt gin
 	r := gin.Default()
 	r.Use(middlewares.Cors())
-	r.Use(middlewares.UserLoaderMiddleware(jwtSer))
+	r.Use(middlewares.UserLoaderMiddleware(cmd.GetDepInject().JwtService))
 
 	// Đăng ký custom_validate
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -78,9 +61,7 @@ func main() {
 	}
 
 	// Khởi tạo các router
-	for _, v := range routes {
-		v.RegisterRoutes(r)
-	}
+	cmd.RegisterRoutes(r)
 
 	// Chạy server
 	if err := r.Run(":8080"); err != nil {
