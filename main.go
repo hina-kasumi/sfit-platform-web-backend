@@ -23,7 +23,4 @@ func main() {
 	redisClient, redisCtx := infrastructures.InitRedis(os.Getenv("REDIS_ADDRESS"))
 
 	cmd.StartServer(db, redisClient, redisCtx)
-
-	//Khởi tạo routes
-
 }
