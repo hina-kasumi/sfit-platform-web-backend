@@ -31,9 +31,10 @@ Dự án đã cấu hình sẵn Docker Compose để bạn có thể khởi đ�
 
 - Cài đặt sẵn [Docker](https://www.docker.com/)
 
-**Đổi tên file `local.env` thành `.env`** (nếu chưa có):
+**Sao chép file `local.env` thành `.env`** (nếu chưa có):
+
 ```bash
-mv local.env .env
+cp local.env .env
 ```
 
 ### ▶️ Chạy lệnh sau để khởi động môi trường:
