@@ -42,3 +42,37 @@ cp local.env .env
 ```bash
 docker-compose up --build
 ```
+
+
+---
+
+## 📝 Viết file `.http` để test API
+
+Sau khi hoàn thành mỗi API, hãy tạo một file `.http` trong thư mục dự án để mô tả và kiểm thử các endpoint.
+
+**Ví dụ về file `user.http`:**
+
+```http
+### Đăng ký tài khoản mới
+POST http://localhost:8080/api/v1/users/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "123456"
+}
+
+### Đăng nhập
+POST http://localhost:8080/api/v1/users/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "123456"
+}
+```
+
+**Lưu ý:**  
+- Ghi chú rõ ràng chức năng của từng API ngay trong file `.http`.
+- Có thể tạo nhiều file `.http` cho từng nhóm chức năng (user, product, ...).
+- Sử dụng các biến môi trường nếu cần để dễ dàng chuyển đổi giữa các môi trường (local, staging, production).
