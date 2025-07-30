@@ -10,6 +10,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// Struct 'DI'sẽ chứa tất cả các thành phần được inject,
+// giúp gom tất cả lại một chỗ để dễ quản lý và tái sử dụng ở mọi nơi trong ứng dụng.
+// ví dụ: nếu bạn muốn sử dụng một service trong nhiều handler, bạn chỉ cần inject service vào handler đó thôi.
 type DI struct {
 	//repository
 	UserRepo *repositories.UserRepository

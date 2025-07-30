@@ -16,10 +16,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// khai báo các biến cần thiết cho server
+// 'depInject' là một object chứa tất cả các thành phần được inject, giúp gom tất cả lại một chỗ để dễ quản lý và tái sử dụng ở mọi nơi trong ứng dụng.
+// 'rou' là một mảng chứa tất cả các route được regis
 var depInject *dependencyinjection.DI
 var rou []routes.IRoute
 
 func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) {
+	// migrate db để sử dụng các bảng, nếu không có thì sẽ tạo ra bảng mới
 	if db != nil {
 		err := db.AutoMigrate(
 			&entities.Log{}, &entities.Device{}, &entities.Users{}, &entities.UserProfile{},
@@ -28,11 +32,11 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 			&entities.EventAttendance{}, &entities.TagTemp{}, &entities.TeamMembers{}, &entities.UserEvent{},
 			&entities.UserCourse{}, &entities.LessonAttendance{}, &entities.Newsfeed{}, &entities.UserRate{},
 		)
-
 		if err != nil {
 			log.Fatalf("AutoMigrate failed: %v", err)
 		}
 	}
+	// khởi tạo DI
 	depInject = dependencyinjection.NewDI(db, redisClient, redisCtx)
 
 	rou = []routes.IRoute{
