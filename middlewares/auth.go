@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"sfit-platform-web-backend/services"
-	"sfit-platform-web-backend/utits/response"
+	"sfit-platform-web-backend/utils/response"
 
 	"github.com/gin-gonic/gin"
 )

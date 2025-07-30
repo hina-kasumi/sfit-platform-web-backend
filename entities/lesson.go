@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"sfit-platform-web-backend/utits/converter"
+	"sfit-platform-web-backend/utils/converter"
 	"time"
 
 	"github.com/google/uuid"

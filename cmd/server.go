@@ -6,8 +6,8 @@ import (
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/routes"
-	dependencyinjection "sfit-platform-web-backend/utits/dependency_injection"
-	"sfit-platform-web-backend/utits/validation"
+	dependencyinjection "sfit-platform-web-backend/utils/dependency_injection"
+	"sfit-platform-web-backend/utils/validation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"

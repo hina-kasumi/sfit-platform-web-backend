@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"sfit-platform-web-backend/utits/response"
+	"sfit-platform-web-backend/utils/response"
 	"strings"
 
 	"github.com/gin-gonic/gin"

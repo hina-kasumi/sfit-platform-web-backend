@@ -3,7 +3,7 @@ package handlers
 import (
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/services"
-	"sfit-platform-web-backend/utits/response"
+	"sfit-platform-web-backend/utils/response"
 
 	"github.com/gin-gonic/gin"
 )
