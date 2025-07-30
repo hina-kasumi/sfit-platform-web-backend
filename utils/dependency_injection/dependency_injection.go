@@ -25,8 +25,9 @@ type DI struct {
 	AuthService    *services.AuthService
 
 	//handler
-	BaseHandler *handlers.BaseHandler
-	AuthHandler *handlers.AuthHandler
+	BaseHandler  *handlers.BaseHandler
+	AuthHandler  *handlers.AuthHandler
+	EventHandler *handlers.EventHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
