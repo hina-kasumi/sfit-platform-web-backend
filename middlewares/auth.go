@@ -37,3 +37,11 @@ func EnforceAuthenticatedMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func GetPrincipal(c *gin.Context) string {
+	sub, exists := c.Get("subject")
+	if !exists || sub == "" {
+		return ""
+	}
+	return sub.(string)
+}

@@ -16,7 +16,7 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 		db: db,
 	}
 }
-func (er *EventRepository) GetEvents(page int, size int, title string, etype string, registed bool, userID string) ([]entities.Event, error) {
+func (er *EventRepository) GetEvents(page int, size int, title string, etype string, status string, registed bool, userID string) ([]entities.Event, error) {
 	var events []entities.Event
 	query := er.db.Model(&entities.Event{})
 
@@ -30,11 +30,16 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 		query = query.Where("event_type = ?", etype)
 	}
 
+	// Lọc theo status
+	if status != "" {
+		query = query.Where("status ILIKE ?", status)
+
+	}
 	// Lọc theo sự kiện đã đăng ký
 	if registed {
 		userID, _ := uuid.Parse(userID)
-		query = query.Joins("JOIN event_attendances ea ON ea.event_id = events.id").
-			Where("ea.user_id = ?", userID)
+		query = query.Joins("JOIN user_events ue ON ue.event_id = events.id").
+			Where("ue.user_id = ?", userID)
 	}
 
 	// Phân trang
@@ -46,7 +51,7 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 	return events, nil
 }
 func (er *EventRepository) GetRegistedEvent(page int, size int, userID string) ([]entities.Event, error) {
-	result, err := er.GetEvents(page, size, "", "", true, userID)
+	result, err := er.GetEvents(page, size, "", "", "", true, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -98,17 +103,41 @@ func (er *EventRepository) DeleteEvent(id string) error {
 	return nil
 }
 
-func (er *EventRepository) UnsubscribeEvent(userID string, eventID string) (*entities.Event, error) {
-	eventAttendance := entities.EventAttendance{
+func (er *EventRepository) UnsubscribeEvent(userID string, eventID string) error {
+	UserEvent := entities.UserEvent{
 		UserID:  uuid.MustParse(userID),
 		EventID: uuid.MustParse(eventID),
 	}
-	result := er.db.Delete(&eventAttendance)
+	result := er.db.Delete(&UserEvent)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, errors.New("event not found")
+		return errors.New("event not found")
 	}
-	return er.GetEventByID(eventID)
+	return nil
+}
+
+func (er *EventRepository) SubscribeEvent(userID string, eventID string) error {
+	UserEvent := entities.UserEvent{
+		UserID:  uuid.MustParse(userID),
+		EventID: uuid.MustParse(eventID),
+	}
+	result := er.db.Create(&UserEvent)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (er *EventRepository) EventAttendance(userID string, eventID string) error {
+	EventAttendance := entities.EventAttendance{
+		UserID:  uuid.MustParse(userID),
+		EventID: uuid.MustParse(eventID),
+	}
+	result := er.db.Create(&EventAttendance)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }

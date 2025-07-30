@@ -20,7 +20,7 @@ func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
 	eventHandler := eventRou.eventHandler
 
 	task := router.Group("/event")
-	task.GET("/list?", eventHandler.GetEventList)
+	task.GET("/list", eventHandler.GetEventList)
 	task.GET("/:event_id", eventHandler.GetEventDetail)
 	task.GET("/registed-events-list", eventHandler.GetRegistedEventList)
 	task.POST("/subscribe", eventHandler.SubscribeEvent)
