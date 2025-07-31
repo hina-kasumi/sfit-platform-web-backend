@@ -141,3 +141,28 @@ func (er *EventRepository) EventAttendance(userID string, eventID string) error 
 	}
 	return nil
 }
+
+func (er *EventRepository) GetEventRegisted(page int, size int, eventID string) ([]entities.Users, error) {
+	EventID, _ := uuid.Parse(eventID)
+	var users []entities.Users
+	query := er.db.Model(&entities.Users{}).Joins("JOIN user_events ue ON ue.user_id = users.id").
+		Where("ue.event_id = ?", EventID)
+	offset := (page - 1) * size
+	result := query.Offset(offset).Limit(size).Find(&users)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
+}
+func (er *EventRepository) GetEventAttendance(page int, size int, eventID string) ([]entities.Users, error) {
+	EventID, _ := uuid.Parse(eventID)
+	var users []entities.Users
+	query := er.db.Model(&entities.Users{}).Joins("JOIN event_attendances ea ON ea.user_id = users.id").
+		Where("ea.event_id = ?", EventID)
+	offset := (page - 1) * size
+	result := query.Offset(offset).Limit(size).Find(&users)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
+}

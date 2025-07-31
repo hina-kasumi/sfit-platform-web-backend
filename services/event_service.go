@@ -43,3 +43,10 @@ func (eventSer *EventService) SubscribeEvent(userID string, eventID string) erro
 func (eventSer *EventService) EventAttendance(userID string, eventID string) error {
 	return eventSer.eventRepo.EventAttendance(userID, eventID)
 }
+
+func (eventSer *EventService) GetEventAttendance(page int, size int, eventID string) ([]entities.Users, error) {
+	return eventSer.eventRepo.GetEventAttendance(page, size, eventID)
+}
+func (eventSer *EventService) GetEventRegisted(page int, size int, eventID string) ([]entities.Users, error) {
+	return eventSer.eventRepo.GetEventRegisted(page, size, eventID)
+}
