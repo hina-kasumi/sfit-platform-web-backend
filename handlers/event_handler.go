@@ -48,7 +48,7 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, events)
+	response.Success(ctx, "Get event list successfully", events)
 }
 
 func (eventHandler *EventHandler) GetRegistedEventList(ctx *gin.Context) {
@@ -68,7 +68,7 @@ func (eventHandler *EventHandler) GetRegistedEventList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, events)
+	response.Success(ctx, "Get registed event list successfully", events)
 }
 
 func (eventHandler *EventHandler) GetEventDetail(ctx *gin.Context) {
@@ -77,7 +77,7 @@ func (eventHandler *EventHandler) GetEventDetail(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, event)
+	response.Success(ctx, "Get event detail successfully", event)
 }
 
 func (eventHandler *EventHandler) EventAttendance(ctx *gin.Context) {
@@ -87,7 +87,7 @@ func (eventHandler *EventHandler) EventAttendance(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Attendance event successfully")
+	response.Success(ctx, "Attendance event successfully", nil)
 }
 func (eventHandler *EventHandler) SubscribeEvent(ctx *gin.Context) {
 	eventID := ctx.PostForm("event_id")
@@ -135,7 +135,7 @@ func (eventHandler *EventHandler) CreateEvent(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, eventRespone)
+	response.Success(ctx, "Create new event successfully", eventRespone)
 }
 
 func (eventHandler *EventHandler) DeleteEvent(ctx *gin.Context) {
@@ -144,7 +144,7 @@ func (eventHandler *EventHandler) DeleteEvent(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Deleted successfully")
+	response.Success(ctx, "Deleted successfully", nil)
 }
 func (eventHandler *EventHandler) UpdateEvent(ctx *gin.Context) {
 	eventID := ctx.PostForm("event_id")
@@ -164,7 +164,7 @@ func (eventHandler *EventHandler) UpdateEvent(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, event)
+	response.Success(ctx, "Update event successfully", event)
 }
 func (eventHandler *EventHandler) UnsubscribeEvent(ctx *gin.Context) {
 	eventID := ctx.PostForm("event_id")
@@ -174,7 +174,7 @@ func (eventHandler *EventHandler) UnsubscribeEvent(ctx *gin.Context) {
 		response.Error(ctx, 400, "Unsubscribe event failed")
 		return
 	}
-	response.Success(ctx, "Unsubscribe event successfully")
+	response.Success(ctx, "Unsubscribe event successfully", nil)
 }
 
 func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
@@ -185,7 +185,7 @@ func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, users)
+	response.Success(ctx, "Get event registed list successfully", users)
 }
 
 func (eventHandler *EventHandler) GetEventAttendanceList(ctx *gin.Context) {
@@ -196,5 +196,5 @@ func (eventHandler *EventHandler) GetEventAttendanceList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, users)
+	response.Success(ctx, "Get event attendances list successfully", users)
 }
