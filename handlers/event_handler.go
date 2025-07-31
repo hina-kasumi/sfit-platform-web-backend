@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"log"
-	"sfit-platform-web-backend/entities"
+	"net/http"
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 	"strconv"
-	"time"
 )
 
 type EventHandler struct {
@@ -48,7 +46,12 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Get event list successfully", events)
+	response.Success(ctx, "Get event list successfully", gin.H{
+		"events":   events,
+		"page":     pageNum,
+		"pageSize": pageSize,
+		"total":    len(events),
+	})
 }
 
 func (eventHandler *EventHandler) GetRegistedEventList(ctx *gin.Context) {
@@ -68,7 +71,12 @@ func (eventHandler *EventHandler) GetRegistedEventList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Get registed event list successfully", events)
+	response.Success(ctx, "Get registed event list successfully", gin.H{
+		"events":   events,
+		"page":     pageNum,
+		"pageSize": pageSize,
+		"total":    len(events),
+	})
 }
 
 func (eventHandler *EventHandler) GetEventDetail(ctx *gin.Context) {
@@ -98,44 +106,21 @@ func (eventHandler *EventHandler) SubscribeEvent(ctx *gin.Context) {
 }
 
 func (eventHandler *EventHandler) CreateEvent(ctx *gin.Context) {
-	title := ctx.PostForm("title")
-	eventType := ctx.PostForm("type")
-	description := ctx.PostForm("description")
-	priority, _ := strconv.ParseInt(ctx.PostForm("priority"), 10, 64)
-	location := ctx.PostForm("location")
-	maxPeople, _ := strconv.ParseInt(ctx.PostForm("max_people"), 10, 64)
-	agency := ctx.PostForm("agency")
-	status := ctx.PostForm("status")
-	beginDate := ctx.PostForm("begin_at")
-	endDate := ctx.PostForm("end_at")
-	layout := "2006-01-02" // layout chuẩn của Go (yyyy-mm-dd)
-	beginTime, err := time.Parse(layout, beginDate)
-	if err != nil {
-		log.Fatal(err)
+	var eventReq dtos.NewEventRequest
+	if err := ctx.ShouldBindJSON(&eventReq); err != nil {
+		response.Error(ctx, http.StatusBadRequest, "Invalid input")
+		return
 	}
-
-	endTime, err := time.Parse(layout, endDate)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	event := entities.Event{
-		Title:       title,
-		EventType:   eventType,
-		Description: description,
-		Priority:    int(priority),
-		Location:    location,
-		MaxPeople:   int(maxPeople),
-		Agency:      agency,
-		Status:      entities.EventStatus(status),
-		BeginAt:     beginTime,
-		EndAt:       endTime,
-	}
-	eventRespone, err := eventHandler.EventSer.CreateEvent(&event)
+	// Gọi service tạo event
+	eventResponse, err := eventHandler.EventSer.CreateEvent(&eventReq)
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Create new event successfully", eventRespone)
+
+	response.Success(ctx, "Create new event successfully", gin.H{
+		"id":         eventResponse.ID,
+		"created_at": eventResponse.CreatedAt,
+	})
 }
 
 func (eventHandler *EventHandler) DeleteEvent(ctx *gin.Context) {
@@ -147,24 +132,18 @@ func (eventHandler *EventHandler) DeleteEvent(ctx *gin.Context) {
 	response.Success(ctx, "Deleted successfully", nil)
 }
 func (eventHandler *EventHandler) UpdateEvent(ctx *gin.Context) {
-	eventID := ctx.PostForm("event_id")
-	title := ctx.PostForm("title")
-	description := ctx.PostForm("description")
-	eventType := ctx.PostForm("eventType")
-	status := ctx.PostForm("status")
+	var eventReq dtos.UpdateEventRequest
 
-	eventAfterUpdate := entities.Event{
-		ID:          uuid.MustParse(eventID),
-		Title:       title,
-		Description: description,
-		EventType:   eventType,
-		Status:      entities.EventStatus(status),
+	if err := ctx.ShouldBindJSON(&eventReq); err != nil {
+		response.Error(ctx, http.StatusBadRequest, "Invalid input")
+		return
 	}
-	event, err := eventHandler.EventSer.UpdateEvent(&eventAfterUpdate)
+	// Gọi service tạo event
+	eventResponse, err := eventHandler.EventSer.UpdateEvent(&eventReq)
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Update event successfully", event)
+	response.Success(ctx, "Update event successfully", eventResponse)
 }
 func (eventHandler *EventHandler) UnsubscribeEvent(ctx *gin.Context) {
 	eventID := ctx.PostForm("event_id")
@@ -185,7 +164,12 @@ func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Get event registed list successfully", users)
+	response.Success(ctx, "Get event registed list successfully", gin.H{
+		"users":    users,
+		"page":     page,
+		"pageSize": size,
+		"total":    len(users),
+	})
 }
 
 func (eventHandler *EventHandler) GetEventAttendanceList(ctx *gin.Context) {
@@ -196,5 +180,10 @@ func (eventHandler *EventHandler) GetEventAttendanceList(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, "Get event attendances list successfully", users)
+	response.Success(ctx, "Get event attendances list successfully", gin.H{
+		"users":    users,
+		"page":     page,
+		"pageSize": size,
+		"total":    len(users),
+	})
 }

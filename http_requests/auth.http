@@ -30,3 +30,20 @@ Authorization: Bearer <your_access_token>
 ### Làm mới token
 POST http://localhost:8080/auth/refresh
 Content-Type: application/json
+
+### tạo mới event
+
+POST http://localhost:8080/event/new
+Content-Type: application/json
+{
+  "title": "Summer Festival",
+  "type": "Event",
+  "description": "A fun summer gathering with music and food",
+  "priority": 2,
+  "locaion": "Central Park",
+  "max_people": 150,
+  "agency": "City Events",
+  "status": "Scheduled",
+  "begin_at": "2025-08-15T10:00:00Z",
+  "end_at": "2025-08-15T18:00:00Z"
+}

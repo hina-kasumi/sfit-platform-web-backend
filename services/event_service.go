@@ -1,6 +1,7 @@
 package services
 
 import (
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 )
@@ -21,12 +22,12 @@ func (eventSer *EventService) GetRegistedEvent(page int, size int, userID string
 func (eventSer *EventService) GetEventByID(id string) (*entities.Event, error) {
 	return eventSer.eventRepo.GetEventByID(id)
 }
-func (eventSer *EventService) CreateEvent(event *entities.Event) (*entities.Event, error) {
-	return eventSer.eventRepo.CreateEvent(event)
+func (eventSer *EventService) CreateEvent(eventReq *dtos.NewEventRequest) (*entities.Event, error) {
+	return eventSer.eventRepo.CreateEvent(eventReq)
 }
 
-func (eventSer *EventService) UpdateEvent(event *entities.Event) (*entities.Event, error) {
-	return eventSer.eventRepo.UpdateEvent(event)
+func (eventSer *EventService) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
+	return eventSer.eventRepo.UpdateEvent(eventReq)
 }
 
 func (eventSer *EventService) DeleteEvent(id string) error {

@@ -4,7 +4,9 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
+	"time"
 )
 
 type EventRepository struct {
@@ -41,7 +43,7 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 		query = query.Joins("JOIN user_events ue ON ue.event_id = events.id").
 			Where("ue.user_id = ?", userID)
 	}
-
+	query = query.Order("created_at DESC")
 	// Phân trang
 	offset := (page - 1) * size
 	result := query.Offset(offset).Limit(size).Find(&events)
@@ -69,20 +71,54 @@ func (er *EventRepository) GetEventByID(id string) (*entities.Event, error) {
 	}
 	return &event, nil
 }
-func (er *EventRepository) CreateEvent(event *entities.Event) (*entities.Event, error) {
+func (er *EventRepository) CreateEvent(eventReq *dtos.NewEventRequest) (*entities.Event, error) {
+	eventID, err := uuid.NewRandom()
+
+	if err != nil {
+		return nil, err
+	}
+	event := entities.Event{
+		ID:          eventID,
+		Title:       eventReq.Title,
+		Type:        eventReq.Type,
+		Description: eventReq.Description,
+		Priority:    eventReq.Priority,
+		MaxPeople:   eventReq.MaxPeople,
+		Agency:      eventReq.Agency,
+		EventType:   eventReq.EventType,
+		Status:      eventReq.Status,
+		BeginAt:     eventReq.BeginAt,
+		EndAt:       eventReq.EndAt,
+		Location:    eventReq.Location,
+	}
 	result := er.db.Create(&event)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return event, nil
+	return &event, nil
 }
 
-func (er *EventRepository) UpdateEvent(event *entities.Event) (*entities.Event, error) {
+func (er *EventRepository) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
+	var event = entities.Event{
+		ID:          eventReq.ID,
+		Title:       eventReq.Title,
+		Type:        eventReq.Type,
+		Description: eventReq.Description,
+		Priority:    eventReq.Priority,
+		MaxPeople:   eventReq.MaxPeople,
+		Agency:      eventReq.Agency,
+		EventType:   eventReq.EventType,
+		Status:      eventReq.Status,
+		BeginAt:     eventReq.BeginAt,
+		EndAt:       eventReq.EndAt,
+		Location:    eventReq.Location,
+		UpdatedAt:   time.Now(),
+	}
 	result := er.db.Save(&event)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return event, nil
+	return &event, nil
 }
 
 func (er *EventRepository) DeleteEvent(id string) error {
