@@ -15,15 +15,10 @@ func NewTeamService(teamRepo *repositories.TeamRepository) *TeamService {
 	return &TeamService{teamRepo: teamRepo}
 }
 
-func (s *TeamService) CreateTeam(id string, name string, description string) (*entities.Teams, error) {
-
-	uuidID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, err
-	}
+func (s *TeamService) CreateTeam(name string, description string) (*entities.Teams, error) {
 
 	team := entities.Teams{
-		ID:          uuidID,
+		ID:          uuid.New(),
 		Name:        name,
 		Description: description,
 		CreatedAt:   time.Now(),

@@ -40,7 +40,6 @@ POST http://localhost:8080/teams
 Content-Type: application/json
 
 {
-  "id": "b3cbb824-c923-4c3c-8f0b-f5286db52039",
-  "name": "Ban Web",
-  "description": "Ban phụ trách đào tạo làm web, làm web cho clb"
+  "name": "Ban Học Tập",
+  "description": "Thành viên ban phải tham gia học tập"
 }

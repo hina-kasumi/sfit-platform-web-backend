@@ -26,7 +26,7 @@ func (h *TeamHandler) CreateTeam(ctx *gin.Context) {
 		return
 	}
 
-	team, err := h.teamService.CreateTeam(req.ID.String(), req.Name, req.Description)
+	team, err := h.teamService.CreateTeam(req.Name, req.Description)
 	if h.isError(ctx, err) {
 		return
 	}
