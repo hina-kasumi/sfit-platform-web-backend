@@ -13,9 +13,11 @@ import (
 type DI struct {
 	//repository
 	UserRepo *repositories.UserRepository
+	TagRepo  *repositories.TagRepository
 
 	// service
 	UserService    *services.UserService
+	TagService     *services.TagService
 	RedisService   *services.RedisService
 	JwtService     *services.JwtService
 	RefreshService *services.RefreshTokenService
@@ -24,14 +26,17 @@ type DI struct {
 	//handler
 	BaseHandler *handlers.BaseHandler
 	AuthHandler *handlers.AuthHandler
+	TagHandler  *handlers.TagHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
 	// Khởi tạo Repository
 	userRepo := repositories.NewUserRepository(db)
+	tagRepo := repositories.NewTagRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
+	tagSer := services.NewTagService(tagRepo)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
@@ -40,15 +45,18 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
-
+	tagHandler := handlers.NewTagHandler(baseHandler, tagSer)
 	return &DI{
 		UserRepo:       userRepo,
+		TagRepo:        tagRepo,
 		UserService:    userSer,
+		TagService:     tagSer,
 		RedisService:   redisSer,
 		JwtService:     jwtSer,
 		RefreshService: refreshSer,
 		AuthService:    authSer,
 		BaseHandler:    baseHandler,
 		AuthHandler:    authHandler,
+		TagHandler:     tagHandler,
 	}
 }
