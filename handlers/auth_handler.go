@@ -36,7 +36,7 @@ func (authHandler *AuthHandler) Register(ctx *gin.Context) {
 	}
 
 	authHandler.setRefreshTokenCookie(ctx, refreshToken)
-	response.Success(ctx, accessToken, nil)
+	response.Success(ctx, accessToken)
 }
 
 func (authHandler *AuthHandler) Login(ctx *gin.Context) {
@@ -51,7 +51,7 @@ func (authHandler *AuthHandler) Login(ctx *gin.Context) {
 	}
 
 	authHandler.setRefreshTokenCookie(ctx, refreshToken)
-	response.Success(ctx, accessToken, nil)
+	response.Success(ctx, accessToken)
 }
 func (authHandler *AuthHandler) Logout(ctx *gin.Context) {
 	token := ctx.GetHeader("Authorization")
@@ -64,7 +64,7 @@ func (authHandler *AuthHandler) Logout(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, "Logged out successfully", nil)
+	response.Success(ctx, "Logged out successfully")
 }
 func (authHandler *AuthHandler) RefreshToken(ctx *gin.Context) {
 	refreshToken, err := ctx.Cookie("refresh_token")
@@ -79,7 +79,7 @@ func (authHandler *AuthHandler) RefreshToken(ctx *gin.Context) {
 	}
 
 	authHandler.setRefreshTokenCookie(ctx, newRefreshToken)
-	response.Success(ctx, accessToken, nil)
+	response.Success(ctx, accessToken)
 }
 
 func (authHandler *AuthHandler) setRefreshTokenCookie(ctx *gin.Context, refreshToken string) {

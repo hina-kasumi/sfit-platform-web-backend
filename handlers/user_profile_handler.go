@@ -75,7 +75,7 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 	response.Success(ctx, gin.H{
 		"createAt": createAt,
 		"updateAt": updateAt,
-	}, nil)
+	})
 
 }
 
@@ -95,6 +95,6 @@ func (profileHandler *UserProfileHandler) DeleteUser(ctx *gin.Context) {
 
 	response.Success(ctx, gin.H{
 		"message": "User deleted",
-	}, nil)
+	})
 
 }

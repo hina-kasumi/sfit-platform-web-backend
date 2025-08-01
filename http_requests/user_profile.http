@@ -19,4 +19,4 @@ Authorization: Bearer <Token>
 ###
 
 ###Delete user
-DELETE http://localhost:8080/user-profile/5b7309a9-adc2-4ade-8342-926a1ae0a8d8
+DELETE http://localhost:8080/user-profile/{user_id}
