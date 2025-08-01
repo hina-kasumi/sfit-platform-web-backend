@@ -2,11 +2,12 @@ package repositories
 
 import (
 	"errors"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type EventRepository struct {
@@ -42,7 +43,7 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 		query = query.Joins("JOIN user_events ue ON ue.event_id = events.id").
 			Where("ue.user_id = ?", userID)
 	}
-	query = query.Order("create_at DESC")
+	query = query.Order("begin_at, priority DESC")
 	// Phân trang
 	offset := (page - 1) * size
 	result := query.Offset(offset).Limit(size).Find(&events)
