@@ -30,6 +30,17 @@ Authorization: Bearer <your_access_token>
 ### Làm mới token
 POST http://localhost:8080/auth/refresh
 Content-Type: application/json
+
 ### lấy tag
 GET http://localhost:8080/tags
 Accept: application/json
+
+### Tạo ban mới
+POST http://localhost:8080/teams
+Content-Type: application/json
+
+{
+  "id": "b3cbb824-c923-4c3c-8f0b-f5286db52039",
+  "name": "Ban Web",
+  "description": "Ban phụ trách đào tạo làm web, làm web cho clb"
+}

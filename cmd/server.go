@@ -38,6 +38,7 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 	rou = []routes.IRoute{
 		routes.NewAuthRoute(depInject.AuthHandler),
 		routes.NewTagRoute(depInject.TagHandler),
+		routes.NewTeamRoute(depInject.TeamHandler),
 	}
 
 	r := gin.Default()
