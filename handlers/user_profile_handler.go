@@ -22,7 +22,7 @@ func NewUserProfileHandler(userProfileService *services.UserProfileService) *Use
 	}
 }
 
-func (h *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
+func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 	sub, exists := ctx.Get("subject") //lấy subject từ context
 	if !exists {
 		response.Error(ctx, 401, "Unauthorized")
@@ -66,7 +66,7 @@ func (h *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 		UpdatedAt:    time.Now(),
 	}
 
-	createAt, updateAt, err := h.UserProfileService.UpdateUserProfile(&profile)
+	createAt, updateAt, err := profileHandler.UserProfileService.UpdateUserProfile(&profile)
 	if err != nil {
 		response.Error(ctx, 500, "Failed to update user profile")
 		return
@@ -75,6 +75,26 @@ func (h *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 	response.Success(ctx, gin.H{
 		"createAt": createAt,
 		"updateAt": updateAt,
+	}, nil)
+
+}
+
+func (profileHandler *UserProfileHandler) DeleteUser(ctx *gin.Context) {
+	userIDSTr := ctx.Param("user_id")
+	userID, err := uuid.Parse(userIDSTr)
+	if err != nil {
+		response.Error(ctx, 400, "Invalid user ID")
+		return
+	}
+
+	err = profileHandler.UserProfileService.DeleteUser(userID)
+	if err != nil {
+		response.Error(ctx, 500, "Failed to delete user")
+		return
+	}
+
+	response.Success(ctx, gin.H{
+		"message": "User deleted",
 	}, nil)
 
 }

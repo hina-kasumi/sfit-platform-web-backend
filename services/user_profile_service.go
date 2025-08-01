@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"sfit-platform-web-backend/entities"
 	"time"
@@ -44,4 +45,50 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 	}
 
 	return existing.CreatedAt, existing.UpdatedAt, nil
+}
+
+func (profileSer *UserProfileService) DeleteUser(userID uuid.UUID) error {
+	tx := profileSer.db.Begin()
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserCourse{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserEvent{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.FavoriteCourse{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.LessonAttendance{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.EventAttendance{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserRate{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserProfile{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("id = ?", userID).Delete(&entities.Users{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
 }
