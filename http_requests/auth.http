@@ -43,3 +43,14 @@ Content-Type: application/json
   "name": "Ban Học Tập",
   "description": "Thành viên ban phải tham gia học tập"
 }
+
+### Cập nhật thông tin ban
+PUT http://localhost:8080/teams
+Content-Type: application/json
+
+{
+  "id": "6c48f131-15aa-499a-bd4e-a9d4d1c9f1aa",
+  "name": "Ban Học Tập Update",
+  "description": "Thông tin ban học tập đã cập nhật"
+}
+

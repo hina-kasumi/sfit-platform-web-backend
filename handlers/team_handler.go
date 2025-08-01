@@ -37,3 +37,20 @@ func (h *TeamHandler) CreateTeam(ctx *gin.Context) {
 	}
 	response.Success(ctx, res)
 }
+
+func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
+	var req dtos.UpdateTeamRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	updatedTeam, err := h.teamService.UpdateTeam(req.ID, req.Name, req.Description)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	res := dtos.UpdateTeamResponse{
+		UpdatedAt: updatedTeam.UpdatedAt.Format(time.RFC3339),
+	}
+	response.Success(ctx, res)
+}
