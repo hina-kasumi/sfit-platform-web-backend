@@ -1,0 +1,13 @@
+### Change Password
+### Nhập Token sau Authorization: Brearer ...
+POST http://localhost:8080/change-password
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQwNzc4NzksImp0aSI6IjU0NjE1NWFjLTAyM2MtNGE1MS05MjFjLTA1NDcxNjA4NjFiYiIsInN1YiI6ImI0YzFiZDk2LWYxZmYtNGU0YS1iN2RhLWQ1ZmVmNTEyOGUwYiJ9.NvwarUg-MJvxiR7RAr7bw-_wTNpiR3AI9h9ZTHze38M
+
+{
+  "old_password": "TestPassword123@",
+  "new_password": "TestPassword12345@",
+  "confirm_password": "TestPassword12345@"
+}
+
+###

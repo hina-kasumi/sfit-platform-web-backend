@@ -26,6 +26,7 @@ type DI struct {
 	BaseHandler        *handlers.BaseHandler
 	AuthHandler        *handlers.AuthHandler
 	UserProfileHandler *handlers.UserProfileHandler
+	UserHandler        *handlers.UserHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -44,6 +45,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	profileHandler := handlers.NewUserProfileHandler(profileSer)
+	userHandler := handlers.NewUserHandler(userSer)
 
 	return &DI{
 		UserRepo:           userRepo,
@@ -56,5 +58,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		AuthHandler:        authHandler,
 		UserProfileService: profileSer,
 		UserProfileHandler: profileHandler,
+		UserHandler:        userHandler,
 	}
 }
