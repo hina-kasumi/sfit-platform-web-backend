@@ -18,20 +18,19 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 		db: db,
 	}
 }
+
+// lấy danh sách event (lọc có điều kiện)
 func (er *EventRepository) GetEvents(page int, size int, title string, etype string, status string, registed bool, userID string) ([]entities.Event, error) {
 	var events []entities.Event
 	query := er.db.Model(&entities.Event{})
-
 	// Lọc theo title
 	if title != "" {
 		query = query.Where("title ILIKE ?", "%"+title+"%")
 	}
-
 	// Lọc theo type
 	if etype != "" {
 		query = query.Where("event_type = ?", etype)
 	}
-
 	// Lọc theo status
 	if status != "" {
 		query = query.Where("status ILIKE ?", status)
@@ -43,7 +42,7 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 		query = query.Joins("JOIN user_events ue ON ue.event_id = events.id").
 			Where("ue.user_id = ?", userID)
 	}
-	query = query.Order("created_at DESC")
+	query = query.Order("create_at DESC")
 	// Phân trang
 	offset := (page - 1) * size
 	result := query.Offset(offset).Limit(size).Find(&events)
@@ -52,6 +51,8 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 	}
 	return events, nil
 }
+
+// lấy danh sách event đã đăng kí
 func (er *EventRepository) GetRegistedEvent(page int, size int, userID string) ([]entities.Event, error) {
 	result, err := er.GetEvents(page, size, "", "", "", true, userID)
 	if err != nil {
@@ -59,6 +60,8 @@ func (er *EventRepository) GetRegistedEvent(page int, size int, userID string) (
 	}
 	return result, nil
 }
+
+// lấy thông tin event theo id
 func (er *EventRepository) GetEventByID(id string) (*entities.Event, error) {
 	eventID, err := uuid.Parse(id)
 	if err != nil {
@@ -71,6 +74,8 @@ func (er *EventRepository) GetEventByID(id string) (*entities.Event, error) {
 	}
 	return &event, nil
 }
+
+// tạo mới event
 func (er *EventRepository) CreateEvent(eventReq *dtos.NewEventRequest) (*entities.Event, error) {
 	eventID, err := uuid.NewRandom()
 
@@ -98,6 +103,7 @@ func (er *EventRepository) CreateEvent(eventReq *dtos.NewEventRequest) (*entitie
 	return &event, nil
 }
 
+// câp nhật event
 func (er *EventRepository) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
 	var event = entities.Event{
 		ID:          eventReq.ID,
@@ -121,6 +127,7 @@ func (er *EventRepository) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*enti
 	return &event, nil
 }
 
+// xóa event
 func (er *EventRepository) DeleteEvent(id string) error {
 	eventID, err := uuid.Parse(id)
 	if err != nil {
@@ -139,6 +146,7 @@ func (er *EventRepository) DeleteEvent(id string) error {
 	return nil
 }
 
+// hủy đăng kí event
 func (er *EventRepository) UnsubscribeEvent(userID string, eventID string) error {
 	UserEvent := entities.UserEvent{
 		UserID:  uuid.MustParse(userID),
@@ -154,6 +162,7 @@ func (er *EventRepository) UnsubscribeEvent(userID string, eventID string) error
 	return nil
 }
 
+// đăng kí event
 func (er *EventRepository) SubscribeEvent(userID string, eventID string) error {
 	UserEvent := entities.UserEvent{
 		UserID:  uuid.MustParse(userID),
@@ -166,6 +175,7 @@ func (er *EventRepository) SubscribeEvent(userID string, eventID string) error {
 	return nil
 }
 
+// điểm danh sự kiện
 func (er *EventRepository) EventAttendance(userID string, eventID string) error {
 	EventAttendance := entities.EventAttendance{
 		UserID:  uuid.MustParse(userID),
@@ -178,6 +188,7 @@ func (er *EventRepository) EventAttendance(userID string, eventID string) error 
 	return nil
 }
 
+// lấy danh sách những nguoi đã đăng kí vào sự kiện
 func (er *EventRepository) GetEventRegisted(page int, size int, eventID string) ([]entities.Users, error) {
 	EventID, _ := uuid.Parse(eventID)
 	var users []entities.Users
@@ -190,6 +201,8 @@ func (er *EventRepository) GetEventRegisted(page int, size int, eventID string) 
 	}
 	return users, nil
 }
+
+// lấy danh sách những người đã điểm danh vào sự kiện
 func (er *EventRepository) GetEventAttendance(page int, size int, eventID string) ([]entities.Users, error) {
 	EventID, _ := uuid.Parse(eventID)
 	var users []entities.Users

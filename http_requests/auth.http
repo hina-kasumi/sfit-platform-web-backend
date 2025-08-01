@@ -47,3 +47,13 @@ Content-Type: application/json
   "begin_at": "2025-08-15T10:00:00Z",
   "end_at": "2025-08-15T18:00:00Z"
 }
+
+### lấy chi tiết sự kiện
+GET http://localhost:8080/event/
+
+### lấy danh sách event
+GET http://localhost:8080/event/list
+
+### xóa event
+DELETE http://localhost:8080/event/
+
