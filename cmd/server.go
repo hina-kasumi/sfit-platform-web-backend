@@ -37,6 +37,9 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 
 	rou = []routes.IRoute{
 		routes.NewAuthRoute(depInject.AuthHandler),
+
+		// Đắng ký router
+		routes.NewCourseRoute(depInject.CourseHandler),
 	}
 
 	r := gin.Default()
