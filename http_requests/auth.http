@@ -30,3 +30,6 @@ Authorization: Bearer <your_access_token>
 ### Làm mới token
 POST http://localhost:8080/auth/refresh
 Content-Type: application/json
+### lấy tag
+GET http://localhost:8080/tags
+Accept: application/json
