@@ -1,0 +1,19 @@
+### Update User Profile
+### Nhập Token sau Authorization: Brearer ...
+PUT http://localhost:8080/user-profile/update
+Content-Type: application/json
+Authorization: Bearer <Token>
+
+{
+  "full_name": "Shizuka",
+  "class_name": "CNTT4",
+  "khoa": "65",
+  "phone": "0123456789",
+  "introduction": "Tôi là sinh viên năm 1",
+  "social_link": {
+    "github": "https://github.com/nguyenvana",
+    "facebook": "https://facebook.com/shizuka"
+  }
+}
+
+###
