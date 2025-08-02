@@ -12,24 +12,27 @@ import (
 
 type DI struct {
 	//repository
-	UserRepo *repositories.UserRepository
-	TagRepo  *repositories.TagRepository
-	TeamRepo *repositories.TeamRepository
+	UserRepo        *repositories.UserRepository
+	TagRepo         *repositories.TagRepository
+	TeamRepo        *repositories.TeamRepository
+	TeamMembersRepo *repositories.TeamMembersRepository
 
 	// service
-	UserService    *services.UserService
-	TagService     *services.TagService
-	TeamService    *services.TeamService
-	RedisService   *services.RedisService
-	JwtService     *services.JwtService
-	RefreshService *services.RefreshTokenService
-	AuthService    *services.AuthService
+	UserService        *services.UserService
+	TagService         *services.TagService
+	TeamService        *services.TeamService
+	TeamMembersService *services.TeamMembersService
+	RedisService       *services.RedisService
+	JwtService         *services.JwtService
+	RefreshService     *services.RefreshTokenService
+	AuthService        *services.AuthService
 
 	//handler
-	BaseHandler *handlers.BaseHandler
-	AuthHandler *handlers.AuthHandler
-	TagHandler  *handlers.TagHandler
-	TeamHandler *handlers.TeamHandler
+	BaseHandler        *handlers.BaseHandler
+	AuthHandler        *handlers.AuthHandler
+	TagHandler         *handlers.TagHandler
+	TeamHandler        *handlers.TeamHandler
+	TeamMembersHandler *handlers.TeamMembersHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -37,11 +40,13 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	userRepo := repositories.NewUserRepository(db)
 	tagRepo := repositories.NewTagRepository(db)
 	teamRepo := repositories.NewTeamRepository(db)
+	teamMembersRepo := repositories.NewTeamMembersRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
 	tagSer := services.NewTagService(tagRepo)
 	teamSer := services.NewTeamService(teamRepo)
+	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
@@ -52,20 +57,25 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	tagHandler := handlers.NewTagHandler(baseHandler, tagSer)
 	teamHandler := handlers.NewTeamHandler(baseHandler, teamSer)
+	teamMembersHandler := handlers.NewTeamMembersHandler(handlers.NewBaseHandler(), teamMembersService)
+
 	return &DI{
-		UserRepo:       userRepo,
-		TagRepo:        tagRepo,
-		TeamRepo:       teamRepo,
-		UserService:    userSer,
-		TagService:     tagSer,
-		TeamService:    teamSer,
-		RedisService:   redisSer,
-		JwtService:     jwtSer,
-		RefreshService: refreshSer,
-		AuthService:    authSer,
-		BaseHandler:    baseHandler,
-		AuthHandler:    authHandler,
-		TagHandler:     tagHandler,
-		TeamHandler:    teamHandler,
+		UserRepo:           userRepo,
+		TagRepo:            tagRepo,
+		TeamRepo:           teamRepo,
+		TeamMembersRepo:    teamMembersRepo,
+		UserService:        userSer,
+		TagService:         tagSer,
+		TeamService:        teamSer,
+		TeamMembersService: teamMembersService,
+		RedisService:       redisSer,
+		JwtService:         jwtSer,
+		RefreshService:     refreshSer,
+		AuthService:        authSer,
+		BaseHandler:        baseHandler,
+		AuthHandler:        authHandler,
+		TagHandler:         tagHandler,
+		TeamHandler:        teamHandler,
+		TeamMembersHandler: teamMembersHandler,
 	}
 }

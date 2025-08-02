@@ -25,7 +25,7 @@ func (ur *UserRepository) GetUserByID(id string) (*entities.Users, error) {
 	}
 
 	user := entities.Users{ID: userID}
-	result := ur.db.First(&user)
+	result := ur.db.Where("id = ?", userID).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}

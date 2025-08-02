@@ -54,3 +54,11 @@ Content-Type: application/json
   "description": "Thông tin ban học tập đã cập nhật"
 }
 
+### Thêm người vào ban đã tồn tại
+POST http://localhost:8080/teams/b3cbb824-c923-4c3c-8f0b-f5286db52039/team_members/new
+Content-Type: application/json
+
+{
+  "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e",
+  "role": "MEMBER"
+}

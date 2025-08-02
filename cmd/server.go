@@ -39,6 +39,7 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 		routes.NewAuthRoute(depInject.AuthHandler),
 		routes.NewTagRoute(depInject.TagHandler),
 		routes.NewTeamRoute(depInject.TeamHandler),
+		routes.NewTeamMembersRoute(depInject.TeamMembersHandler),
 	}
 
 	r := gin.Default()
