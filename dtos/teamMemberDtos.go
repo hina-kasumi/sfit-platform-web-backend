@@ -13,3 +13,8 @@ type AddTeamMemberResponse struct {
 type DeleteTeamMemberRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 }
+
+type UpdateTeamMemberRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+	Role   string `json:"role" binding:"required"`
+}

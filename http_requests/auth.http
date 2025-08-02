@@ -62,3 +62,21 @@ Content-Type: application/json
   "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e",
   "role": "MEMBER"
 }
+
+### Xóa người khỏi ban
+DELETE http://localhost:8080/teams/b3cbb824-c923-4c3c-8f0b-f5286db52039/team_members/delete
+Content-Type: application/json
+
+{
+  "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e"
+}
+
+### Cập nhập vị trí của người trong ban
+DELETE http://localhost:8080/teams/b3cbb824-c923-4c3c-8f0b-f5286db52039/team_members/update
+Content-Type: application/json
+
+{
+  "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e",
+  "role": "VICE_HEADER"
+}
+

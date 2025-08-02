@@ -65,3 +65,25 @@ func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
 
 	response.Success(ctx, gin.H{"message": "Member removed from team successfully"})
 }
+
+func (h *TeamMembersHandler) UpdateMemberRole(ctx *gin.Context) {
+	var req dtos.UpdateTeamMemberRequest
+	teamID := ctx.Param("team_id")
+	if teamID == "" {
+		response.Error(ctx, 400, "team_id is required in URL")
+		return
+	}
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	err := h.service.UpdateMemberRole(req.UserID, teamID, req.Role)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, gin.H{
+		"message":   "Role updated successfully",
+		"updatedAt": time.Now().Format(time.RFC3339),
+	})
+}

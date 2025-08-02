@@ -18,6 +18,6 @@ func (r *TeamMembersRoute) RegisterRoutes(router *gin.Engine) {
 	{
 		group.POST("/new", r.handler.AddMember)
 		group.DELETE("/delete", r.handler.DeleteMember)
-
+		group.PUT("/update", r.handler.UpdateMemberRole)
 	}
 }

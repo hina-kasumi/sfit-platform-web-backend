@@ -78,3 +78,37 @@ func (s *TeamMembersService) DeleteMember(userIDStr, teamIDStr string) error {
 	}
 	return nil
 }
+
+func (s *TeamMembersService) UpdateMemberRole(userIDStr, teamIDStr, roleStr string) error {
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return errors.New("invalid user_id format")
+	}
+
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		return errors.New("invalid team_id format")
+	}
+
+	validRoles := map[string]bool{
+		string(entities.RoleHeader):     true,
+		string(entities.RoleViceHeader): true,
+		string(entities.RoleMember):     true,
+	}
+
+	if !validRoles[roleStr] {
+		return errors.New("invalid role value")
+	}
+
+	existingMember, err := s.repo.FindByUserIDAndTeamID(userID, teamID)
+	if err != nil || existingMember == nil {
+		return errors.New("user is not a member of this team")
+	}
+
+	err = s.repo.UpdateRole(userID, teamID, roleStr)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
