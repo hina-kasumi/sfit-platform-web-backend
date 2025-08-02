@@ -15,7 +15,13 @@ func UserLoaderMiddleware(jwtSer *services.JwtService) gin.HandlerFunc {
 			return
 		}
 		tokenPart := bearerToken[len("Bearer "):]
-		sub, err := jwtSer.ParseToken(tokenPart)
+		claims, err := jwtSer.ParseToken(tokenPart)
+		if err != nil {
+			response.Error(c, 401, "Invalid token")
+			c.Abort()
+			return
+		}
+		sub, err := claims.GetSubject()
 		if err != nil {
 			response.Error(c, 401, "Invalid token")
 			c.Abort()
