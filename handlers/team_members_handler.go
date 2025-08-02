@@ -44,3 +44,24 @@ func (h *TeamMembersHandler) AddMember(ctx *gin.Context) {
 	}
 	response.Success(ctx, res)
 }
+
+func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
+	var req dtos.DeleteTeamMemberRequest
+
+	teamID := ctx.Param("team_id")
+	if teamID == "" {
+		response.Error(ctx, 400, "team_id is required in URL")
+		return
+	}
+
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	err := h.service.DeleteMember(req.UserID, teamID)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, gin.H{"message": "Member removed from team successfully"})
+}

@@ -17,5 +17,7 @@ func (r *TeamMembersRoute) RegisterRoutes(router *gin.Engine) {
 	group := router.Group("/teams/:team_id/team_members")
 	{
 		group.POST("/new", r.handler.AddMember)
+		group.DELETE("/delete", r.handler.DeleteMember)
+
 	}
 }

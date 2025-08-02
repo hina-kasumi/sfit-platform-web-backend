@@ -56,3 +56,25 @@ func (s *TeamMembersService) AddMember(userIDStr, teamIDStr, roleStr string) (*e
 
 	return s.repo.Create(&teamMember)
 }
+
+func (s *TeamMembersService) DeleteMember(userIDStr, teamIDStr string) error {
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return errors.New("invalid user_id format")
+	}
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		return errors.New("invalid team_id format")
+	}
+
+	existing, err := s.repo.FindByUserIDAndTeamID(userID, teamID)
+	if err != nil || existing == nil {
+		return errors.New("user is not a member of the team")
+	}
+
+	err = s.repo.DeleteByUserIDAndTeamID(userID, teamID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

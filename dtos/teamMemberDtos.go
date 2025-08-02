@@ -9,3 +9,7 @@ type AddTeamMemberResponse struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"create_at"`
 }
+
+type DeleteTeamMemberRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
