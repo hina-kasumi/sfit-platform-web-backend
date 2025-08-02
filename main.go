@@ -19,7 +19,10 @@ func main() {
 	dbName := os.Getenv("DB_NAME")
 	host := os.Getenv("DB_HOST")
 
+	//kết nối database, cấu hình database
 	db := infrastructures.OpenDbConnection(username, password, dbName, host)
+
+	//kết nối redis
 	redisClient, redisCtx := infrastructures.InitRedis(os.Getenv("REDIS_ADDRESS"))
 
 	cmd.StartServer(db, redisClient, redisCtx)
