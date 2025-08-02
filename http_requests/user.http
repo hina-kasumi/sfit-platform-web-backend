@@ -2,7 +2,7 @@
 ### Nhập Token sau Authorization: Brearer ...
 POST http://localhost:8080/change-password
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQwNzc4NzksImp0aSI6IjU0NjE1NWFjLTAyM2MtNGE1MS05MjFjLTA1NDcxNjA4NjFiYiIsInN1YiI6ImI0YzFiZDk2LWYxZmYtNGU0YS1iN2RhLWQ1ZmVmNTEyOGUwYiJ9.NvwarUg-MJvxiR7RAr7bw-_wTNpiR3AI9h9ZTHze38M
+Authorization: Bearer <Token>
 
 {
   "old_password": "TestPassword123@",
@@ -11,3 +11,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQwNzc4N
 }
 
 ###
+
+### Get User List
+GET http://localhost:8080/user-list?page=1&pageSize=10

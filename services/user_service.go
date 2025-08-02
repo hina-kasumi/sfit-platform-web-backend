@@ -3,6 +3,7 @@ package services
 import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 )
@@ -50,4 +51,22 @@ func (user_ser *UserService) ChangePassword(userID, oldPass, newPass string) err
 
 	_, err = user_ser.user_repo.UpdateUser(user)
 	return err
+}
+
+func (user_ser *UserService) GetUserList(page, pageSize int) ([]dtos.UserListItem, int, int, int64, error) {
+	users, total, err := user_ser.user_repo.GetUserList(page, pageSize)
+	if err != nil {
+		return nil, 0, 0, 0, err
+	}
+
+	var userList []dtos.UserListItem
+	for _, user := range users {
+		userList = append(userList, dtos.UserListItem{
+			ID:       user.ID.String(),
+			Username: user.Username,
+			Email:    user.Email,
+		})
+	}
+
+	return userList, page, pageSize, total, nil
 }

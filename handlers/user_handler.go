@@ -49,3 +49,26 @@ func (userHandler *UserHandler) ChangePassword(ctx *gin.Context) {
 
 	response.Success(ctx, "Change password success")
 }
+
+func (userHandler *UserHandler) GetUserList(ctx *gin.Context) {
+	var query dtos.UserListQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		response.Error(ctx, 401, "Invalid request")
+		return
+	}
+
+	users, page, pageSize, total, err := userHandler.userSer.GetUserList(query.Page, query.PageSize)
+	if err != nil {
+		response.Error(ctx, 500, "Failed to get user list")
+		return
+	}
+
+	res := dtos.UserListResponse{
+		Users:    users,
+		Page:     page,
+		PageSize: pageSize,
+		Total:    total,
+	}
+
+	response.Success(ctx, res)
+}
