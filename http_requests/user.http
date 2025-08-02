@@ -1,0 +1,16 @@
+### Change Password
+### Nhập Token sau Authorization: Brearer ...
+POST http://localhost:8080/change-password
+Content-Type: application/json
+Authorization: Bearer <Token>
+
+{
+  "old_password": "TestPassword123@",
+  "new_password": "TestPassword12345@",
+  "confirm_password": "TestPassword12345@"
+}
+
+###
+
+### Get User List
+GET http://localhost:8080/user-list?page=1&pageSize=10

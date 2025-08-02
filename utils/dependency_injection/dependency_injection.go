@@ -15,15 +15,18 @@ type DI struct {
 	UserRepo *repositories.UserRepository
 
 	// service
-	UserService    *services.UserService
-	RedisService   *services.RedisService
-	JwtService     *services.JwtService
-	RefreshService *services.RefreshTokenService
-	AuthService    *services.AuthService
+	UserService        *services.UserService
+	RedisService       *services.RedisService
+	JwtService         *services.JwtService
+	RefreshService     *services.RefreshTokenService
+	AuthService        *services.AuthService
+	UserProfileService *services.UserProfileService
 
 	//handler
-	BaseHandler *handlers.BaseHandler
-	AuthHandler *handlers.AuthHandler
+	BaseHandler        *handlers.BaseHandler
+	AuthHandler        *handlers.AuthHandler
+	UserProfileHandler *handlers.UserProfileHandler
+	UserHandler        *handlers.UserHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -36,19 +39,25 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
+	profileSer := services.NewUserProfileService(db)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
+	profileHandler := handlers.NewUserProfileHandler(profileSer)
+	userHandler := handlers.NewUserHandler(userSer)
 
 	return &DI{
-		UserRepo:       userRepo,
-		UserService:    userSer,
-		RedisService:   redisSer,
-		JwtService:     jwtSer,
-		RefreshService: refreshSer,
-		AuthService:    authSer,
-		BaseHandler:    baseHandler,
-		AuthHandler:    authHandler,
+		UserRepo:           userRepo,
+		UserService:        userSer,
+		RedisService:       redisSer,
+		JwtService:         jwtSer,
+		RefreshService:     refreshSer,
+		AuthService:        authSer,
+		BaseHandler:        baseHandler,
+		AuthHandler:        authHandler,
+		UserProfileService: profileSer,
+		UserProfileHandler: profileHandler,
+		UserHandler:        userHandler,
 	}
 }
