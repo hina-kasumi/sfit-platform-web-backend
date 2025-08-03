@@ -15,27 +15,33 @@ import (
 // ví dụ: nếu bạn muốn sử dụng một service trong nhiều handler, bạn chỉ cần inject service vào handler đó thôi.
 type DI struct {
 	//repository
-	UserRepo  *repositories.UserRepository
-	EventRepo *repositories.EventRepository
+	UserRepo        *repositories.UserRepository
+	EventRepo       *repositories.EventRepository
+	UserProfileRepo *repositories.UserProfileRepository
 
 	// service
-	UserService    *services.UserService
-	RedisService   *services.RedisService
-	JwtService     *services.JwtService
-	RefreshService *services.RefreshTokenService
-	AuthService    *services.AuthService
-	EventService   *services.EventService
+	UserService        *services.UserService
+	RedisService       *services.RedisService
+	JwtService         *services.JwtService
+	RefreshService     *services.RefreshTokenService
+	AuthService        *services.AuthService
+	EventService       *services.EventService
+	UserProfileService *services.UserProfileService
 
 	//handler
-	BaseHandler  *handlers.BaseHandler
-	AuthHandler  *handlers.AuthHandler
-	EventHandler *handlers.EventHandler
+	BaseHandler        *handlers.BaseHandler
+	AuthHandler        *handlers.AuthHandler
+	EventHandler       *handlers.EventHandler
+	UserProfileHandler *handlers.UserProfileHandler
+	UserHandler        *handlers.UserHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
 	// Khởi tạo Repository
 	userRepo := repositories.NewUserRepository(db)
 	eventRepo := repositories.NewEventRepository(db)
+	userProfileRepo := repositories.NewUserProfileRepository(db)
+
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
@@ -43,23 +49,30 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 	eventSer := services.NewEventService(eventRepo)
+	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
+	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
+	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 
 	return &DI{
-		UserRepo:       userRepo,
-		EventRepo:      eventRepo,
-		UserService:    userSer,
-		RedisService:   redisSer,
-		JwtService:     jwtSer,
-		RefreshService: refreshSer,
-		AuthService:    authSer,
-		EventService:   eventSer,
-		BaseHandler:    baseHandler,
-		AuthHandler:    authHandler,
-		EventHandler:   eventHandler,
+		UserRepo:           userRepo,
+		EventRepo:          eventRepo,
+		UserService:        userSer,
+		RedisService:       redisSer,
+		JwtService:         jwtSer,
+		RefreshService:     refreshSer,
+		AuthService:        authSer,
+		EventService:       eventSer,
+		BaseHandler:        baseHandler,
+		AuthHandler:        authHandler,
+		EventHandler:       eventHandler,
+		UserProfileService: profileSer,
+		UserProfileHandler: profileHandler,
+		UserHandler:        userHandler,
+		UserProfileRepo:    userProfileRepo,
 	}
 }
