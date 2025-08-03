@@ -1,23 +1,26 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
-	"github.com/google/uuid"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/goccy/go-json"
+	"github.com/google/uuid"
 )
 
 type UserProfileHandler struct {
+	*BaseHandler
 	UserProfileService *services.UserProfileService
 }
 
-func NewUserProfileHandler(userProfileService *services.UserProfileService) *UserProfileHandler {
+func NewUserProfileHandler(baseHandler *BaseHandler, userProfileService *services.UserProfileService) *UserProfileHandler {
 	return &UserProfileHandler{
+		BaseHandler:        baseHandler,
 		UserProfileService: userProfileService,
 	}
 }
@@ -35,8 +38,7 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 	}
 
 	var req dtos.UpdateUserProfileRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 400, "Invalid request")
+	if !profileHandler.canBindJSON(ctx, &req) {
 		return
 	}
 
@@ -55,8 +57,7 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 	}
 
 	createAt, updateAt, err := profileHandler.UserProfileService.UpdateUserProfile(&profile)
-	if err != nil {
-		response.Error(ctx, 500, "Failed to update user profile")
+	if profileHandler.isErrorWithMessage(ctx, err, 500, "Failed to update user profile") {
 		return
 	}
 
@@ -70,14 +71,12 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 func (profileHandler *UserProfileHandler) DeleteUser(ctx *gin.Context) {
 	userIDSTr := ctx.Param("user_id")
 	userID, err := uuid.Parse(userIDSTr)
-	if err != nil {
-		response.Error(ctx, 400, "Invalid user ID")
+	if profileHandler.isErrorWithMessage(ctx, err, 400, "Invalid user ID") {
 		return
 	}
 
 	err = profileHandler.UserProfileService.DeleteUser(userID)
-	if err != nil {
-		response.Error(ctx, 500, "Failed to delete user")
+	if profileHandler.isErrorWithMessage(ctx, err, 500, "Failed to delete user") {
 		return
 	}
 
@@ -89,14 +88,12 @@ func (profileHandler *UserProfileHandler) DeleteUser(ctx *gin.Context) {
 func (profileHandler *UserProfileHandler) GetUserProfile(ctx *gin.Context) {
 	userIDSTr := ctx.Param("user_id")
 	userID, err := uuid.Parse(userIDSTr)
-	if err != nil {
-		response.Error(ctx, 400, "Invalid user ID")
+	if profileHandler.isErrorWithMessage(ctx, err, 400, "Invalid user ID") {
 		return
 	}
 
 	profile, err := profileHandler.UserProfileService.GetUserProfile(userID)
-	if err != nil {
-		response.Error(ctx, 500, "User profile not found")
+	if profileHandler.isErrorWithMessage(ctx, err, 500, "Failed to get user profile") {
 		return
 	}
 
@@ -111,14 +108,12 @@ func (profileHandler *UserProfileHandler) CreateUserProfile(ctx *gin.Context) {
 	}
 
 	userID, err := uuid.Parse(userIDSTr)
-	if err != nil {
-		response.Error(ctx, 400, "Invalid user ID")
+	if profileHandler.isErrorWithMessage(ctx, err, 400, "Invalid user ID") {
 		return
 	}
 
 	var req dtos.CreateUserProfileRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 400, "Invalid request")
+	if !profileHandler.canBindJSON(ctx, &req) {
 		return
 	}
 
@@ -136,8 +131,7 @@ func (profileHandler *UserProfileHandler) CreateUserProfile(ctx *gin.Context) {
 	}
 
 	err = profileHandler.UserProfileService.CreateUserProfile(&profile)
-	if err != nil {
-		response.Error(ctx, 500, "Failed to create user profile")
+	if profileHandler.isErrorWithMessage(ctx, err, 500, "Failed to create user profile") {
 		return
 	}
 

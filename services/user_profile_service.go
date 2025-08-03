@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/repositories"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -12,30 +13,29 @@ import (
 )
 
 type UserProfileService struct {
-	userSer *UserService
-	db      *gorm.DB
+	userSer         *UserService
+	userProfileRepo *repositories.UserProfileRepository
 }
 
-func NewUserProfileService(db *gorm.DB, userSer *UserService) *UserProfileService {
+func NewUserProfileService(userProfileRepo *repositories.UserProfileRepository, userSer *UserService) *UserProfileService {
 	return &UserProfileService{
-		userSer: userSer,
-		db:      db,
+		userSer:         userSer,
+		userProfileRepo: userProfileRepo,
 	}
 }
 
 func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserProfile) (createAt, updateAt time.Time, err error) {
-	var existing entities.UserProfile
-	result := profileSer.db.First(&existing, "user_id = ?", profile.UserID)
-	user, err := profileSer.userSer.GetUserByID(profile.UserID.String())
+	existing, err := profileSer.userProfileRepo.GetUserProfileByID(profile.UserID)
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return time.Time{}, time.Time{}, errors.New("user profile not found")
+		}
 		return time.Time{}, time.Time{}, err
 	}
 
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return time.Time{}, time.Time{}, errors.New("user profile not found")
-		}
-		return time.Time{}, time.Time{}, result.Error
+	user, err := profileSer.userSer.GetUserByID(profile.UserID.String())
+	if err != nil {
+		return time.Time{}, time.Time{}, err
 	}
 
 	existing.FullName = profile.FullName
@@ -56,7 +56,7 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 	}
 
 	//gán các trường từ request vào bản cũ
-	if err := profileSer.db.Save(&existing).Error; err != nil {
+	if _, err := profileSer.userProfileRepo.UpdateUserProfile(existing); err != nil {
 		return time.Time{}, time.Time{}, err
 	}
 
@@ -64,54 +64,12 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 }
 
 func (profileSer *UserProfileService) DeleteUser(userID uuid.UUID) error {
-	tx := profileSer.db.Begin()
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserCourse{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserEvent{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.FavoriteCourse{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.LessonAttendance{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.EventAttendance{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserRate{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserProfile{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Where("id = ?", userID).Delete(&entities.Users{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+	return profileSer.userProfileRepo.DeleteUser(userID)
 }
 
 func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.GetUserProfileResponse, error) {
-	var profile entities.UserProfile
-	if err := profileSer.db.First(&profile, "user_id = ?", userID).Error; err != nil {
+	profile, err := profileSer.userProfileRepo.GetUserProfileByID(userID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -137,8 +95,14 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 }
 
 func (profileSer *UserProfileService) CreateUserProfile(profile *entities.UserProfile) error {
-	var existing entities.UserProfile
-	result := profileSer.db.First(&existing, "user_id = ?", profile.UserID)
+	_, result := profileSer.userProfileRepo.GetUserProfileByID(profile.UserID)
+
+	if result == nil {
+		return errors.New("profile already exists")
+	}
+	if !errors.Is(result, gorm.ErrRecordNotFound) {
+		return result
+	}
 
 	user, err := profileSer.userSer.GetUserByID(profile.UserID.String())
 	if err != nil {
@@ -146,13 +110,6 @@ func (profileSer *UserProfileService) CreateUserProfile(profile *entities.UserPr
 	}
 	profile.Email = user.Email
 
-	if result.Error == nil {
-		return errors.New("profile already exists")
-	}
-
-	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return result.Error
-	}
-
-	return profileSer.db.Create(profile).Error
+	_, err = profileSer.userProfileRepo.CreateUserProfile(profile)
+	return err
 }

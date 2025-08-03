@@ -1,7 +1,6 @@
 package services
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
@@ -46,10 +45,8 @@ func (user_ser *UserService) ChangePassword(userID, oldPass, newPass string) err
 		return err
 	}
 
-	hashedNew, _ := bcrypt.GenerateFromPassword([]byte(newPass), bcrypt.DefaultCost)
-	user.Password = string(hashedNew)
-
-	_, err = user_ser.user_repo.UpdateUser(user)
+	user.SetPassword(newPass)
+	_, err = user_ser.UpdateUser(user)
 	return err
 }
 

@@ -15,8 +15,9 @@ import (
 // ví dụ: nếu bạn muốn sử dụng một service trong nhiều handler, bạn chỉ cần inject service vào handler đó thôi.
 type DI struct {
 	//repository
-	UserRepo  *repositories.UserRepository
-	EventRepo *repositories.EventRepository
+	UserRepo        *repositories.UserRepository
+	EventRepo       *repositories.EventRepository
+	UserProfileRepo *repositories.UserProfileRepository
 
 	// service
 	UserService        *services.UserService
@@ -39,6 +40,8 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	// Khởi tạo Repository
 	userRepo := repositories.NewUserRepository(db)
 	eventRepo := repositories.NewEventRepository(db)
+	userProfileRepo := repositories.NewUserProfileRepository(db)
+
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
@@ -46,14 +49,14 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 	eventSer := services.NewEventService(eventRepo)
-	profileSer := services.NewUserProfileService(db, userSer)
+	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
-	profileHandler := handlers.NewUserProfileHandler(profileSer)
-	userHandler := handlers.NewUserHandler(userSer)
+	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
+	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 
 	return &DI{
 		UserRepo:           userRepo,
@@ -70,5 +73,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		UserProfileService: profileSer,
 		UserProfileHandler: profileHandler,
 		UserHandler:        userHandler,
+		UserProfileRepo:    userProfileRepo,
 	}
 }

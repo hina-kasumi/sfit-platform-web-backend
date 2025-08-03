@@ -1,25 +1,29 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
+	*BaseHandler
 	userSer *services.UserService
 }
 
-func NewUserHandler(userSer *services.UserService) *UserHandler {
-	return &UserHandler{userSer: userSer}
+func NewUserHandler(baseHandler *BaseHandler, userSer *services.UserService) *UserHandler {
+	return &UserHandler{
+		BaseHandler: baseHandler,
+		userSer:     userSer,
+	}
 }
 
 func (userHandler *UserHandler) ChangePassword(ctx *gin.Context) {
 	var req dtos.ChangePasswordRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.Error(ctx, 401, "Invalid request")
+	if !userHandler.canBindJSON(ctx, &req) {
 		return
 	}
 
@@ -30,24 +34,21 @@ func (userHandler *UserHandler) ChangePassword(ctx *gin.Context) {
 	}
 
 	err := userHandler.userSer.ChangePassword(userID, req.OldPassword, req.NewPassword)
-	if err != nil {
-		response.Error(ctx, 401, "Change password error")
+	if userHandler.isErrorWithMessage(ctx, err, 500, "Change password error") {
 		return
 	}
 
-	response.Success(ctx, "change password successfully", "Change password success")
+	response.Success(ctx, "Change password successfully", nil)
 }
 
 func (userHandler *UserHandler) GetUserList(ctx *gin.Context) {
 	var query dtos.UserListQuery
-	if err := ctx.ShouldBindQuery(&query); err != nil {
-		response.Error(ctx, 401, "Invalid request")
+	if !userHandler.canBindQuery(ctx, &query) {
 		return
 	}
 
 	users, page, pageSize, total, err := userHandler.userSer.GetUserList(query.Page, query.PageSize)
-	if err != nil {
-		response.Error(ctx, 500, "Failed to get user list")
+	if userHandler.isErrorWithMessage(ctx, err, 500, "Failed to get user list") {
 		return
 	}
 
