@@ -2,6 +2,7 @@ package repositories
 
 import (
 	// "encoding/json"
+	"encoding/json"
 	"fmt"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
@@ -236,8 +237,8 @@ func (r *CourseRepository) CreateNewCourse(course *entities.Course) error {
 // }
 
 func (r *CourseRepository) GetCourses(filter dtos.CourseFilter, pageSize, offset int) ([]dtos.CourseInformationResponse, int, error) {
-	var courses []dtos.CourseInformationResponse
-	var total int
+	// var courses []dtos.CourseInformationResponse
+	var rawCourses []dtos.CourseRaw
 
 	// Base query với CTE
 	baseQuery := `
@@ -346,14 +347,45 @@ func (r *CourseRepository) GetCourses(filter dtos.CourseFilter, pageSize, offset
 	mainArgs := append(args, pageSize, offset)
 
 	// Execute main query
-	err := r.db.Raw(mainQuery, mainArgs...).Scan(&courses).Error
+	// err := r.db.Raw(mainQuery, mainArgs...).Scan(&courses).Error
+	err := r.db.Raw(mainQuery, mainArgs...).Scan(&rawCourses).Error
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get courses: %w", err)
 	}
 
+	// Chuyển đổi rawCourses sang courses
+	var courses []dtos.CourseInformationResponse
+	for _, raw := range rawCourses {
+		var teachers []string
+		var tags []string
 
+		// Unmarshal teachers JSON
+		if err := json.Unmarshal(raw.Teachers, &teachers); err != nil {
+			return nil, 0, fmt.Errorf("failed to parse teachers: %w", err)
+		}
 
-	// Build count query (không cần CTE, chỉ cần WHERE conditions)
+		// Unmarshal tags JSON
+		if err := json.Unmarshal(raw.Tags, &tags); err != nil {
+			return nil, 0, fmt.Errorf("failed to parse tags: %w", err)
+		}
+
+		courses = append(courses, dtos.CourseInformationResponse{
+			ID:             raw.ID,
+			Title:          raw.Title,
+			Description:    raw.Description,
+			Type:           raw.Type,
+			Teachers:       teachers,
+			NumberLessons:  raw.NumberLessons,
+			TimeLearn:      raw.TimeLearn,
+			Rate:           raw.Rate,
+			Tags:           tags,
+			LearnedLessons: raw.LearnedLessons,
+			Registed:       raw.Registed,
+		})
+	}
+
+	// Tính tổng số khóa học
+	var total int
 	countQuery := "SELECT COUNT(*) FROM courses c"
 	var countArgs []interface{}
 	var countConditions []string

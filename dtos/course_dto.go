@@ -1,6 +1,10 @@
 package dtos
 
-import "github.com/google/uuid"
+import (
+	"encoding/json"
+
+	"github.com/google/uuid"
+)
 
 type CreateCourseRequest struct {
 	Title       string   `json:"title" binding:"required"`
@@ -33,6 +37,21 @@ type CourseInformationResponse struct {
 	LearnedLessons int      `json:"learnedLessons"`
 	Registed       bool     `json:"registed"`
 }
+
+type CourseRaw struct {
+	ID             string          `json:"id"`
+	Title          string          `json:"title"`
+	Description    string          `json:"description"`
+	Type           string          `json:"type"`
+	Teachers       json.RawMessage `json:"teachers"` // JSON array → parse sau
+	NumberLessons  int             `json:"number_lessons"`
+	TimeLearn      int             `json:"time_learn"`
+	Rate           float64         `json:"rate"`
+	Tags           json.RawMessage `json:"tags"` // JSON array of UUIDs → parse sau
+	LearnedLessons int             `json:"learned_lessons"`
+	Registed       bool            `json:"registed"`
+}
+
 
 type CourseFilter struct {
 	Title        string
