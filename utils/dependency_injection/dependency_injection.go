@@ -13,6 +13,10 @@ import (
 type DI struct {
 	//repository
 	UserRepo *repositories.UserRepository
+	TagRepo      *repositories.TagRepository
+	CourseRepo   *repositories.CourseRepository
+	TagTempRepo *repositories.TagTempRepository
+
 
 	// service
 	UserService    *services.UserService
@@ -20,22 +24,22 @@ type DI struct {
 	JwtService     *services.JwtService
 	RefreshService *services.RefreshTokenService
 	AuthService    *services.AuthService
+	TagService     *services.TagService
+	CourseService  *services.CourseService
+	TagTempService *services.TagTempService
+
 
 	//handler
 	BaseHandler *handlers.BaseHandler
 	AuthHandler *handlers.AuthHandler
-
-		// handler Tag, Course
-	TagHandler   *handlers.TagHandler
 	CourseHandler *handlers.CourseHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
 	// Khởi tạo Repository
 	userRepo := repositories.NewUserRepository(db)
-
-		// Khởi tạo Repository Tag, Course
 	tagRepo := repositories.NewTagRepository(db)
+	tagTempRepo := repositories.NewTagTempRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
 
 	// Khởi tạo Service
@@ -44,18 +48,14 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
-	
-		// Khởi tạo Service Tag, Course
 	tagSer := services.NewTagService(tagRepo)
+	tagTempSer := services.NewTagTempService(tagTempRepo)
 	courseSer := services.NewCourseService(courseRepo)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
-
-		// Khởi tạo Handler Tag, Course
-	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer, tagSer)
-	tagHandler := handlers.NewTagHandler(baseHandler, tagSer)
+	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer, tagSer, tagTempSer)
 
 	return &DI{
 		UserRepo:       userRepo,
@@ -67,8 +67,12 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		BaseHandler:    baseHandler,
 		AuthHandler:    authHandler,
 
-			// Handler Tag, Course
-		TagHandler: tagHandler,
+		TagRepo:       tagRepo,
+		TagService:    tagSer,
+		CourseRepo:    courseRepo,
+		CourseService: courseSer,
+		TagTempRepo:   tagTempRepo,
+		TagTempService: tagTempSer,
 		CourseHandler:  courseHandler,
 	}
 }

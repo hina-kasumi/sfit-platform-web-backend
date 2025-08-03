@@ -22,7 +22,7 @@ func (s *CourseService) CreateCourse(
     language string,
     certificate bool,
     level string,
-    tags []entities.Tag,
+    // tags []entities.Tag,
 ) (uuid.UUID, time.Time, error) {
     course := entities.Course{
         ID:          uuid.New(),
@@ -37,7 +37,7 @@ func (s *CourseService) CreateCourse(
         Level:       level,
         CreatedAt:   time.Now(),
     }
-    if err := s.course_repo.Create(&course); err != nil {
+    if err := s.course_repo.CreateNewCourse(&course); err != nil {
         return uuid.Nil, time.Time{}, err
     }
     return course.ID, course.CreatedAt, nil

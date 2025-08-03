@@ -32,9 +32,8 @@ func stringArrayToPGArray(arr []string) string {
 	return "{" + strings.Join(escaped, ",") + "}"
 }
 
-func (r *CourseRepository) Create(course *entities.Course) error {
+func (r *CourseRepository) CreateNewCourse(course *entities.Course) error {
 	// Trick lỏ :>
-
 	return r.db.Exec(`
 		INSERT INTO courses 
 			(id, title, description, type, target, require, teachers, language, certificate, level, create_at, update_at)

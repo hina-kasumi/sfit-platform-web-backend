@@ -21,7 +21,7 @@ func (s *TagService) EnsureTags(tags []string) ([]entities.Tag, error) {
         tag, err := s.tag_repo.FindByID(tagName)
         if err == gorm.ErrRecordNotFound {
             tag = &entities.Tag{ID: tagName}
-            if err := s.tag_repo.Create(tag); err != nil {
+            if err := s.tag_repo.CreateNewTag(tag); err != nil {
                 return nil, err
             }
         } else if err != nil {
