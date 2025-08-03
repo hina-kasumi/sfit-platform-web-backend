@@ -53,6 +53,21 @@ func (er *EventRepository) GetEvents(page int, size int, title string, etype str
 	return events, nil
 }
 
+// Kiểm tra sự kiện có đăng kí hay không
+func (er *EventRepository) CheckRegisted(userID string, event entities.Event) (bool, error) {
+	UserID, _ := uuid.Parse(userID)
+	EventID := event.ID
+	var userEvent entities.UserEvent
+	result := er.db.Where("user_id = ? AND event_id = ?", UserID, EventID).First(&userEvent)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	if userEvent.UserID == uuid.Nil {
+		return false, nil
+	}
+	return true, nil
+}
+
 // lấy danh sách event đã đăng kí
 func (er *EventRepository) GetRegistedEvent(page int, size int, userID string) ([]entities.Event, error) {
 	result, err := er.GetEvents(page, size, "", "", "", true, userID)
@@ -196,7 +211,7 @@ func (er *EventRepository) GetEventRegisted(page int, size int, eventID string) 
 	query := er.db.Model(&entities.Users{}).Joins("JOIN user_events ue ON ue.user_id = users.id").
 		Where("ue.event_id = ?", EventID)
 	offset := (page - 1) * size
-	result := query.Offset(offset).Limit(size).Find(&users)
+	result := query.Offset(offset).Limit(size).Debug().Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}

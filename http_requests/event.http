@@ -23,7 +23,9 @@ GET http://localhost:8080/event/list
 ### xóa event (duyệt)
 DELETE http://localhost:8080/event/{9a7d21bb-d136-4324-901e-aad613988863}
 
-### điểm danh (lỗi)
+### điểm danh (lỗi) -> đã sửa
 POST http://localhost:8080/event/subscribe
+### hủy điểm danh
+POST http://localhost:8080/event/unsubscribe
 
 

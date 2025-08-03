@@ -2,6 +2,7 @@ package routes
 
 import (
 	"sfit-platform-web-backend/handlers"
+	"sfit-platform-web-backend/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,19 +18,22 @@ func NewEventRoute(eventHandler *handlers.EventHandler) *EventRoutes {
 }
 
 func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
-
 	eventHandler := eventRou.eventHandler
 
 	task := router.Group("/event")
 	task.GET("", eventHandler.GetEventList)
-	task.GET("/registed-event-list", eventHandler.GetRegistedEventList)
 	task.GET("/:event_id", eventHandler.GetEventDetail)
-	task.POST("/user-attendance", eventHandler.EventAttendance)
-	task.POST("/subscribe", eventHandler.SubscribeEvent)
-	task.POST("", eventHandler.CreateEvent)
-	task.PUT("", eventHandler.UpdateEvent)
-	task.DELETE("/:event_id", eventHandler.DeleteEvent)
-	task.POST("/unsubscribe", eventHandler.UnsubscribeEvent)
 	task.GET("/list-register", eventHandler.GetEventRegistedList)
 	task.GET("/list-attendance", eventHandler.GetEventAttendanceList)
+
+	taskAuth := router.Group("/event")
+	taskAuth.Use(middlewares.EnforceAuthenticatedMiddleware())
+	taskAuth.GET("/event-list-registed", eventHandler.GetRegistedEventList)
+	taskAuth.POST("/user-attendance", eventHandler.EventAttendance)
+	taskAuth.POST("/subscribe", eventHandler.SubscribeEvent)
+	taskAuth.POST("", eventHandler.CreateEvent)
+	taskAuth.PUT("", eventHandler.UpdateEvent)
+	taskAuth.DELETE("/:event_id", eventHandler.DeleteEvent)
+	taskAuth.POST("/unsubscribe", eventHandler.UnsubscribeEvent)
+
 }

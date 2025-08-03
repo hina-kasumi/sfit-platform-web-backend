@@ -51,3 +51,7 @@ func (eventSer *EventService) GetEventAttendance(page int, size int, eventID str
 func (eventSer *EventService) GetEventRegisted(page int, size int, eventID string) ([]entities.Users, error) {
 	return eventSer.eventRepo.GetEventRegisted(page, size, eventID)
 }
+
+func (eventSer *EventService) CheckRegisted(userID string, event entities.Event) (bool, error) {
+	return eventSer.eventRepo.CheckRegisted(userID, event)
+}
