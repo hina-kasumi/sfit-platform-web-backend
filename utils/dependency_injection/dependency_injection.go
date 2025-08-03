@@ -41,6 +41,11 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	tagRepo := repositories.NewTagRepository(db)
 	tagTempRepo := repositories.NewTagTempRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
+	lessonRepo := repositories.NewLessonRepository(db)
+	userCourseRepo := repositories.NewUserCourseRepository(db)
+	userRateRepo := repositories.NewUserRateRepository(db)
+	lessonAttendanceRepo := repositories.NewLessonAttendanceRepository(db)
+	moduleRepo := repositories.NewModuleRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
@@ -50,7 +55,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 	tagSer := services.NewTagService(tagRepo)
 	tagTempSer := services.NewTagTempService(tagTempRepo)
-	courseSer := services.NewCourseService(courseRepo)
+	courseSer := services.NewCourseService(userRepo, courseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()

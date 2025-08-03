@@ -15,4 +15,5 @@ func NewCourseRoute(handler *handlers.CourseHandler) *CourseRoute {
 
 func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
     router.POST("/course", r.handler.CreateCourse)
+    router.GET("/course", r.handler.GetListCourse)
 }
