@@ -46,7 +46,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 	eventSer := services.NewEventService(eventRepo)
-	profileSer := services.NewUserProfileService(db)
+	profileSer := services.NewUserProfileService(db, userSer)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()

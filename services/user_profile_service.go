@@ -2,25 +2,34 @@ package services
 
 import (
 	"errors"
-	"github.com/goccy/go-json"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"time"
+
+	"github.com/goccy/go-json"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type UserProfileService struct {
-	db *gorm.DB
+	userSer *UserService
+	db      *gorm.DB
 }
 
-func NewUserProfileService(db *gorm.DB) *UserProfileService {
-	return &UserProfileService{db: db}
+func NewUserProfileService(db *gorm.DB, userSer *UserService) *UserProfileService {
+	return &UserProfileService{
+		userSer: userSer,
+		db:      db,
+	}
 }
 
 func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserProfile) (createAt, updateAt time.Time, err error) {
 	var existing entities.UserProfile
 	result := profileSer.db.First(&existing, "user_id = ?", profile.UserID)
+	user, err := profileSer.userSer.GetUserByID(profile.UserID.String())
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -36,6 +45,16 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 	existing.Introduction = profile.Introduction
 	existing.SocialLink = profile.SocialLink
 	existing.UpdatedAt = time.Now()
+
+	// Cập nhật email trong bảng Users
+	if profile.Email != "" {
+		existing.Email = profile.Email
+		user.Email = profile.Email
+		if _, err = profileSer.userSer.UpdateUser(user); err != nil {
+			return time.Time{}, time.Time{}, err
+		}
+	}
+
 	//gán các trường từ request vào bản cũ
 	if err := profileSer.db.Save(&existing).Error; err != nil {
 		return time.Time{}, time.Time{}, err
@@ -106,6 +125,7 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 		Khoa:            profile.Khoa,
 		Phone:           profile.Phone,
 		Introduction:    profile.Introduction,
+		Email:           profile.Email,
 		CompletedCourse: 0,
 		JoinedEvent:     0,
 		CompletedTask:   0,
@@ -119,6 +139,13 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 func (profileSer *UserProfileService) CreateUserProfile(profile *entities.UserProfile) error {
 	var existing entities.UserProfile
 	result := profileSer.db.First(&existing, "user_id = ?", profile.UserID)
+
+	user, err := profileSer.userSer.GetUserByID(profile.UserID.String())
+	if err != nil {
+		return err
+	}
+	profile.Email = user.Email
+
 	if result.Error == nil {
 		return errors.New("profile already exists")
 	}

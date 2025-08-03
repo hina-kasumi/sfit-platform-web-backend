@@ -16,7 +16,7 @@ func NewUserRoute(userHandler *handlers.UserHandler) *UserRoute {
 
 func (userRoute *UserRoute) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/")
-	auth.GET("/user-list", userRoute.userHandler.GetUserList)
+	auth.GET("/user", userRoute.userHandler.GetUserList)
 	auth.Use(
 		middlewares.EnforceAuthenticatedMiddleware(),
 	)

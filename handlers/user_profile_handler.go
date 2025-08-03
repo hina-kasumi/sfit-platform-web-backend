@@ -51,6 +51,7 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 		Introduction: req.Introduction,
 		SocialLink:   string(socialLinkJSON),
 		UpdatedAt:    time.Now(),
+		Email:        req.Email,
 	}
 
 	createAt, updateAt, err := profileHandler.UserProfileService.UpdateUserProfile(&profile)

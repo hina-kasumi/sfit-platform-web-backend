@@ -21,6 +21,6 @@ func (userprofileRoute *UserProfileRoute) RegisterRoutes(router *gin.Engine) {
 	group.DELETE("/:user_id", userprofileRoute.handler.DeleteUser)
 	group.GET("/:user_id", userprofileRoute.handler.GetUserProfile)
 	group.Use(middlewares.EnforceAuthenticatedMiddleware())
-	group.PUT("/update", userprofileRoute.handler.UpdateUserProfile)
+	group.PUT("/", userprofileRoute.handler.UpdateUserProfile)
 	group.POST("/", userprofileRoute.handler.CreateUserProfile)
 }

@@ -1,8 +1,9 @@
 package dtos
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type UpdateUserProfileRequest struct {
@@ -10,6 +11,7 @@ type UpdateUserProfileRequest struct {
 	ClassName    string            `json:"class_name"`
 	Khoa         string            `json:"khoa"`
 	Phone        string            `json:"phone"`
+	Email        string            `json:"email"`
 	Introduction string            `json:"introduction"`
 	SocialLink   map[string]string `json:"social_link"`
 }
@@ -20,6 +22,7 @@ type GetUserProfileResponse struct {
 	ClassName       string            `json:"class_name"`
 	Khoa            string            `json:"khoa"`
 	Phone           string            `json:"phone"`
+	Email           string            `json:"email"`
 	Introduction    string            `json:"introduction"`
 	CompletedCourse int64             `json:"completed_course"`
 	JoinedEvent     int64             `json:"joined_event"`
