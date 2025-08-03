@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -23,13 +24,7 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
-			profile.CreatedAt = time.Now()
-			profile.UpdatedAt = time.Now()
-			if err := profileSer.db.Create(profile).Error; err != nil {
-				return time.Time{}, time.Time{}, err
-			}
-			return profile.CreatedAt, profile.UpdatedAt, nil
-			//nếu chưa có bản ghi cũ, tạo mới
+			return time.Time{}, time.Time{}, errors.New("user profile not found")
 		}
 		return time.Time{}, time.Time{}, result.Error
 	}
@@ -119,4 +114,18 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 		UpdatedAt:       profile.UpdatedAt,
 	}, nil
 
+}
+
+func (profileSer *UserProfileService) CreateUserProfile(profile *entities.UserProfile) error {
+	var existing entities.UserProfile
+	result := profileSer.db.First(&existing, "user_id = ?", profile.UserID)
+	if result.Error == nil {
+		return errors.New("profile already exists")
+	}
+
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+
+	return profileSer.db.Create(profile).Error
 }

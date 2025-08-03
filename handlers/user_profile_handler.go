@@ -3,10 +3,10 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/goccy/go-json"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 	"time"
@@ -23,25 +23,12 @@ func NewUserProfileHandler(userProfileService *services.UserProfileService) *Use
 }
 
 func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
-	sub, exists := ctx.Get("subject") //lấy subject từ context
-	if !exists {
-		response.Error(ctx, 401, "Unauthorized")
+	userIDStr := middlewares.GetPrincipal(ctx)
+	if userIDStr == "" {
+		response.Error(ctx, 401, "unauthorized")
 		return
 	}
-
-	claims, ok := sub.(jwt.MapClaims)
-	if !ok {
-		response.Error(ctx, 400, "Invalid subject format")
-		return
-	}
-
-	subStr, ok := claims["sub"].(string) //lấy giá trị chuỗi từ sub
-	if !ok {
-		response.Error(ctx, 400, "Invalid subject format")
-		return
-	}
-
-	userID, err := uuid.Parse(subStr) //chuyển thành uuid
+	userID, err := uuid.Parse(userIDStr) //chuyển thành uuid
 	if err != nil {
 		response.Error(ctx, 400, "Invalid user ID")
 		return
@@ -72,7 +59,7 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, gin.H{
+	response.Success(ctx, "Update user profile successfully", gin.H{
 		"createAt": createAt,
 		"updateAt": updateAt,
 	})
@@ -93,7 +80,7 @@ func (profileHandler *UserProfileHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, gin.H{
+	response.Success(ctx, "Delete user successfully", gin.H{
 		"message": "User deleted",
 	})
 }
@@ -112,5 +99,49 @@ func (profileHandler *UserProfileHandler) GetUserProfile(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, profile)
+	response.Success(ctx, "Get user profile successfully", profile)
+}
+
+func (profileHandler *UserProfileHandler) CreateUserProfile(ctx *gin.Context) {
+	userIDSTr := middlewares.GetPrincipal(ctx)
+	if userIDSTr == "" {
+		response.Error(ctx, 401, "unauthorized")
+		return
+	}
+
+	userID, err := uuid.Parse(userIDSTr)
+	if err != nil {
+		response.Error(ctx, 400, "Invalid user ID")
+		return
+	}
+
+	var req dtos.CreateUserProfileRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response.Error(ctx, 400, "Invalid request")
+		return
+	}
+
+	socialLinkJSON, _ := json.Marshal(req.SocialLink)
+	profile := entities.UserProfile{
+		UserID:       userID,
+		FullName:     req.FullName,
+		ClassName:    req.ClassName,
+		Khoa:         req.Khoa,
+		Phone:        req.Phone,
+		Introduction: req.Introduction,
+		SocialLink:   string(socialLinkJSON),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	err = profileHandler.UserProfileService.CreateUserProfile(&profile)
+	if err != nil {
+		response.Error(ctx, 500, "Failed to create user profile")
+		return
+	}
+
+	response.Success(ctx, "Create user profile successfully", gin.H{
+		"user_id":  profile.UserID,
+		"createAt": profile.CreatedAt,
+	})
 }
