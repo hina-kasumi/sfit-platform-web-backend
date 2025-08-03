@@ -96,5 +96,21 @@ func (profileHandler *UserProfileHandler) DeleteUser(ctx *gin.Context) {
 	response.Success(ctx, gin.H{
 		"message": "User deleted",
 	})
+}
 
+func (profileHandler *UserProfileHandler) GetUserProfile(ctx *gin.Context) {
+	userIDSTr := ctx.Param("user_id")
+	userID, err := uuid.Parse(userIDSTr)
+	if err != nil {
+		response.Error(ctx, 400, "Invalid user ID")
+		return
+	}
+
+	profile, err := profileHandler.UserProfileService.GetUserProfile(userID)
+	if err != nil {
+		response.Error(ctx, 500, "User profile not found")
+		return
+	}
+
+	response.Success(ctx, profile)
 }

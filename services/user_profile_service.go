@@ -1,8 +1,10 @@
 package services
 
 import (
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"time"
 )
@@ -91,4 +93,30 @@ func (profileSer *UserProfileService) DeleteUser(userID uuid.UUID) error {
 	}
 
 	return tx.Commit().Error
+}
+
+func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.GetUserProfileResponse, error) {
+	var profile entities.UserProfile
+	if err := profileSer.db.First(&profile, "user_id = ?", userID).Error; err != nil {
+		return nil, err
+	}
+
+	var socialLink map[string]string
+	_ = json.Unmarshal([]byte(profile.SocialLink), &socialLink)
+
+	return &dtos.GetUserProfileResponse{
+		UserID:          profile.UserID,
+		FullName:        profile.FullName,
+		ClassName:       profile.ClassName,
+		Khoa:            profile.Khoa,
+		Phone:           profile.Phone,
+		Introduction:    profile.Introduction,
+		CompletedCourse: 0,
+		JoinedEvent:     0,
+		CompletedTask:   0,
+		SocialLink:      socialLink,
+		CreatedAt:       profile.CreatedAt,
+		UpdatedAt:       profile.UpdatedAt,
+	}, nil
+
 }
