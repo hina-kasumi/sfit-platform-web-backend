@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"sfit-platform-web-backend/dtos"
 	entities "sfit-platform-web-backend/entities"
 	"time"
 )
@@ -43,4 +44,19 @@ func (r *TeamMembersRepository) UpdateRole(userID, teamID uuid.UUID, role string
 		Where("user_id = ? AND team_id = ?", userID, teamID).
 		Updates(updateData)
 	return result.Error
+}
+
+func (r *TeamMembersRepository) FindTeamsByUserID(userID uuid.UUID) ([]dtos.UserJoinedTeamResponse, error) {
+	var results []dtos.UserJoinedTeamResponse
+
+	err := r.db.Table("team_members tm").
+		Select("tm.team_id, t.name, tm.role").
+		Joins("JOIN teams t ON tm.team_id = t.id").
+		Where("tm.user_id = ?", userID).
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
 }

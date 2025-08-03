@@ -80,3 +80,11 @@ Content-Type: application/json
   "role": "VICE_HEADER"
 }
 
+### Lấy danh sách ban một người dùng
+GET http://localhost:8080/teams/joined/d91edab3-8c0f-4e83-a7b3-863a170171d5
+Content-Type: application/json
+
+{
+
+}
+

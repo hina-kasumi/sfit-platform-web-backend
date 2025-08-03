@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"github.com/google/uuid"
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 	"time"
@@ -111,4 +112,12 @@ func (s *TeamMembersService) UpdateMemberRole(userIDStr, teamIDStr, roleStr stri
 	}
 
 	return nil
+}
+
+func (s *TeamMembersService) GetTeamsJoinedByUser(userIDStr string) ([]dtos.UserJoinedTeamResponse, error) {
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return nil, errors.New("invalid user_id format")
+	}
+	return s.repo.FindTeamsByUserID(userID)
 }

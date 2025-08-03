@@ -87,3 +87,18 @@ func (h *TeamMembersHandler) UpdateMemberRole(ctx *gin.Context) {
 		"updatedAt": time.Now().Format(time.RFC3339),
 	})
 }
+
+func (h *TeamMembersHandler) GetTeamsJoinedByUser(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	if userID == "" {
+		response.Error(ctx, 400, "user_id is required")
+		return
+	}
+
+	teams, err := h.service.GetTeamsJoinedByUser(userID)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, teams)
+}

@@ -20,4 +20,9 @@ func (r *TeamMembersRoute) RegisterRoutes(router *gin.Engine) {
 		group.DELETE("/delete", r.handler.DeleteMember)
 		group.PUT("/update", r.handler.UpdateMemberRole)
 	}
+	group1 := router.Group("/teams")
+	{
+		group1.GET("/joined/:user_id", r.handler.GetTeamsJoinedByUser)
+	}
+
 }
