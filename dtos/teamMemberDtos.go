@@ -24,3 +24,16 @@ type UserJoinedTeamResponse struct {
 	Name   string `json:"name"`
 	Role   string `json:"role"`
 }
+
+type TeamMemberUserResponse struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+type TeamMembersResponse struct {
+	Users    []TeamMemberUserResponse `json:"users"`
+	Page     int                      `json:"page"`
+	PageSize int                      `json:"page_size"`
+	Total    int64                    `json:"total"`
+}

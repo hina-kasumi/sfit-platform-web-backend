@@ -24,5 +24,6 @@ func (r *TeamMembersRoute) RegisterRoutes(router *gin.Engine) {
 	{
 		group1.GET("/joined/:user_id", r.handler.GetTeamsJoinedByUser)
 	}
+	router.GET("/teams/member", r.handler.GetTeamMembers)
 
 }

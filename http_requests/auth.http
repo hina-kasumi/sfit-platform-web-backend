@@ -88,3 +88,11 @@ Content-Type: application/json
 
 }
 
+### Lấy thành viên trong bang theo trang và theo số người trong 1 trang
+GET http://localhost:8080/teams/member?teamid=2afb1438-723f-4317-9fff-71eb0a1c75e7&page=1&pageSize=10
+Content-Type: application/json
+
+{
+
+}
+

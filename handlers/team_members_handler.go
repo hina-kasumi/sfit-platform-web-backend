@@ -5,6 +5,7 @@ import (
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
+	"strconv"
 	"time"
 )
 
@@ -101,4 +102,33 @@ func (h *TeamMembersHandler) GetTeamsJoinedByUser(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, teams)
+}
+
+func (h *TeamMembersHandler) GetTeamMembers(ctx *gin.Context) {
+	teamID := ctx.Query("teamid")
+	pageStr := ctx.Query("page")
+	pageSizeStr := ctx.Query("pageSize")
+
+	if teamID == "" {
+		response.Error(ctx, 400, "teamid query parameter is required")
+		return
+	}
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	result, err := h.service.GetMembers(teamID, page, pageSize)
+	if err != nil {
+		response.Error(ctx, 500, err.Error())
+		return
+	}
+
+	response.Success(ctx, result)
 }

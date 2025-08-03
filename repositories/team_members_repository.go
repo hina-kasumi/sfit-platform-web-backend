@@ -60,3 +60,24 @@ func (r *TeamMembersRepository) FindTeamsByUserID(userID uuid.UUID) ([]dtos.User
 	}
 	return results, nil
 }
+
+func (r *TeamMembersRepository) FindMembersByTeamID(teamID string, page, pageSize int) (members []dtos.TeamMemberUserResponse, total int64, err error) {
+	offset := (page - 1) * pageSize
+
+	err = r.db.Table("team_members").
+		Where("team_id = ?", teamID).
+		Count(&total).Error
+	if err != nil {
+		return
+	}
+
+	err = r.db.Table("team_members tm").
+		Select("u.id, u.username, u.email").
+		Joins("JOIN users u ON tm.user_id = u.id").
+		Where("tm.team_id = ?", teamID).
+		Offset(offset).
+		Limit(pageSize).
+		Scan(&members).Error
+
+	return
+}
