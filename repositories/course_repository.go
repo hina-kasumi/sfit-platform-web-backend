@@ -100,7 +100,7 @@ func (r *CourseRepository) getCoursesList(filter dtos.CourseFilter, pageSize, of
 	var rawCourses []dtos.CourseRaw
 
 	query, args := r.buildCoursesQuery(filter, pageSize, offset)
-	
+
 	err := r.db.Raw(query, args...).Scan(&rawCourses).Error
 	if err != nil {
 		return nil, err
@@ -314,7 +314,14 @@ func (r *CourseRepository) buildCountWhereConditions(filter dtos.CourseFilter) (
 // getCourseBasicInfo retrieves basic course information
 func (r *CourseRepository) getCourseBasicInfo(courseID, userID string) (*dtos.CourseDetailResponse, error) {
 	var courseRaw dtos.CourseDetailRaw
-
+	// COALESCE(SUM(
+	// 	CASE 
+	// 		WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
+	// 		WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int  
+	// 		WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
+	// 		ELSE 0
+	// 	END
+	// ), 0) as total_time
 	query := `
 		WITH course_stats AS (
 			SELECT 
@@ -326,20 +333,13 @@ func (r *CourseRepository) getCourseBasicInfo(courseID, userID string) (*dtos.Co
 				array_to_json(c.teachers) as teachers,
 				array_to_json(c.target) as target,
 				array_to_json(c.require) as require,
+				c.total_time,
 				c.language,
 				c.update_at,
 				CASE WHEN fc.user_id IS NOT NULL THEN true ELSE false END as like,
 				COALESCE(AVG(ur.star), 0) as star,
 				COUNT(DISTINCT uc.user_id) as total_registered,
-				COUNT(DISTINCT l.id) as total_lessons,
-				COALESCE(SUM(
-					CASE 
-						WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
-						WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int  
-						WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
-						ELSE 0
-					END
-				), 0) as total_time
+				COUNT(DISTINCT l.id) as total_lessons
 			FROM courses c
 			LEFT JOIN favorite_courses fc ON c.id = fc.course_id AND fc.user_id = $2::uuid
 			LEFT JOIN user_rates ur ON c.id = ur.courses_id
@@ -389,17 +389,17 @@ func (r *CourseRepository) getCourseBasicInfo(courseID, userID string) (*dtos.Co
 // transformCourseDetail converts raw course data to response DTO
 func (r *CourseRepository) transformCourseDetail(raw dtos.CourseDetailRaw) (*dtos.CourseDetailResponse, error) {
 	course := &dtos.CourseDetailResponse{
-		Title:           raw.Title,
-		Description:     raw.Description,
-		Like:            raw.Like,
-		Type:            raw.Type,
-		Level:           raw.Level,
-		Star:            raw.Star,
-		TotalLessons:    raw.TotalLessons,
-		TotalTime:       raw.TotalTime,
-		TotalRegitered:  raw.TotalRegistered,
-		UpdatedAt:       raw.UpdatedAt,
-		Language:        raw.Language,
+		Title:          raw.Title,
+		Description:    raw.Description,
+		Like:           raw.Like,
+		Type:           raw.Type,
+		Level:          raw.Level,
+		Star:           raw.Star,
+		TotalTime:      raw.TotalTime,
+		TotalLessons:   raw.TotalLessons,
+		TotalRegitered: raw.TotalRegistered,
+		UpdatedAt:      raw.UpdatedAt,
+		Language:       raw.Language,
 	}
 
 	// Unmarshal JSON arrays
@@ -435,7 +435,7 @@ func (r *CourseRepository) getCourseContent(courseID, userID string) ([]dtos.Cou
 	type ModuleRaw struct {
 		ID          string `json:"id"`
 		ModuleTitle string `json:"module_title"`
-		TotalTime   int    `json:"total_time"`
+		// TotalTime   int    `json:"total_time"`
 	}
 
 	var modules []ModuleRaw
@@ -443,20 +443,28 @@ func (r *CourseRepository) getCourseContent(courseID, userID string) ([]dtos.Cou
 	moduleQuery := `
 		SELECT 
 			m.id,
-			m.module_title,
-			COALESCE(SUM(
-				CASE 
-					WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
-					WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
-					WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
-					ELSE 0
-				END
-			), 0) as total_time
+			m.module_title
 		FROM modules m
-		LEFT JOIN lessons l ON m.id = l.module_id
 		WHERE m.course_id = $1::uuid
-		GROUP BY m.id, m.module_title
 		ORDER BY m.create_at ASC`
+
+	// moduleQuery := `
+	// 	SELECT 
+	// 		m.id,
+	// 		m.module_title,
+	// 		COALESCE(SUM(
+	// 			CASE 
+	// 				WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
+	// 				WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
+	// 				WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
+	// 				ELSE 0
+	// 			END
+	// 		), 0) as total_time
+	// 	FROM modules m
+	// 	LEFT JOIN lessons l ON m.id = l.module_id
+	// 	WHERE m.course_id = $1::uuid
+	// 	GROUP BY m.id, m.module_title
+	// 	ORDER BY m.create_at ASC`
 
 	err := r.db.Raw(moduleQuery, courseID).Scan(&modules).Error
 	if err != nil {
@@ -474,8 +482,8 @@ func (r *CourseRepository) getCourseContent(courseID, userID string) ([]dtos.Cou
 		courseContent = append(courseContent, dtos.CourseContentResponse{
 			ID:          module.ID,
 			ModuleTitle: module.ModuleTitle,
-			TotalTime:   module.TotalTime,
-			Lessons:     lessons,
+			// TotalTime:   module.TotalTime,
+			Lessons: lessons,
 		})
 	}
 

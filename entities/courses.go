@@ -23,6 +23,7 @@ type Course struct {
 	Require     []string  `gorm:"type:text[]"`
 	Teachers    []string  `gorm:"type:text[]"`
 	Language    string    `gorm:"type:varchar"`
+	TotalTime   int       `gorm:"column:total_time;default:0"` // đơn vị: giây hoặc phút
 	Certificate bool      `gorm:"type:boolean"`
 	Level       string    `gorm:"type:varchar;check:level in ('Beginner', 'Intermediate', 'Advanced')"`
 	CreatedAt   time.Time `gorm:"column:create_at"`

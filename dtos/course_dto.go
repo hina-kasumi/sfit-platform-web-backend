@@ -51,7 +51,7 @@ type CourseGeneralInformationResponse struct {
 	Type           string   `json:"type"`
 	Teachers       []string `json:"teachers"`
 	NumberLessons  int      `json:"numberLessons"`
-	TimeLearn      int      `json:"timeLearning"`
+	TimeLearn      int      `json:"timeLearned"`
 	Rate           float64  `json:"rate"`
 	Tags           []string `json:"tags"`
 	LearnedLessons int      `json:"learnedLessons"`
@@ -70,7 +70,7 @@ type CourseDetailResponse struct {
 	Tags           []string                `json:"tags"`
 	Target         []string                `json:"target"`
 	Require        []string                `json:"require"`
-	TotalTime      int                     `json:"total_time"`
+	TotalTime      int                     `json:"total_time"` // total time in seconds
 	TotalRegitered int                     `json:"total_registered"`
 	UpdatedAt      time.Time               `json:"updated_at"`
 	Language       string                  `json:"language"`
@@ -81,7 +81,7 @@ type CourseDetailResponse struct {
 type CourseContentResponse struct {
 	ID          string           `json:"id"`
 	ModuleTitle string           `json:"module_title"`
-	TotalTime   int              `json:"total_time"`
+	// TotalTime   int              `json:"total_time"`
 	Lessons     []LessonResponse `json:"lessons"`
 }
 
