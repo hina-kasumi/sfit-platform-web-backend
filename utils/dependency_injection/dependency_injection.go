@@ -20,11 +20,16 @@ type DI struct {
 	CourseRepo   *repositories.CourseRepository
 	TagTempRepo *repositories.TagTempRepository
 
+	TagRepo         *repositories.TagRepository
+	TeamRepo        *repositories.TeamRepository
+	TeamMembersRepo *repositories.TeamMembersRepository
 	EventRepo       *repositories.EventRepository
 	UserProfileRepo *repositories.UserProfileRepository
-
 	// service
 	UserService        *services.UserService
+	TagService         *services.TagService
+	TeamService        *services.TeamService
+	TeamMembersService *services.TeamMembersService
 	RedisService       *services.RedisService
 	JwtService         *services.JwtService
 	RefreshService     *services.RefreshTokenService
@@ -35,11 +40,13 @@ type DI struct {
 
 	EventService       *services.EventService
 	UserProfileService *services.UserProfileService
-
 	//handler
 	BaseHandler        *handlers.BaseHandler
 	AuthHandler        *handlers.AuthHandler
 	CourseHandler *handlers.CourseHandler
+	TagHandler         *handlers.TagHandler
+	TeamHandler        *handlers.TeamHandler
+	TeamMembersHandler *handlers.TeamMembersHandler
 	EventHandler       *handlers.EventHandler
 	UserProfileHandler *handlers.UserProfileHandler
 	UserHandler        *handlers.UserHandler
@@ -56,11 +63,17 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	userRateRepo := repositories.NewUserRateRepository(db)
 	lessonAttendanceRepo := repositories.NewLessonAttendanceRepository(db)
 	moduleRepo := repositories.NewModuleRepository(db)
+	tagRepo := repositories.NewTagRepository(db)
+	teamRepo := repositories.NewTeamRepository(db)
+	teamMembersRepo := repositories.NewTeamMembersRepository(db)
 	eventRepo := repositories.NewEventRepository(db)
 	userProfileRepo := repositories.NewUserProfileRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
+	tagSer := services.NewTagService(tagRepo)
+	teamSer := services.NewTeamService(teamRepo)
+	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
@@ -75,19 +88,32 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer, tagSer, tagTempSer)
+	tagHandler := handlers.NewTagHandler(baseHandler, tagSer)
+	teamHandler := handlers.NewTeamHandler(baseHandler, teamSer)
+	teamMembersHandler := handlers.NewTeamMembersHandler(handlers.NewBaseHandler(), teamMembersService)
 	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
 	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
 	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 
 	return &DI{
-		UserRepo:           userRepo,
-		EventRepo:          eventRepo,
+		UserRepo:        userRepo,
+		TagRepo:         tagRepo,
+		TeamRepo:        teamRepo,
+		TeamMembersRepo: teamMembersRepo,
+		EventRepo:       eventRepo,
+		UserProfileRepo: userProfileRepo,
+
 		UserService:        userSer,
+		TagService:         tagSer,
+		TeamService:        teamSer,
+		TeamMembersService: teamMembersService,
 		RedisService:       redisSer,
 		JwtService:         jwtSer,
 		RefreshService:     refreshSer,
 		AuthService:        authSer,
 		EventService:       eventSer,
+		UserProfileService: profileSer,
+
 		BaseHandler:        baseHandler,
 		AuthHandler:        authHandler,
 
@@ -98,10 +124,11 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		TagTempRepo:   tagTempRepo,
 		TagTempService: tagTempSer,
 		CourseHandler:  courseHandler,
+		TagHandler:         tagHandler,
+		TeamHandler:        teamHandler,
+		TeamMembersHandler: teamMembersHandler,
 		EventHandler:       eventHandler,
-		UserProfileService: profileSer,
 		UserProfileHandler: profileHandler,
 		UserHandler:        userHandler,
-		UserProfileRepo:    userProfileRepo,
 	}
 }
