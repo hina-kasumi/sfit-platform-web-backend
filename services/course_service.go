@@ -11,36 +11,42 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	minPage     = 1
+	maxPageSize = 100
+	defaultSize = 20
+)
+
 type CourseService struct {
-	user_repo             *repositories.UserRepository
-	course_repo           *repositories.CourseRepository
-	lesson_repo           *repositories.LessonRepository
-	tagTemp_repo          *repositories.TagTempRepository
-	userCourse_repo       *repositories.UserCourseRepository
-	userRate_repo         *repositories.UserRateRepository
-	lessonAttendance_repo *repositories.LessonAttendanceRepository
-	module_repo           *repositories.ModuleRepository
+	userRepo             *repositories.UserRepository
+	courseRepo           *repositories.CourseRepository
+	lessonRepo           *repositories.LessonRepository
+	tagTempRepo          *repositories.TagTempRepository
+	userCourseRepo       *repositories.UserCourseRepository
+	userRateRepo         *repositories.UserRateRepository
+	lessonAttendanceRepo *repositories.LessonAttendanceRepository
+	moduleRepo           *repositories.ModuleRepository
 }
 
 func NewCourseService(
-	user_repo *repositories.UserRepository,
-	course_repo *repositories.CourseRepository,
-	lesson_repo *repositories.LessonRepository,
-	tagTemp_repo *repositories.TagTempRepository,
-	userCourse_repo *repositories.UserCourseRepository,
-	userRate_repo *repositories.UserRateRepository,
-	lessonAttendance_repo *repositories.LessonAttendanceRepository,
-	module_repo *repositories.ModuleRepository,
+	userRepo *repositories.UserRepository,
+	courseRepo *repositories.CourseRepository,
+	lessonRepo *repositories.LessonRepository,
+	tagTempRepo *repositories.TagTempRepository,
+	userCourseRepo *repositories.UserCourseRepository,
+	userRateRepo *repositories.UserRateRepository,
+	lessonAttendanceRepo *repositories.LessonAttendanceRepository,
+	moduleRepo *repositories.ModuleRepository,
 ) *CourseService {
 	return &CourseService{
-		user_repo:             user_repo,
-		course_repo:           course_repo,
-		lesson_repo:           lesson_repo,
-		tagTemp_repo:          tagTemp_repo,
-		userCourse_repo:       userCourse_repo,
-		userRate_repo:         userRate_repo,
-		lessonAttendance_repo: lessonAttendance_repo,
-		module_repo:           module_repo,
+		userRepo:             userRepo,
+		courseRepo:           courseRepo,
+		lessonRepo:           lessonRepo,
+		tagTempRepo:          tagTempRepo,
+		userCourseRepo:       userCourseRepo,
+		userRateRepo:         userRateRepo,
+		lessonAttendanceRepo: lessonAttendanceRepo,
+		moduleRepo:           moduleRepo,
 	}
 }
 
@@ -64,87 +70,88 @@ func (s *CourseService) CreateCourse(
 		Level:       level,
 		CreatedAt:   time.Now(),
 	}
-	if err := s.course_repo.CreateNewCourse(&course); err != nil {
+	if err := s.courseRepo.CreateNewCourse(&course); err != nil {
 		return uuid.Nil, time.Time{}, err
 	}
 	return course.ID, course.CreatedAt, nil
 }
 
-const minPage = 1
-const maxPageSize = 100
+// validatePagination ensures page and pageSize are in valid range
+func validatePagination(page, pageSize int) (int, int) {
+	if page < minPage {
+		page = minPage
+	}
+	if pageSize < minPage || pageSize > maxPageSize {
+		pageSize = defaultSize
+	}
+	return page, pageSize
+}
 
-func (s *CourseService) GetListCourse(userID string, page, pageSize int, title string, onlyRegisted bool, courseType, level string) (*dtos.CourseListResponse, error) {
-	// Validate user exists - REQUIRED
-	if _, err := s.user_repo.GetUserByID(userID); err != nil {
+func (s *CourseService) GetListCourse(
+	userID string,
+	page, pageSize int,
+	title string,
+	onlyRegistered bool,
+	courseType, level string,
+) (*dtos.CourseListResponse, error) {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
 		return nil, fmt.Errorf("user not found or unauthorized: %w", err)
 	}
 
-	// Validate pagination parameters
-	if page < minPage {
-		page = 1
-	}
-	if pageSize < minPage || pageSize > maxPageSize {
-		pageSize = 20 // Default page size
-	}
+	// Sanitize pagination
+	page, pageSize = validatePagination(page, pageSize)
 	offset := (page - 1) * pageSize
 
-	// Build filter với required userID
-	id, err := uuid.Parse(userID)
+	// Build filter
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
 	filter := dtos.CourseFilter{
 		Title:        strings.TrimSpace(title),
-		OnlyRegisted: onlyRegisted,
+		OnlyRegisted: onlyRegistered,
 		CourseType:   strings.TrimSpace(courseType),
 		Level:        strings.TrimSpace(level),
-		UserID:       id,
+		UserID:       parsedUserID,
 		Page:         page,
 		PageSize:     pageSize,
 	}
 
-	// Get courses với user-specific data
-	courses, total, err := s.course_repo.GetCourses(filter, pageSize, offset)
+	// Query course list
+	courses, total, err := s.courseRepo.GetCourses(filter, pageSize, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get courses: %w", err)
 	}
 
-	// Calculate pagination info
-	// totalPages := (int(total) + pageSize - 1) / pageSize
+	totalPages := (int(total) + pageSize - 1) / pageSize
 
 	return &dtos.CourseListResponse{
 		Courses: courses,
 		Pagination: dtos.PaginationResponse{
 			CurrentPage:  page,
-			TotalPages:   pageSize,
+			TotalPages:   totalPages,
 			TotalCourses: total,
 		},
 	}, nil
 }
 
 func (s *CourseService) GetMyCourses(userID string, page, pageSize int, title, courseType, level string) (*dtos.CourseListResponse, error) {
-	// Validate user exists
-	if _, err := s.user_repo.GetUserByID(userID); err != nil {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
-
-	// Validate pagination
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
-	}
-
-	// Force onlyRegisted = true for "my courses"
+	// Only registered courses
 	return s.GetListCourse(userID, page, pageSize, title, true, courseType, level)
 }
 
 func (s *CourseService) GetCourseDetailByID(courseID string, userID string) (*dtos.CourseDetailResponse, error) {
-	// Validate user exists
-	if _, err := s.user_repo.GetUserByID(userID); err != nil {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
 
-	// Get course by ID
-	course, err := s.course_repo.GetCourseByID(courseID, userID)
+	course, err := s.courseRepo.GetCourseByID(courseID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("course not found: %w", err)
 	}
