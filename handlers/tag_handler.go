@@ -23,5 +23,5 @@ func (h *TagHandler) GetAllTags(ctx *gin.Context) {
 	if h.isError(ctx, err) {
 		return
 	}
-	response.Success(ctx, tags)
+	response.Success(ctx, "", tags)
 }

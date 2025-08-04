@@ -43,7 +43,7 @@ func (h *TeamMembersHandler) AddMember(ctx *gin.Context) {
 		ID:        member.UserID.String() + "_" + member.TeamID.String(),
 		CreatedAt: member.CreatedAt.Format(time.RFC3339),
 	}
-	response.Success(ctx, res)
+	response.Success(ctx, "add member success", res)
 }
 
 func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
@@ -64,7 +64,7 @@ func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, gin.H{"message": "Member removed from team successfully"})
+	response.Success(ctx, "success", gin.H{"message": "Member removed from team successfully"})
 }
 
 func (h *TeamMembersHandler) UpdateMemberRole(ctx *gin.Context) {
@@ -83,7 +83,7 @@ func (h *TeamMembersHandler) UpdateMemberRole(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, gin.H{
+	response.Success(ctx, "success", gin.H{
 		"message":   "Role updated successfully",
 		"updatedAt": time.Now().Format(time.RFC3339),
 	})
@@ -101,7 +101,7 @@ func (h *TeamMembersHandler) GetTeamsJoinedByUser(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, teams)
+	response.Success(ctx, "Get team success", teams)
 }
 
 func (h *TeamMembersHandler) GetTeamMembers(ctx *gin.Context) {
@@ -130,5 +130,5 @@ func (h *TeamMembersHandler) GetTeamMembers(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, result)
+	response.Success(ctx, "Get team member success", result)
 }

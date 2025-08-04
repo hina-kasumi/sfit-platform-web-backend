@@ -35,7 +35,7 @@ func (h *TeamHandler) CreateTeam(ctx *gin.Context) {
 		ID:       team.ID,
 		CreateAt: team.CreatedAt.Format(time.RFC3339),
 	}
-	response.Success(ctx, res)
+	response.Success(ctx, "create team suss", res)
 }
 
 func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
@@ -52,5 +52,5 @@ func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
 	res := dtos.UpdateTeamResponse{
 		UpdatedAt: updatedTeam.UpdatedAt.Format(time.RFC3339),
 	}
-	response.Success(ctx, res)
+	response.Success(ctx, "update success", res)
 }
