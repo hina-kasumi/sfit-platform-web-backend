@@ -14,7 +14,7 @@ func NewTeamRoute(teamHandler *handlers.TeamHandler) *TeamRoute {
 }
 
 func (r *TeamRoute) RegisterRoutes(router *gin.Engine) {
-	group := router.Group("/teams")
+	group := router.Group("/team")
 	{
 		group.POST("", r.teamHandler.CreateTeam)
 		group.PUT("", r.teamHandler.UpdateTeam)

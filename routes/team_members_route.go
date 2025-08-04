@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"sfit-platform-web-backend/handlers"
+
+	"github.com/gin-gonic/gin"
 )
 
 type TeamMembersRoute struct {
@@ -14,16 +15,16 @@ func NewTeamMembersRoute(handler *handlers.TeamMembersHandler) *TeamMembersRoute
 }
 
 func (r *TeamMembersRoute) RegisterRoutes(router *gin.Engine) {
-	group := router.Group("/teams/:team_id/team_members")
+	group := router.Group("/team-member")
 	{
-		group.POST("/new", r.handler.AddMember)
-		group.DELETE("/delete", r.handler.DeleteMember)
-		group.PUT("/update", r.handler.UpdateMemberRole)
+		group.POST("", r.handler.AddMember)
+		group.DELETE("/:team_id/:user_id", r.handler.DeleteMember)
+		group.PUT("", r.handler.UpdateMemberRole)
 	}
-	group1 := router.Group("/teams")
+	group1 := router.Group("/team")
 	{
 		group1.GET("/joined/:user_id", r.handler.GetTeamsJoinedByUser)
 	}
-	router.GET("/teams/member", r.handler.GetTeamMembers)
+	router.GET("/team/member", r.handler.GetTeamMembers)
 
 }

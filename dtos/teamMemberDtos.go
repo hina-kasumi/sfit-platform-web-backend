@@ -1,6 +1,7 @@
 package dtos
 
 type AddTeamMemberRequest struct {
+	TeamID string `json:"team_id" binding:"required"`
 	UserID string `json:"user_id" binding:"required"`
 	Role   string `json:"role" binding:"required"`
 }
@@ -10,11 +11,8 @@ type AddTeamMemberResponse struct {
 	CreatedAt string `json:"create_at"`
 }
 
-type DeleteTeamMemberRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 type UpdateTeamMemberRequest struct {
+	TeamID string `json:"team_id" binding:"required"`
 	UserID string `json:"user_id" binding:"required"`
 	Role   string `json:"role" binding:"required"`
 }

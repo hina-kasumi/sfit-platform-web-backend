@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type TeamMembersHandler struct {
@@ -24,17 +25,11 @@ func NewTeamMembersHandler(base *BaseHandler, srv *services.TeamMembersService) 
 func (h *TeamMembersHandler) AddMember(ctx *gin.Context) {
 	var req dtos.AddTeamMemberRequest
 
-	teamID := ctx.Param("team_id")
-	if teamID == "" {
-		response.Error(ctx, 400, "team_id is required in URL")
-		return
-	}
-
 	if !h.canBindJSON(ctx, &req) {
 		return
 	}
 
-	member, err := h.service.AddMember(req.UserID, teamID, req.Role)
+	member, err := h.service.AddMember(req.UserID, req.TeamID, req.Role)
 	if h.isError(ctx, err) {
 		return
 	}
@@ -47,19 +42,19 @@ func (h *TeamMembersHandler) AddMember(ctx *gin.Context) {
 }
 
 func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
-	var req dtos.DeleteTeamMemberRequest
-
 	teamID := ctx.Param("team_id")
 	if teamID == "" {
 		response.Error(ctx, 400, "team_id is required in URL")
 		return
 	}
 
-	if !h.canBindJSON(ctx, &req) {
+	userID := ctx.Param("user_id")
+	if userID == "" {
+		response.Error(ctx, 400, "user_id is required in URL")
 		return
 	}
 
-	err := h.service.DeleteMember(req.UserID, teamID)
+	err := h.service.DeleteMember(userID, teamID)
 	if h.isError(ctx, err) {
 		return
 	}
@@ -69,16 +64,11 @@ func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
 
 func (h *TeamMembersHandler) UpdateMemberRole(ctx *gin.Context) {
 	var req dtos.UpdateTeamMemberRequest
-	teamID := ctx.Param("team_id")
-	if teamID == "" {
-		response.Error(ctx, 400, "team_id is required in URL")
-		return
-	}
 	if !h.canBindJSON(ctx, &req) {
 		return
 	}
 
-	err := h.service.UpdateMemberRole(req.UserID, teamID, req.Role)
+	err := h.service.UpdateMemberRole(req.UserID, req.TeamID, req.Role)
 	if h.isError(ctx, err) {
 		return
 	}

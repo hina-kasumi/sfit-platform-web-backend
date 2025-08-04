@@ -1,11 +1,12 @@
 package repositories
 
 import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"sfit-platform-web-backend/dtos"
 	entities "sfit-platform-web-backend/entities"
 	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type TeamMembersRepository struct {
@@ -56,7 +57,10 @@ func (r *TeamMembersRepository) FindTeamsByUserID(userID uuid.UUID) ([]dtos.User
 		Scan(&results).Error
 
 	if err != nil {
-		return nil, err
+		return []dtos.UserJoinedTeamResponse{}, err
+	}
+	if results == nil {
+		return []dtos.UserJoinedTeamResponse{}, nil
 	}
 	return results, nil
 }
@@ -78,6 +82,10 @@ func (r *TeamMembersRepository) FindMembersByTeamID(teamID string, page, pageSiz
 		Offset(offset).
 		Limit(pageSize).
 		Scan(&members).Error
+
+	if members == nil {
+		members = []dtos.TeamMemberUserResponse{}
+	}
 
 	return
 }
