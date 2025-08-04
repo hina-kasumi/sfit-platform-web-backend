@@ -124,4 +124,4 @@ func (eventSer *EventService) GetEventRegisted(page int, size int, eventID strin
 
 func (eventSer *EventService) CheckRegisted(userID string, event entities.Event) (bool, error) {
 	return eventSer.eventRepo.CheckRegisted(userID, event)
-}events
+}
