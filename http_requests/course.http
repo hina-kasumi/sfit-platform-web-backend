@@ -1,0 +1,49 @@
+### Tạo khóa học
+POST http://localhost:8080/course
+Content-Type: application/json
+
+{
+  "title": "Full Stack Web Development với Go và React 3",
+  "description": "Khóa học toàn diện về phát triển web với Go backend và React frontend.",
+  "type": "Web Development",
+  "targets": [
+    "Hiểu được kiến trúc REST API",
+    "Xây dựng backend với Go và Gin framework",
+    "Tích hợp cơ sở dữ liệu PostgreSQL",
+    "Phát triển frontend với React",
+    "Deploy ứng dụng lên cloud"
+  ],
+  "requires": [
+    "Kiến thức cơ bản về lập trình",
+    "Hiểu biết về HTML, CSS, JavaScript",
+    "Máy tính có kết nối internet"
+  ],
+  "teachers": [
+    "Nguyễn Văn A",
+    "Trần Thị B"
+  ],
+  "language": "Vietnamese",
+  "certificate": true,
+  "level": "Intermediate",
+  "tags": [
+    "golang",
+    "react",
+    "postgresql",
+    "rest-api",
+    "fullstack"
+  ]
+}
+
+###
+
+### Lấy danh sách khóa học
+GET http://localhost:8080/course?page=1&pageSize=1
+Content-Type: application/json
+
+###
+
+### Xem chi tiết 1 khóa học
+GET http://localhost:8080/course/{course_id}
+Content-Type: application/json
+
+###
