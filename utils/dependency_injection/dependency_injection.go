@@ -10,29 +10,39 @@ import (
 	"gorm.io/gorm"
 )
 
+// Struct 'DI'sẽ chứa tất cả các thành phần được inject,
+// giúp gom tất cả lại một chỗ để dễ quản lý và tái sử dụng ở mọi nơi trong ứng dụng.
+// ví dụ: nếu bạn muốn sử dụng một service trong nhiều handler, bạn chỉ cần inject service vào handler đó thôi.
 type DI struct {
 	//repository
-	UserRepo *repositories.UserRepository
+	UserRepo        *repositories.UserRepository
 	TagRepo      *repositories.TagRepository
 	CourseRepo   *repositories.CourseRepository
 	TagTempRepo *repositories.TagTempRepository
 
+	EventRepo       *repositories.EventRepository
+	UserProfileRepo *repositories.UserProfileRepository
 
 	// service
-	UserService    *services.UserService
-	RedisService   *services.RedisService
-	JwtService     *services.JwtService
-	RefreshService *services.RefreshTokenService
-	AuthService    *services.AuthService
+	UserService        *services.UserService
+	RedisService       *services.RedisService
+	JwtService         *services.JwtService
+	RefreshService     *services.RefreshTokenService
+	AuthService        *services.AuthService
 	TagService     *services.TagService
 	CourseService  *services.CourseService
 	TagTempService *services.TagTempService
 
+	EventService       *services.EventService
+	UserProfileService *services.UserProfileService
 
 	//handler
-	BaseHandler *handlers.BaseHandler
-	AuthHandler *handlers.AuthHandler
+	BaseHandler        *handlers.BaseHandler
+	AuthHandler        *handlers.AuthHandler
 	CourseHandler *handlers.CourseHandler
+	EventHandler       *handlers.EventHandler
+	UserProfileHandler *handlers.UserProfileHandler
+	UserHandler        *handlers.UserHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -46,6 +56,8 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	userRateRepo := repositories.NewUserRateRepository(db)
 	lessonAttendanceRepo := repositories.NewLessonAttendanceRepository(db)
 	moduleRepo := repositories.NewModuleRepository(db)
+	eventRepo := repositories.NewEventRepository(db)
+	userProfileRepo := repositories.NewUserProfileRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
@@ -56,21 +68,28 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	tagSer := services.NewTagService(tagRepo)
 	tagTempSer := services.NewTagTempService(tagTempRepo)
 	courseSer := services.NewCourseService(userRepo, courseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
+	eventSer := services.NewEventService(eventRepo)
+	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer, tagSer, tagTempSer)
+	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
+	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
+	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 
 	return &DI{
-		UserRepo:       userRepo,
-		UserService:    userSer,
-		RedisService:   redisSer,
-		JwtService:     jwtSer,
-		RefreshService: refreshSer,
-		AuthService:    authSer,
-		BaseHandler:    baseHandler,
-		AuthHandler:    authHandler,
+		UserRepo:           userRepo,
+		EventRepo:          eventRepo,
+		UserService:        userSer,
+		RedisService:       redisSer,
+		JwtService:         jwtSer,
+		RefreshService:     refreshSer,
+		AuthService:        authSer,
+		EventService:       eventSer,
+		BaseHandler:        baseHandler,
+		AuthHandler:        authHandler,
 
 		TagRepo:       tagRepo,
 		TagService:    tagSer,
@@ -79,5 +98,10 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		TagTempRepo:   tagTempRepo,
 		TagTempService: tagTempSer,
 		CourseHandler:  courseHandler,
+		EventHandler:       eventHandler,
+		UserProfileService: profileSer,
+		UserProfileHandler: profileHandler,
+		UserHandler:        userHandler,
+		UserProfileRepo:    userProfileRepo,
 	}
 }

@@ -37,6 +37,14 @@ func (bh *BaseHandler) canBindJSON(ctx *gin.Context, dto any) bool {
 	return true
 }
 
+func (bh *BaseHandler) canBindQuery(ctx *gin.Context, dto any) bool {
+	if err := ctx.ShouldBindQuery(dto); err != nil {
+		response.Error(ctx, 400, "Invalid input")
+		return false
+	}
+	return true
+}
+
 func (bh *BaseHandler) isNilOrWhiteSpaceWithMessage(ctx *gin.Context, dto any, message string) bool {
 	if dto == nil {
 		response.Error(ctx, 400, message)

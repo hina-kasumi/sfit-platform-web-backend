@@ -77,3 +77,22 @@ func (ur *UserRepository) DeleteUser(id string) error {
 	}
 	return nil
 }
+
+func (ur *UserRepository) GetUserList(page, pageSize int) ([]entities.Users, int64, error) {
+	var users []entities.Users
+	var total int64
+
+	offset := (page - 1) * pageSize
+
+	result := ur.db.Model(&entities.Users{}).Count(&total)
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+
+	result = ur.db.Limit(pageSize).Offset(offset).Find(&users)
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+
+	return users, total, nil
+}
