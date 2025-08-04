@@ -15,9 +15,8 @@ import (
 // ví dụ: nếu bạn muốn sử dụng một service trong nhiều handler, bạn chỉ cần inject service vào handler đó thôi.
 type DI struct {
 	//repository
-	UserRepo        *repositories.UserRepository
-	TagRepo      *repositories.TagRepository
-	CourseRepo   *repositories.CourseRepository
+	UserRepo    *repositories.UserRepository
+	CourseRepo  *repositories.CourseRepository
 	TagTempRepo *repositories.TagTempRepository
 
 	TagRepo         *repositories.TagRepository
@@ -27,23 +26,22 @@ type DI struct {
 	UserProfileRepo *repositories.UserProfileRepository
 	// service
 	UserService        *services.UserService
-	TagService         *services.TagService
 	TeamService        *services.TeamService
 	TeamMembersService *services.TeamMembersService
 	RedisService       *services.RedisService
 	JwtService         *services.JwtService
 	RefreshService     *services.RefreshTokenService
 	AuthService        *services.AuthService
-	TagService     *services.TagService
-	CourseService  *services.CourseService
-	TagTempService *services.TagTempService
+	TagService         *services.TagService
+	CourseService      *services.CourseService
+	TagTempService     *services.TagTempService
 
 	EventService       *services.EventService
 	UserProfileService *services.UserProfileService
 	//handler
 	BaseHandler        *handlers.BaseHandler
 	AuthHandler        *handlers.AuthHandler
-	CourseHandler *handlers.CourseHandler
+	CourseHandler      *handlers.CourseHandler
 	TagHandler         *handlers.TagHandler
 	TeamHandler        *handlers.TeamHandler
 	TeamMembersHandler *handlers.TeamMembersHandler
@@ -63,7 +61,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	userRateRepo := repositories.NewUserRateRepository(db)
 	lessonAttendanceRepo := repositories.NewLessonAttendanceRepository(db)
 	moduleRepo := repositories.NewModuleRepository(db)
-	tagRepo := repositories.NewTagRepository(db)
 	teamRepo := repositories.NewTeamRepository(db)
 	teamMembersRepo := repositories.NewTeamMembersRepository(db)
 	eventRepo := repositories.NewEventRepository(db)
@@ -78,7 +75,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
-	tagSer := services.NewTagService(tagRepo)
 	tagTempSer := services.NewTagTempService(tagTempRepo)
 	courseSer := services.NewCourseService(userRepo, courseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
 	eventSer := services.NewEventService(eventRepo)
@@ -102,6 +98,8 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		TeamMembersRepo: teamMembersRepo,
 		EventRepo:       eventRepo,
 		UserProfileRepo: userProfileRepo,
+		CourseRepo:      courseRepo,
+		TagTempRepo:     tagTempRepo,
 
 		UserService:        userSer,
 		TagService:         tagSer,
@@ -113,17 +111,12 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		AuthService:        authSer,
 		EventService:       eventSer,
 		UserProfileService: profileSer,
+		CourseService:      courseSer,
 
 		BaseHandler:        baseHandler,
 		AuthHandler:        authHandler,
-
-		TagRepo:       tagRepo,
-		TagService:    tagSer,
-		CourseRepo:    courseRepo,
-		CourseService: courseSer,
-		TagTempRepo:   tagTempRepo,
-		TagTempService: tagTempSer,
-		CourseHandler:  courseHandler,
+		TagTempService:     tagTempSer,
+		CourseHandler:      courseHandler,
 		TagHandler:         tagHandler,
 		TeamHandler:        teamHandler,
 		TeamMembersHandler: teamMembersHandler,

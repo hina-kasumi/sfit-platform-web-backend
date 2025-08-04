@@ -3,34 +3,20 @@ package services
 import (
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
-)
-
-type TagService struct {
-	tagRepo *repositories.TagRepository
-}
-
-func NewTagService(tag_repo *repositories.TagRepository) *TagService {
-	return &TagService{tagRepo: tag_repo}
-}
-
-func (service *TagService) GetAll() ([]entities.Tag, error) {
-	return service.tagRepo.FindAll()
-}
-package services
-
-import (
-	"sfit-platform-web-backend/entities"
-	"sfit-platform-web-backend/repositories"
 
 	"gorm.io/gorm"
 )
 
 type TagService struct {
-    tag_repo *repositories.TagRepository
+	tag_repo *repositories.TagRepository
 }
 
 func NewTagService(tag_repo *repositories.TagRepository) *TagService {
-    return &TagService{tag_repo: tag_repo}
+	return &TagService{tag_repo: tag_repo}
+}
+
+func (service *TagService) GetAll() ([]entities.Tag, error) {
+	return service.tag_repo.FindAll()
 }
 
 func (s *TagService) EnsureTags(tags []string) ([]entities.Tag, error) {

@@ -28,19 +28,6 @@ func (r *TagRepository) FindByID(id string) (*entities.Tag, error) {
 // Tạo tag mới
 func (r *TagRepository) CreateNewTag(tag *entities.Tag) error {
     return r.db.Create(tag).Error
-}package repositories
-
-import (
-	"gorm.io/gorm"
-	"sfit-platform-web-backend/entities"
-)
-
-type TagRepository struct {
-	db *gorm.DB
-}
-
-func NewTagRepository(db *gorm.DB) *TagRepository {
-	return &TagRepository{db: db}
 }
 
 func (r *TagRepository) FindAll() ([]entities.Tag, error) {
