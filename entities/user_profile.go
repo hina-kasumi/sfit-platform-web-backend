@@ -16,7 +16,7 @@ type UserProfile struct {
 	CreatedAt    time.Time `gorm:"column:create_at"`
 	UpdatedAt    time.Time `gorm:"column:update_at"`
 	Introduction string    `gorm:"type:varchar"`
-	Email        string    `gorm:"type:varchar"`
+	Email        string    `gorm:"type:varchar;unique"`
 	Location     string    `gorm:"type:varchar"`
 	SocialLink   string    `gorm:"type:json"`
 }
