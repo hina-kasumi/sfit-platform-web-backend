@@ -13,9 +13,11 @@ import (
 type DI struct {
 	//repository
 	UserRepo *repositories.UserRepository
+	CourseRepo *repositories.CourseRepository
 
 	// service
 	UserService    *services.UserService
+	CourseService   *services.CourseService
 	RedisService   *services.RedisService
 	JwtService     *services.JwtService
 	RefreshService *services.RefreshTokenService
@@ -24,11 +26,13 @@ type DI struct {
 	//handler
 	BaseHandler *handlers.BaseHandler
 	AuthHandler *handlers.AuthHandler
+	CourseHandler *handlers.CourseHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
 	// Khởi tạo Repository
 	userRepo := repositories.NewUserRepository(db)
+	courseRepo := repositories.NewCourseRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
@@ -36,19 +40,24 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
+	courseSer := services.NewCourseService(courseRepo)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
+	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer)
 
 	return &DI{
 		UserRepo:       userRepo,
+		CourseRepo:     courseRepo,
 		UserService:    userSer,
+		CourseService:  courseSer,
 		RedisService:   redisSer,
 		JwtService:     jwtSer,
 		RefreshService: refreshSer,
 		AuthService:    authSer,
 		BaseHandler:    baseHandler,
 		AuthHandler:    authHandler,
+		CourseHandler:  courseHandler,
 	}
 }
