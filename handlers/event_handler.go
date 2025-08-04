@@ -1,9 +1,6 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/tidwall/gjson"
 	"net/http"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/middlewares"
@@ -11,6 +8,10 @@ import (
 	"sfit-platform-web-backend/utils/response"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/tidwall/gjson"
 )
 
 type EventHandler struct {
@@ -93,7 +94,7 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 			Registed:    Registed, //TODO: logic check user đã đăng ký hay chưa
 		})
 	}
-	response.Success(ctx, "Get registed event list successfully", gin.H{
+	response.Success(ctx, "Get event list successfully", gin.H{
 		"events":   eventResponses,
 		"page":     pageNum,
 		"pageSize": pageSize,
@@ -292,6 +293,9 @@ func (eventHandler *EventHandler) UnsubscribeEvent(ctx *gin.Context) {
 func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
 	page, _ := strconv.ParseInt(ctx.Query("page"), 10, 64)
 	size, _ := strconv.ParseInt(ctx.Query("pageSize"), 10, 64)
+	if page == 0 {
+		page = 1
+	}
 	if size == 0 {
 		size = 20
 	}
@@ -330,6 +334,9 @@ func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
 func (eventHandler *EventHandler) GetEventAttendanceList(ctx *gin.Context) {
 	page, _ := strconv.ParseInt(ctx.Query("page"), 10, 64)
 	size, _ := strconv.ParseInt(ctx.Query("pageSize"), 10, 64)
+	if page == 0 {
+		page = 1
+	}
 	if size == 0 {
 		size = 20
 	}
