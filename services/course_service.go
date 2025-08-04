@@ -11,68 +11,67 @@ import (
 	"github.com/google/uuid"
 )
 
-
 type CourseService struct {
-    user_repo                *repositories.UserRepository
-	course_repo              *repositories.CourseRepository
-	lesson_repo              *repositories.LessonRepository
-	tagTemp_repo             *repositories.TagTempRepository
-	userCourse_repo          *repositories.UserCourseRepository
-	userRate_repo            *repositories.UserRateRepository
-	lessonAttendance_repo    *repositories.LessonAttendanceRepository
-	module_repo              *repositories.ModuleRepository
+	user_repo             *repositories.UserRepository
+	course_repo           *repositories.CourseRepository
+	lesson_repo           *repositories.LessonRepository
+	tagTemp_repo          *repositories.TagTempRepository
+	userCourse_repo       *repositories.UserCourseRepository
+	userRate_repo         *repositories.UserRateRepository
+	lessonAttendance_repo *repositories.LessonAttendanceRepository
+	module_repo           *repositories.ModuleRepository
 }
 
 func NewCourseService(
-    user_repo                *repositories.UserRepository,
-	course_repo              *repositories.CourseRepository,
-	lesson_repo              *repositories.LessonRepository,
-	tagTemp_repo             *repositories.TagTempRepository,
-	userCourse_repo          *repositories.UserCourseRepository,
-	userRate_repo            *repositories.UserRateRepository,
-	lessonAttendance_repo    *repositories.LessonAttendanceRepository,
-	module_repo              *repositories.ModuleRepository,
+	user_repo *repositories.UserRepository,
+	course_repo *repositories.CourseRepository,
+	lesson_repo *repositories.LessonRepository,
+	tagTemp_repo *repositories.TagTempRepository,
+	userCourse_repo *repositories.UserCourseRepository,
+	userRate_repo *repositories.UserRateRepository,
+	lessonAttendance_repo *repositories.LessonAttendanceRepository,
+	module_repo *repositories.ModuleRepository,
 ) *CourseService {
 	return &CourseService{
-        user_repo:               user_repo,
-		course_repo:             course_repo,
-		lesson_repo:             lesson_repo,
-		tagTemp_repo:            tagTemp_repo,
-		userCourse_repo:         userCourse_repo,
-		userRate_repo:           userRate_repo,
-		lessonAttendance_repo:   lessonAttendance_repo,
-		module_repo:             module_repo,
+		user_repo:             user_repo,
+		course_repo:           course_repo,
+		lesson_repo:           lesson_repo,
+		tagTemp_repo:          tagTemp_repo,
+		userCourse_repo:       userCourse_repo,
+		userRate_repo:         userRate_repo,
+		lessonAttendance_repo: lessonAttendance_repo,
+		module_repo:           module_repo,
 	}
 }
 
 func (s *CourseService) CreateCourse(
-    title, description, courseType string,
-    targets, requires, teachers []string,
-    language string,
-    certificate bool,
-    level string,
+	title, description, courseType string,
+	targets, requires, teachers []string,
+	language string,
+	certificate bool,
+	level string,
 ) (uuid.UUID, time.Time, error) {
-    course := entities.Course{
-        ID:          uuid.New(),
-        Title:       title,
-        Description: description,
-        Type:        courseType,
-        Target:      targets,
-        Require:     requires,
-        Teachers:    teachers,
-        Language:    language,
-        Certificate: certificate,
-        Level:       level,
-        CreatedAt:   time.Now(),
-    }
-    if err := s.course_repo.CreateNewCourse(&course); err != nil {
-        return uuid.Nil, time.Time{}, err
-    }
-    return course.ID, course.CreatedAt, nil
+	course := entities.Course{
+		ID:          uuid.New(),
+		Title:       title,
+		Description: description,
+		Type:        courseType,
+		Target:      targets,
+		Require:     requires,
+		Teachers:    teachers,
+		Language:    language,
+		Certificate: certificate,
+		Level:       level,
+		CreatedAt:   time.Now(),
+	}
+	if err := s.course_repo.CreateNewCourse(&course); err != nil {
+		return uuid.Nil, time.Time{}, err
+	}
+	return course.ID, course.CreatedAt, nil
 }
 
 const minPage = 1
-const maxPageSize = 100;
+const maxPageSize = 100
 
 func (s *CourseService) GetListCourse(userID string, page, pageSize int, title string, onlyRegisted bool, courseType, level string) (*dtos.CourseListResponse, error) {
 	// Validate user exists - REQUIRED
@@ -90,7 +89,7 @@ func (s *CourseService) GetListCourse(userID string, page, pageSize int, title s
 	offset := (page - 1) * pageSize
 
 	// Build filter với required userID
-    id, err := uuid.Parse(userID)
+	id, err := uuid.Parse(userID)
 	filter := dtos.CourseFilter{
 		Title:        strings.TrimSpace(title),
 		OnlyRegisted: onlyRegisted,
@@ -110,17 +109,15 @@ func (s *CourseService) GetListCourse(userID string, page, pageSize int, title s
 	// Calculate pagination info
 	// totalPages := (int(total) + pageSize - 1) / pageSize
 
-
 	return &dtos.CourseListResponse{
 		Courses: courses,
 		Pagination: dtos.PaginationResponse{
 			CurrentPage:  page,
 			TotalPages:   pageSize,
-            TotalCourses: total,
+			TotalCourses: total,
 		},
 	}, nil
 }
-
 
 func (s *CourseService) GetMyCourses(userID string, page, pageSize int, title, courseType, level string) (*dtos.CourseListResponse, error) {
 	// Validate user exists
@@ -138,4 +135,19 @@ func (s *CourseService) GetMyCourses(userID string, page, pageSize int, title, c
 
 	// Force onlyRegisted = true for "my courses"
 	return s.GetListCourse(userID, page, pageSize, title, true, courseType, level)
+}
+
+func (s *CourseService) GetCourseDetailByID(courseID string, userID string) (*dtos.CourseDetailResponse, error) {
+	// Validate user exists
+	if _, err := s.user_repo.GetUserByID(userID); err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	// Get course by ID
+	course, err := s.course_repo.GetCourseByID(courseID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("course not found: %w", err)
+	}
+
+	return course, nil
 }

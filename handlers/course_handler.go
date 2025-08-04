@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"sfit-platform-web-backend/utils"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
@@ -10,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 )
 
 type CourseHandler struct {
@@ -71,32 +72,10 @@ func (h *CourseHandler) CreateCourse(ctx *gin.Context) {
     response.Success(ctx, "Course created successfully", resp)
 }
 
+// lây danh sách khóa học
 func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
     // Lấy user_id từ context (đã được set bởi JWT middleware)
-	userIDInterface, exists := ctx.Get("user_id")
-	var userID uuid.UUID
-	
-	if exists {
-		switch v := userIDInterface.(type) {
-		case string:
-			parsedID, err := uuid.Parse(v)
-			if err != nil {
-				response.Error(ctx, http.StatusBadRequest, "Invalid user ID format")
-				return
-			}
-			userID = parsedID
-		case uuid.UUID:
-			userID = v
-		default:
-			// Nếu không có user_id, có thể để uuid.Nil cho guest user
-			userID = uuid.Nil
-		}
-	} else {
-		// Không có user_id trong context, có thể là guest user
-		userID = uuid.Nil
-	}
-
-
+	userID := utils.GetUserIDFromContext(ctx)
 
     //page=number&pageSize=number&title=string&onlyRegisted=boolean&type=string&level=string
     page := ctx.Query("page")
@@ -129,4 +108,32 @@ func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
     }
     // Return response
     response.Success(ctx, "Courses retrieved successfully", courses)
+}
+
+
+func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
+	userID := utils.GetUserIDFromContext(ctx)
+
+    courseID := ctx.Param("course_id")
+    if courseID == "" {
+        response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+        return
+    }
+
+    // Validate course ID format
+    // _, err := uuid.Parse(courseID)
+    // if err != nil {
+    //     response.Error(ctx, http.StatusBadRequest, "Invalid course ID format")
+    //     return
+    // }
+
+    // Call service to get course detail
+    courseDetail, err := h.course_ser.GetCourseDetailByID(courseID, userID.String())
+    if err != nil {
+        response.Error(ctx, http.StatusInternalServerError, "Failed to get course detail")
+        return
+    }
+
+    // Return response
+    response.Success(ctx, "Course detail retrieved successfully", courseDetail)
 }

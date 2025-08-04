@@ -2,6 +2,7 @@ package dtos
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -24,7 +25,7 @@ type CreateCourseResponse struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-type CourseInformationResponse struct {
+type CourseGeneralInformationResponse struct {
 	ID             string   `json:"id"`
 	Title          string   `json:"title"`
 	Description    string   `json:"description"`
@@ -52,7 +53,6 @@ type CourseRaw struct {
 	Registed       bool            `json:"registed"`
 }
 
-
 type CourseFilter struct {
 	Title        string
 	OnlyRegisted bool
@@ -64,12 +64,53 @@ type CourseFilter struct {
 }
 
 type CourseListResponse struct {
-	Courses    []CourseInformationResponse `json:"courses"`
-	Pagination PaginationResponse          `json:"pagination"`
+	Courses    []CourseGeneralInformationResponse `json:"courses"`
+	Pagination PaginationResponse                 `json:"pagination"`
 }
 
 type PaginationResponse struct {
 	CurrentPage  int `json:"currentPage"`
 	TotalPages   int `json:"totalPages"`
 	TotalCourses int `json:"totalCourses"`
+}
+
+type CourseDetailResponse struct {
+    Title           string                  `json:"title"`
+    Description     string                  `json:"description"`
+    Like            bool                    `json:"like"`
+    Type            string                  `json:"type"`
+    Level           string                  `json:"level"`
+    Teachers        []string                `json:"teachers"`
+    Star            float64                 `json:"star"`
+    TotalLessons    int                     `json:"total_lessons"`
+    Tags            []string                `json:"tags"`
+    Target          []string                `json:"target"`
+    Require         []string                `json:"require"`
+    TotalTime       int                     `json:"total_time"`
+    TotalRegitered  int                     `json:"total_registered"`
+    UpdatedAt       time.Time               `json:"updated_at"`
+    Language        string                  `json:"language"`
+    CourseContent   []CourseContentResponse `json:"course_content"`
+    Rate            []RateResponse          `json:"rate"`
+}
+
+type RateResponse struct {
+    Name  string  `json:"name"`
+    Comment string  `json:"comment"`
+    Star  float64 `json:"star"`
+    CreatedAt string `json:"created_at"`
+}
+
+type CourseContentResponse struct {
+    ID          string `json:"id"`
+    ModuleTitle string `json:"module_title"`
+    TotalTime int    `json:"total_time"`
+    Lessons    []LessonResponse `json:"lessons"`
+}
+
+type LessonResponse struct {
+    ID          string `json:"id"`
+    Title       string `json:"title"`
+    Learned     bool   `json:"learned"`
+    StudyTime   int    `json:"study_time"`
 }
