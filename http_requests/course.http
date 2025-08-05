@@ -1,0 +1,87 @@
+### Test Course APIs
+
+### 0. Đang ký người dùng mới (Public - không cần token)
+POST http://localhost:8080/auth/register
+Content-Type: application/json
+
+{
+    "username": "Huhu",
+    "email": "H@gmail.com",
+    "password": "Hahahihi6@"
+}
+###
+
+### 1. Đăng nhập để lấy token
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+    "email": "H@gmail.com",
+    "password": "Hahahihi6@"
+}
+
+###
+
+### 2. Tạo khóa học mới (Public - không cần token)
+POST http://localhost:8080/course/create
+Content-Type: application/json
+
+{
+    "title": "Khóa học C++ cơ bản",
+    "description": "Học C++ từ zero đến hero",
+    "target": ["Sinh viên IT", "Developer muốn học C++"],
+    "require": ["Biết C++ cơ bản", "Có kinh nghiệm C++"],
+    "teachers": ["Thầy C", "Thầy B"],
+    "language": "Vietnamese",
+    "certificate": true,
+    "level": "Beginner"
+}
+
+###
+
+### 3. Đăng ký khóa học (Protected - cần token)
+POST http://localhost:8080/course/register
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ0MzA5MzYsImp0aSI6ImU5MmJmNWE4LTA4ZTYtNGYxYi1hY2ZiLWIzMTBiMTViYzFhNSIsInN1YiI6ImE5ZDgwOTU3LTkyMzMtNGViZi04NmEwLTA0ZGYxYWIyOTlmZiJ9.XnhotaHpTHrM8siQ1grPp1KaU0FcB6Ndihsy7QTg1HI
+Content-Type: application/json
+
+{
+    "course_id": "8b025adb-d1a5-4048-9dd7-004fe26717a6"
+}
+
+###
+
+### 4. Đánh giá khóa học (Protected - cần token)
+POST http://localhost:8080/course/rate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ0MzA5MzYsImp0aSI6ImU5MmJmNWE4LTA4ZTYtNGYxYi1hY2ZiLWIzMTBiMTViYzFhNSIsInN1YiI6ImE5ZDgwOTU3LTkyMzMtNGViZi04NmEwLTA0ZGYxYWIyOTlmZiJ9.XnhotaHpTHrM8siQ1grPp1KaU0FcB6Ndihsy7QTg1HI
+Content-Type: application/json
+
+{
+    "course": "8b025adb-d1a5-4048-9dd7-004fe26717a6",
+    "star": 3,
+    "comment": "Khóa học rất hay và bổ ích!"
+}
+
+###
+
+### 5. Lấy khóa học đã đăng ký (Public)
+GET http://localhost:8080/course/registered/a9d80957-9233-4ebf-86a0-04df1ab299ff
+?page=1&page_size=10
+
+###
+
+### 6. Lấy danh sách bài học (Public)  
+GET http://localhost:8080/course/lessons/e05de126-dae3-4e05-b563-b72d648dff81
+?user_id=8b025adb-d1a5-4048-9dd7-004fe26717a6
+
+###
+
+### 7. Lấy danh sách users đã đăng ký khóa học (Public)
+GET http://localhost:8080/course/list-registered
+?course_id=8b025adb-d1a5-4048-9dd7-004fe26717a6&page=1&pageSize=10
+
+###
+
+
+//chưa xử lý logic cụ thể
+### 8. Xóa khóa học (Public)
+DELETE http://localhost:8080/course/8b025adb-d1a5-4048-9dd7-004fe26717a6

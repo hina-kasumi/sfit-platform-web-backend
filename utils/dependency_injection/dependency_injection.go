@@ -21,11 +21,13 @@ type DI struct {
 	TeamMembersRepo *repositories.TeamMembersRepository
 	EventRepo       *repositories.EventRepository
 	UserProfileRepo *repositories.UserProfileRepository
+	CourseRepo     *repositories.CourseRepository
 	// service
 	UserService        *services.UserService
 	TagService         *services.TagService
 	TeamService        *services.TeamService
 	TeamMembersService *services.TeamMembersService
+	CourseService      *services.CourseService
 	RedisService       *services.RedisService
 	JwtService         *services.JwtService
 	RefreshService     *services.RefreshTokenService
@@ -41,6 +43,7 @@ type DI struct {
 	EventHandler       *handlers.EventHandler
 	UserProfileHandler *handlers.UserProfileHandler
 	UserHandler        *handlers.UserHandler
+	CourseHandler      *handlers.CourseHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -51,11 +54,13 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	teamMembersRepo := repositories.NewTeamMembersRepository(db)
 	eventRepo := repositories.NewEventRepository(db)
 	userProfileRepo := repositories.NewUserProfileRepository(db)
+	courseRepo := repositories.NewCourseRepository(db)
 
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
 	tagSer := services.NewTagService(tagRepo)
 	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo)
+	courseService := services.NewCourseService(courseRepo, db)
 	teamSer := services.NewTeamService(teamRepo, teamMembersService)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
@@ -73,6 +78,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
 	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
 	userHandler := handlers.NewUserHandler(baseHandler, userSer)
+	courseHandler := handlers.NewCourseHandler(baseHandler, courseService)
 
 	return &DI{
 		UserRepo:        userRepo,
@@ -81,11 +87,13 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		TeamMembersRepo: teamMembersRepo,
 		EventRepo:       eventRepo,
 		UserProfileRepo: userProfileRepo,
+		CourseRepo:      courseRepo,
 
 		UserService:        userSer,
 		TagService:         tagSer,
 		TeamService:        teamSer,
 		TeamMembersService: teamMembersService,
+		CourseService:     courseService,
 		RedisService:       redisSer,
 		JwtService:         jwtSer,
 		RefreshService:     refreshSer,
@@ -101,5 +109,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		EventHandler:       eventHandler,
 		UserProfileHandler: profileHandler,
 		UserHandler:        userHandler,
+		CourseHandler:      courseHandler,
 	}
 }
