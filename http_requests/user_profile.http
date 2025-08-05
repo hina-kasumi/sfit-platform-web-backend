@@ -1,6 +1,6 @@
 ### Update User Profile
 ### Nhập Token sau Authorization: Brearer ...
-PUT http://localhost:8080/user-profile/update
+PUT http://localhost:8080/user-profile/
 Content-Type: application/json
 Authorization: Bearer <Token>
 

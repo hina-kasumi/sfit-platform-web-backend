@@ -13,4 +13,4 @@ Authorization: Bearer <Token>
 ###
 
 ### Get User List
-GET http://localhost:8080/user-list?page=1&pageSize=10
+GET http://localhost:8080/user?page=1&pageSize=10
