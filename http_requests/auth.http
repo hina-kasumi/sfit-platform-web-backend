@@ -30,3 +30,69 @@ Authorization: Bearer <your_access_token>
 ### Làm mới token
 POST http://localhost:8080/auth/refresh
 Content-Type: application/json
+
+### lấy tag
+GET http://localhost:8080/tags
+Accept: application/json
+
+### Tạo ban mới
+POST http://localhost:8080/teams
+Content-Type: application/json
+
+{
+  "name": "Ban Học Tập",
+  "description": "Thành viên ban phải tham gia học tập"
+}
+
+### Cập nhật thông tin ban
+PUT http://localhost:8080/teams
+Content-Type: application/json
+
+{
+  "id": "6c48f131-15aa-499a-bd4e-a9d4d1c9f1aa",
+  "name": "Ban Học Tập Update",
+  "description": "Thông tin ban học tập đã cập nhật"
+}
+
+### Thêm người vào ban đã tồn tại
+POST http://localhost:8080/teams/b3cbb824-c923-4c3c-8f0b-f5286db52039/team_members/new
+Content-Type: application/json
+
+{
+  "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e",
+  "role": "MEMBER"
+}
+
+### Xóa người khỏi ban
+DELETE http://localhost:8080/teams/b3cbb824-c923-4c3c-8f0b-f5286db52039/team_members/delete
+Content-Type: application/json
+
+{
+  "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e"
+}
+
+### Cập nhập vị trí của người trong ban
+DELETE http://localhost:8080/teams/b3cbb824-c923-4c3c-8f0b-f5286db52039/team_members/update
+Content-Type: application/json
+
+{
+  "user_id": "26faf45e-3d06-4a51-899e-4640bb53ef8e",
+  "role": "VICE_HEADER"
+}
+
+### Lấy danh sách ban một người dùng
+GET http://localhost:8080/teams/joined/d91edab3-8c0f-4e83-a7b3-863a170171d5
+Content-Type: application/json
+
+{
+
+}
+
+### Lấy thành viên trong bang theo trang và theo số người trong 1 trang
+GET http://localhost:8080/teams/member?teamid=2afb1438-723f-4317-9fff-71eb0a1c75e7&page=1&pageSize=10
+Content-Type: application/json
+
+{
+
+}
+
