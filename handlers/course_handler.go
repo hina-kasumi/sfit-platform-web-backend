@@ -159,43 +159,47 @@ func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
 }
 
 // PUT /courses
-// func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
-// 	userID := utils.GetUserIDFromContext(ctx)
-// 	if userID == uuid.Nil {
-// 		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
-// 		return
-// 	}
+func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
+	userID := middlewares.GetPrincipal(ctx)
+	if userID == "" {
+		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
 
-// 	var req dtos.UpdateCourseRequest
-// 	if !h.canBindJSON(ctx, &req) {
-// 		return
-// 	}
+	var req dtos.UpdateCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
 
-// 	if req.ID == "" {
-// 		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
-// 		return
-// 	}
+	if req.ID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
 
-// 	tags, err := h.tagService.EnsureTags(req.Tags)
-// 	if h.isError(ctx, err) {
-// 		return
-// 	}
+	tags, err := h.tagService.EnsureTags(req.Tags)
+	if h.isError(ctx, err) {
+		return
+	}
 
-// 	err = h.courseService.UpdateCourse(
-// 		req.ID, req.Title, req.Description, req.Type, req.Target,
-// 		req.Require, req.Teachers, req.Language, req.Certificate, req.Level,
-// 	)
-// 	if h.isError(ctx, err) {
-// 		return
-// 	}
+	updatedAt, err := h.courseService.UpdateCourse(
+		req.ID, req.Title, req.Description, req.Type, req.Target,
+		req.Require, req.Teachers, req.Language, req.Certificate, req.Level,
+	)
+	if h.isError(ctx, err) {
+		return
+	}
 
-// 	err = h.tagTempService.UpdateTagTemps(req.ID, tags)
-// 	if h.isError(ctx, err) {
-// 		return
-// 	}
+	err = h.tagTempService.UpdateTagTemp(req.ID, tags)
+	if h.isError(ctx, err) {
+		return
+	}
 
-// 	response.Success(ctx, "Course updated successfully", nil)
-// }
+	resp := dtos.UpdateCourseResponse{
+		// ID:        req.ID,
+		UpdatedAt: updatedAt.Format(time.RFC3339),
+	}
+	response.Success(ctx, "Course update successfully", resp)
+}
 
 //
 // Helper

@@ -197,3 +197,43 @@ func (s *CourseService) UnmarkCourseAsFavourite(userID, courseID string) error {
 
 	return nil
 }
+
+func (s *CourseService) UpdateCourse(
+	courseID, title, description, courseType string,
+	targets, requires, teachers []string,
+	language string,
+	certificate bool,
+	level string,
+) (time.Time, error) {
+	// Validate course exists
+	// userID := middlewares.GetPrincipal()
+	// if userID == "" {
+	// 	return fmt.Errorf("unauthorized")
+	// }
+
+	// if _, err := s.courseRepo.GetCourseByID(courseID, userID); err != nil {
+	// 	return fmt.Errorf("course not found: %w", err)
+	// }
+
+	// Prepare updated course
+	updatedCourse := entities.Course{
+		ID:          uuid.MustParse(courseID),
+		Title:       title,
+		Description: description,
+		Type:        courseType,
+		Target:      targets,
+		Require:     requires,
+		Teachers:    teachers,
+		Language:    language,
+		Certificate: certificate,
+		Level:       level,
+		UpdatedAt:   time.Now(),
+	}
+
+	// Update in repository
+	if err := s.courseRepo.UpdateCourse(&updatedCourse); err != nil {
+		return time.Time{}, fmt.Errorf("failed to update course: %w", err)
+	}
+
+	return updatedCourse.UpdatedAt, nil
+}

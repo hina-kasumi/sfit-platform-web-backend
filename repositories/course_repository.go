@@ -81,6 +81,32 @@ func (r *CourseRepository) GetCourseByID(courseID, userID string) (*dtos.CourseD
 	return courseDetail, nil
 }
 
+// UpdateCourse updates an existing course in the database
+func (r *CourseRepository) UpdateCourse(course *entities.Course) error {
+	// check if course exists
+	if err := r.EnsureCourseExists(course.ID); err != nil {
+		return fmt.Errorf("course does not exist: %w", err)
+	}
+
+	return r.db.Exec(`
+		UPDATE courses
+		SET title = ?, description = ?, type = ?, target = ?, require = ?, teachers = ?, language = ?, certificate = ?, level = ?, update_at = ?
+		WHERE id = ?
+	`,
+		course.Title,
+		course.Description,
+		course.Type,
+		stringArrayToPGArray(course.Target),
+		stringArrayToPGArray(course.Require),
+		stringArrayToPGArray(course.Teachers),
+		course.Language,
+		course.Certificate,
+		course.Level,
+		course.UpdatedAt,
+		course.ID,
+	).Error
+}
+
 // Private helper methods
 
 // stringArrayToPGArray converts Go string slice to PostgreSQL array format
@@ -578,4 +604,22 @@ func (r *CourseRepository) getCourseRatings(courseID string) ([]dtos.RateRespons
 	}
 
 	return result, nil
+}
+
+func (r *CourseRepository) EnsureCourseExists(courseID uuid.UUID) error {
+	var dummy int
+	err := r.db.
+		Model(&entities.Course{}).
+		Select("1").
+		Where("id = ?", courseID).
+		Limit(1).
+		Scan(&dummy).Error
+
+	if err != nil {
+		return fmt.Errorf("failed to check course existence: %w", err)
+	}
+	if dummy == 0 {
+		return fmt.Errorf("course with ID %s does not exist", courseID)
+	}
+	return nil
 }

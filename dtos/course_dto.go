@@ -28,6 +28,20 @@ type SetFavouriteCourseRequest struct {
 	CourseID string `json:"course_id" binding:"required"`
 }
 
+type UpdateCourseRequest struct {
+	ID          string   `json:"id" binding:"required"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Type        string   `json:"type"`
+	Target      []string `json:"targets"`
+	Require     []string `json:"requires"`
+	Teachers    []string `json:"teachers"`
+	Language    string   `json:"language"`
+	Certificate bool     `json:"certificate"`
+	Level       string   `json:"level"`
+	Tags        []string `json:"tags"`
+}
+
 //
 // RESPONSE DTOs
 //
@@ -101,6 +115,11 @@ type RateResponse struct {
 	Comment   string  `json:"comment"`
 	Star      float64 `json:"star"`
 	CreatedAt string  `json:"created_at"`
+}
+
+type UpdateCourseResponse struct {
+	// ID string  `json:"id"`
+	UpdatedAt string  `json:"updated_at"`
 }
 
 //

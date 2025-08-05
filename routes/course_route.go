@@ -19,4 +19,5 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
     router.GET("/course/:course_id", r.handler.GetCourseDetailByID)
     router.POST("/course/favourite", r.handler.MarkCourseAsFavourite)
     router.DELETE("/course/favourite", r.handler.UnmarkCourseAsFavourite)
+    router.PUT("/course", r.handler.UpdateCourse)
 }

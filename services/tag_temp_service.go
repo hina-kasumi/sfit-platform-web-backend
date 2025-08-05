@@ -18,3 +18,15 @@ func NewTagTempService(tagTemp_repo *repositories.TagTempRepository) *TagTempSer
 func (s *TagTempService) CreateTagTemp(tagID string, courseID uuid.UUID) (*entities.TagTemp, error) {
     return s.tagTemp_repo.CreateNewTagTemp(tagID, courseID)
 }
+
+// func (s *TagTempService) GetTagTempsByCourseID(courseID uuid.UUID) ([]entities.TagTemp, error) {
+// 	return s.tagTemp_repo.GetTagTempsByCourseID(courseID)
+// }
+
+// func (s *TagTempService) DeleteTagTemp(tagID string, courseID uuid.UUID) error {
+// 	return s.tagTemp_repo.DeleteTagTemp(tagID, courseID)
+// }
+
+func (s *TagTempService) UpdateTagTemp(courseID string, tags []entities.Tag) error {
+	return s.tagTemp_repo.UpdateTagTemp(courseID, tags)
+}
