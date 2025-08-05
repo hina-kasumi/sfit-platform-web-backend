@@ -22,6 +22,7 @@ func NewCourseHandler(baseHandler *BaseHandler, courseService *services.CourseSe
 	}
 }
 
+// Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
 	// Lấy userID từ URL parameter
 	userID := c.Param("user_id")
@@ -56,11 +57,12 @@ func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// Lấy danh sách bài học của khóa học
 func (ch *CourseHandler) GetCourseLessons(c *gin.Context) {
-	// Lấy event_id(course_id) từ URL parameter
-	eventID := c.Param("event_id")
-	if eventID == "" {
-		response.Error(c, http.StatusBadRequest, "Event ID is required")
+	// Lấy course_id từ URL parameter
+	courseID := c.Param("course_id")
+	if courseID == "" {
+		response.Error(c, http.StatusBadRequest, "Course ID is required")
 		return
 	}
 
@@ -72,7 +74,7 @@ func (ch *CourseHandler) GetCourseLessons(c *gin.Context) {
 	}
 
 	// Gọi service để lấy thông tin lessons
-	result, err := ch.CourseService.GetCourseLessons(eventID, userID)
+	result, err := ch.CourseService.GetCourseLessons(courseID, userID)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to get course lessons")
 		return
@@ -81,6 +83,7 @@ func (ch *CourseHandler) GetCourseLessons(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// Đánh giá khóa học
 func (ch *CourseHandler) RateCourse(c *gin.Context) {
 	// Lấy userID từ JWT token
 	userID := c.GetString("user_id")
@@ -105,6 +108,7 @@ func (ch *CourseHandler) RateCourse(c *gin.Context) {
 	response.Success(c, gin.H{"message": "Course rated successfully"})
 }
 
+// Xóa khóa học theo ID
 func (ch *CourseHandler) DeleteCourse(c *gin.Context) {
 	// Lấy course_id từ URL parameter
 	courseID := c.Param("course_id")
@@ -127,6 +131,7 @@ func (ch *CourseHandler) DeleteCourse(c *gin.Context) {
 	response.Success(c, gin.H{"message": "Course deleted successfully"})
 }
 
+// Lấy danh sách người dùng đã đăng ký khóa học với phân trang
 func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
 	// Lấy course_id từ query parameter
 	courseID := c.Query("course_id")
@@ -161,6 +166,7 @@ func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// Đăng ký người dùng vào khóa học
 func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 	// Lấy userID từ JWT token
 	userID := c.GetString("user_id")

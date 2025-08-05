@@ -21,7 +21,7 @@ func (courseRou *CourseRoutes) RegisterRoutes(router *gin.Engine) {
 
 	course := router.Group("/course")
 	course.GET("/registed/:user_id", courseHandler.GetRegisteredCourses)
-	course.GET("/lessions/:event_id", courseHandler.GetCourseLessons)
+	course.GET("/lessions/:course_id", courseHandler.GetCourseLessons)
 	course.POST("/rate", courseHandler.RateCourse)
 	course.DELETE("/:course_id", courseHandler.DeleteCourse)
 	course.GET("/list-registed", courseHandler.GetRegisteredUsers)
