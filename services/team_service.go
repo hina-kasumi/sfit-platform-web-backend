@@ -1,18 +1,23 @@
 package services
 
 import (
-	"github.com/google/uuid"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type TeamService struct {
-	teamRepo *repositories.TeamRepository
+	teamRepo       *repositories.TeamRepository
+	teamMembersSer *TeamMembersService
 }
 
-func NewTeamService(teamRepo *repositories.TeamRepository) *TeamService {
-	return &TeamService{teamRepo: teamRepo}
+func NewTeamService(teamRepo *repositories.TeamRepository, teamMembersSer *TeamMembersService) *TeamService {
+	return &TeamService{
+		teamRepo:       teamRepo,
+		teamMembersSer: teamMembersSer,
+	}
 }
 
 func (s *TeamService) CreateTeam(name string, description string) (*entities.Teams, error) {
@@ -44,4 +49,21 @@ func (s *TeamService) UpdateTeam(id uuid.UUID, name string, description string) 
 	}
 
 	return team, nil
+}
+
+func (s *TeamService) DeleteTeam(id string) error {
+	teamID, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+	err = s.teamRepo.DeleteTeam(teamID)
+	if err != nil {
+		return err
+	}
+	err = s.teamMembersSer.DeleteAllMemberInTeam(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

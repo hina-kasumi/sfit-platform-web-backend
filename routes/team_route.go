@@ -18,5 +18,6 @@ func (r *TeamRoute) RegisterRoutes(router *gin.Engine) {
 	{
 		group.POST("", r.teamHandler.CreateTeam)
 		group.PUT("", r.teamHandler.UpdateTeam)
+		group.DELETE("/:id", r.teamHandler.DeleteTeam)
 	}
 }

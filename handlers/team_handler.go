@@ -54,3 +54,17 @@ func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
 	}
 	response.Success(ctx, "update success", res)
 }
+
+func (h *TeamHandler) DeleteTeam(ctx *gin.Context) {
+	teamID := ctx.Param("id")
+	if h.isNilOrWhiteSpaceWithMessage(ctx, teamID, "team id is required") {
+		return
+	}
+
+	err := h.teamService.DeleteTeam(teamID)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "delete team success", nil)
+}

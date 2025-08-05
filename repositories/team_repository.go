@@ -1,9 +1,10 @@
 package repositories
 
 import (
+	"sfit-platform-web-backend/entities"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"sfit-platform-web-backend/entities"
 )
 
 type TeamRepository struct {
@@ -30,4 +31,14 @@ func (r *TeamRepository) FindByID(id uuid.UUID) (*entities.Teams, error) {
 		return nil, result.Error
 	}
 	return &team, nil
+}
+
+func (r *TeamRepository) DeleteTeam(id uuid.UUID) error {
+	team := entities.Teams{ID: id}
+	result := r.db.First(&team)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return r.db.Delete(&team).Error
 }

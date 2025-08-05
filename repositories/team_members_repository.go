@@ -89,3 +89,8 @@ func (r *TeamMembersRepository) FindMembersByTeamID(teamID string, page, pageSiz
 
 	return
 }
+
+func (r *TeamMembersRepository) DeleteAllMembersInTeam(teamID uuid.UUID) error {
+	result := r.db.Where("team_id = ?", teamID).Delete(&entities.TeamMembers{})
+	return result.Error
+}

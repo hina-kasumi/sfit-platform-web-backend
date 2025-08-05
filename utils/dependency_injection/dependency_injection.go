@@ -71,8 +71,8 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	// Khởi tạo Service
 	userSer := services.NewUserService(userRepo)
 	tagSer := services.NewTagService(tagRepo)
-	teamSer := services.NewTeamService(teamRepo)
 	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo)
+	teamSer := services.NewTeamService(teamRepo, teamMembersService)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()

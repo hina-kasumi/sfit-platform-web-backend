@@ -1,6 +1,34 @@
+### Lấy danh sách sự kiện
+GET http://localhost:8080/event
+
+### lấy chi tiết sự kiện
+GET http://localhost:8080/event/{event_id}
+
+### lấy danh sách người đăng kí sự kiện
+GET http://localhost:8080/event/list-register
+
+### lấy danh sách người điểm danh sự kiện
+GET http://localhost:8080/event/list-attendance
+
+### lấy danh sách sự kiện đã đăng kí
+GET http://localhost:8080/event/event-list-registed
+Authorization: Bearer <Token>
+
+### điểm danh sự kiện
+POST http://localhost:8080/event/user-attendance
+Content-Type: application/json
+Authorization: Bearer <Token>
+
+{
+  "event_id" : "",
+  "user_id" : ""
+}
+
 ### tạo mới event (thiếu tag, sắp xếp theo)
 POST http://localhost:8080/event
 Content-Type: application/json
+Authorization: Bearer <Token>
+
 {
   "title": "Summer Festival",
   "type": "Event",
@@ -14,18 +42,43 @@ Content-Type: application/json
   "end_at": "2025-08-15T18:00:00Z"
 }
 
-### lấy chi tiết sự kiện (duyệt)
-GET http://localhost:8080/event/{9a7d21bb-d136-4324-901e-aad613988863} 
-
-### lấy danh sách event (thiếu registed: boolean)
-GET http://localhost:8080/event/list
-
 ### xóa event (duyệt)
-DELETE http://localhost:8080/event/{9a7d21bb-d136-4324-901e-aad613988863}
+DELETE http://localhost:8080/event/{event_ID}
+Authorization: Bearer <Token>
 
-### điểm danh (lỗi) -> đã sửa
+### đăng kí (lỗi) -> đã sửa
 POST http://localhost:8080/event/subscribe
-### hủy điểm danh
+Content-Type: application/json
+Authorization: Bearer <Token>
+
+{
+  "event_id" : ""
+}
+
+### hủy đăng kí
 POST http://localhost:8080/event/unsubscribe
+Content-Type: application/json
+Authorization: Bearer <Token>
 
+{
+  "event_id" : ""
+}
 
+### Sửa sự kiện
+PUT http://localhost:8080/event
+Content-Type: application/json
+Authorization: Bearer <Token>
+
+{
+  "id": "",
+  "title": "Summer Festival",
+  "type": "Event",
+  "description": "A fun summer gathering with music and food",
+  "priority": 2,
+  "locaion": "Central Park",
+  "max_people": 150,
+  "agency": "City Events",
+  "status": "UPCOMING",
+  "begin_at": "2025-08-15T10:00:00Z",
+  "end_at": "2025-08-15T18:00:00Z"
+}
