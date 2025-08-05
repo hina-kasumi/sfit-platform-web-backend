@@ -141,3 +141,17 @@ func (s *TeamMembersService) GetMembers(teamID string, page, pageSize int) (*dto
 		Total:    total,
 	}, nil
 }
+
+func (s *TeamMembersService) DeleteAllMemberInTeam(teamID string) error {
+	teamUUID, err := uuid.Parse(teamID)
+	if err != nil {
+		return errors.New("invalid team_id format")
+	}
+
+	err = s.repo.DeleteAllMembersInTeam(teamUUID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
