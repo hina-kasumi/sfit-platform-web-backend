@@ -7,7 +7,8 @@ import (
 
 // Lấy userID từ context
 func GetUserIDFromContext(ctx *gin.Context) uuid.UUID {
-	userIDInterface, exists := ctx.Get("user_id")
+	// userIDInterface, exists := ctx.Get("user_id")
+	userIDInterface, exists := ctx.Get("subject")
 
 	if !exists {
 		return uuid.Nil
