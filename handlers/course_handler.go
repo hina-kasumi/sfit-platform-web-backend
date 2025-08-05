@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
-	"sfit-platform-web-backend/utils"
 	"sfit-platform-web-backend/utils/response"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type CourseHandler struct {
@@ -70,7 +69,8 @@ func (h *CourseHandler) CreateCourse(ctx *gin.Context) {
 
 // GET /courses
 func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
-	userID := utils.GetUserIDFromContext(ctx)
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
 
 	pageNum, pageSizeNum, valid := parsePagination(ctx)
 	if !valid {
@@ -83,7 +83,7 @@ func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
 	level := ctx.Query("level")
 
 	courses, err := h.courseService.GetListCourse(
-		userID.String(), pageNum, pageSizeNum, title, onlyRegisted, courseType, level,
+		userID, pageNum, pageSizeNum, title, onlyRegisted, courseType, level,
 	)
 	if err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to get courses")
@@ -95,7 +95,8 @@ func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
 
 // GET /courses/:course_id
 func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
-	userID := utils.GetUserIDFromContext(ctx)
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
 	courseID := ctx.Param("course_id")
 
 	if courseID == "" {
@@ -103,7 +104,7 @@ func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
 		return
 	}
 
-	courseDetail, err := h.courseService.GetCourseDetailByID(courseID, userID.String())
+	courseDetail, err := h.courseService.GetCourseDetailByID(courseID, userID)
 	if err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to get course detail")
 		return
@@ -115,8 +116,9 @@ func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
 
 // POST /courses/favourite
 func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
-	userID := utils.GetUserIDFromContext(ctx)
-	if userID == uuid.Nil {
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
+	if userID == "" {
 		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -126,7 +128,7 @@ func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.courseService.MarkCourseAsFavourite(userID.String(), req.CourseID); err != nil {
+	if err := h.courseService.MarkCourseAsFavourite(userID, req.CourseID); err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to mark course as favourite")
 		return
 	}
@@ -136,8 +138,9 @@ func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
 
 // DELETE /courses/favourite
 func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
-	userID := utils.GetUserIDFromContext(ctx)
-	if userID == uuid.Nil {
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
+	if userID == "" {
 		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -147,13 +150,52 @@ func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.courseService.UnmarkCourseAsFavourite(userID.String(), req.CourseID); err != nil {
+	if err := h.courseService.UnmarkCourseAsFavourite(userID, req.CourseID); err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to unmark course as favourite")
 		return
 	}
 
 	response.Success(ctx, "Course unmarked as favourite successfully", nil)
 }
+
+// PUT /courses
+// func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
+// 	userID := utils.GetUserIDFromContext(ctx)
+// 	if userID == uuid.Nil {
+// 		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+// 		return
+// 	}
+
+// 	var req dtos.UpdateCourseRequest
+// 	if !h.canBindJSON(ctx, &req) {
+// 		return
+// 	}
+
+// 	if req.ID == "" {
+// 		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+// 		return
+// 	}
+
+// 	tags, err := h.tagService.EnsureTags(req.Tags)
+// 	if h.isError(ctx, err) {
+// 		return
+// 	}
+
+// 	err = h.courseService.UpdateCourse(
+// 		req.ID, req.Title, req.Description, req.Type, req.Target,
+// 		req.Require, req.Teachers, req.Language, req.Certificate, req.Level,
+// 	)
+// 	if h.isError(ctx, err) {
+// 		return
+// 	}
+
+// 	err = h.tagTempService.UpdateTagTemps(req.ID, tags)
+// 	if h.isError(ctx, err) {
+// 		return
+// 	}
+
+// 	response.Success(ctx, "Course updated successfully", nil)
+// }
 
 //
 // Helper
