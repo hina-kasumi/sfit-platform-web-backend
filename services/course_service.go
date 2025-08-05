@@ -20,6 +20,7 @@ const (
 type CourseService struct {
 	userRepo             *repositories.UserRepository
 	courseRepo           *repositories.CourseRepository
+	favorCourseRepo      *repositories.FavoriteCourseRepository
 	lessonRepo           *repositories.LessonRepository
 	tagTempRepo          *repositories.TagTempRepository
 	userCourseRepo       *repositories.UserCourseRepository
@@ -31,6 +32,7 @@ type CourseService struct {
 func NewCourseService(
 	userRepo *repositories.UserRepository,
 	courseRepo *repositories.CourseRepository,
+	favorCourseRepo *repositories.FavoriteCourseRepository,
 	lessonRepo *repositories.LessonRepository,
 	tagTempRepo *repositories.TagTempRepository,
 	userCourseRepo *repositories.UserCourseRepository,
@@ -41,6 +43,7 @@ func NewCourseService(
 	return &CourseService{
 		userRepo:             userRepo,
 		courseRepo:           courseRepo,
+		favorCourseRepo:      favorCourseRepo,
 		lessonRepo:           lessonRepo,
 		tagTempRepo:          tagTempRepo,
 		userCourseRepo:       userCourseRepo,
@@ -157,4 +160,40 @@ func (s *CourseService) GetCourseDetailByID(courseID string, userID string) (*dt
 	}
 
 	return course, nil
+}
+
+func (s *CourseService) MarkCourseAsFavourite(userID, courseID string) error {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Check course exists
+	if _, err := s.courseRepo.GetCourseByID(courseID, userID); err != nil {
+		return fmt.Errorf("course not found: %w", err)
+	}
+
+	if err := s.favorCourseRepo.MarkCourseAsFavourite(userID, courseID); err != nil {
+		return fmt.Errorf("failed to mark course as favourite: %w", err)
+	}
+
+	return nil
+}
+
+func (s *CourseService) UnmarkCourseAsFavourite(userID, courseID string) error {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Check course exists
+	if _, err := s.courseRepo.GetCourseByID(courseID, userID); err != nil {
+		return fmt.Errorf("course not found: %w", err)
+	}
+
+	if err := s.favorCourseRepo.UnmarkCourseAsFavourite(userID, courseID); err != nil {
+		return fmt.Errorf("failed to unmark course as favourite: %w", err)
+	}
+
+	return nil
 }

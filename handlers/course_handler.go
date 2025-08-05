@@ -6,11 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils"
 	"sfit-platform-web-backend/utils/response"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CourseHandler struct {
@@ -108,6 +110,49 @@ func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, "Course detail retrieved successfully", courseDetail)
+}
+
+
+// POST /courses/favourite
+func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
+	userID := utils.GetUserIDFromContext(ctx)
+	if userID == uuid.Nil {
+		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req dtos.SetFavouriteCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	if err := h.courseService.MarkCourseAsFavourite(userID.String(), req.CourseID); err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to mark course as favourite")
+		return
+	}
+
+	response.Success(ctx, "Course marked as favourite successfully", nil)
+}
+
+// DELETE /courses/favourite
+func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
+	userID := utils.GetUserIDFromContext(ctx)
+	if userID == uuid.Nil {
+		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req dtos.SetFavouriteCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	if err := h.courseService.UnmarkCourseAsFavourite(userID.String(), req.CourseID); err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to unmark course as favourite")
+		return
+	}
+
+	response.Success(ctx, "Course unmarked as favourite successfully", nil)
 }
 
 //

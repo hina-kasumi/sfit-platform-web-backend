@@ -24,6 +24,7 @@ type DI struct {
 	TeamMembersRepo *repositories.TeamMembersRepository
 	EventRepo       *repositories.EventRepository
 	UserProfileRepo *repositories.UserProfileRepository
+
 	// service
 	UserService        *services.UserService
 	TeamService        *services.TeamService
@@ -56,6 +57,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	tagRepo := repositories.NewTagRepository(db)
 	tagTempRepo := repositories.NewTagTempRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
+	favorCourseRepo := repositories.NewFavoriteCourseRepository(db)
 	lessonRepo := repositories.NewLessonRepository(db)
 	userCourseRepo := repositories.NewUserCourseRepository(db)
 	userRateRepo := repositories.NewUserRateRepository(db)
@@ -76,7 +78,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	refreshSer := services.NewRefreshTokenService()
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 	tagTempSer := services.NewTagTempService(tagTempRepo)
-	courseSer := services.NewCourseService(userRepo, courseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
+	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
 	eventSer := services.NewEventService(eventRepo)
 	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
 

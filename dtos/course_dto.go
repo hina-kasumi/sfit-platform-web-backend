@@ -24,6 +24,10 @@ type CreateCourseRequest struct {
 	Tags        []string `json:"tags"`
 }
 
+type SetFavouriteCourseRequest struct {
+	CourseID string `json:"course_id" binding:"required"`
+}
+
 //
 // RESPONSE DTOs
 //
