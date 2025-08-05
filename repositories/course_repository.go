@@ -107,7 +107,7 @@ func (cr *CourseRepository) CreateOrUpdateCourseRating(userID uuid.UUID, courseI
 	}
 
 	// Tạo hoặc cập nhật đánh giá
-	result := cr.db.Where("user_id = ? AND courses_id = ?", userID, courseID).
+	result := cr.db.Where("user_id = ? AND course_id = ?", userID, courseID).
 		Assign(entities.UserRate{Star: star, Comment: comment}).
 		FirstOrCreate(&rating)
 

@@ -9,8 +9,8 @@ type CourseInfoResponse struct {
 	TimeLearn     int      `json:"time_learn"`
 	Rate          float64  `json:"rate"`
 	Tags          []string `json:"tags"`
-	TotalLesson   int      `json:"total_lession"`
-	LearnedLesson int      `json:"learned_lesstion"`
+	TotalLesson   int      `json:"total_lesson"`
+	LearnedLesson int      `json:"learned_lesson"`
 	Registed      bool     `json:"registed"`
 }
 
@@ -32,7 +32,7 @@ type ModuleInfo struct {
 	ID          string       `json:"id"`
 	ModuleTitle string       `json:"module_title"`
 	TotalTime   int          `json:"total_time"`
-	Lessons     []LessonInfo `json:"lessions"`
+	Lessons     []LessonInfo `json:"lessons"`
 }
 
 type CourseLessonsResponse []ModuleInfo
