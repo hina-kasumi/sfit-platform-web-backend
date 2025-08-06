@@ -101,3 +101,20 @@ Content-Type: application/json
     "Không bug"
   ]
 }
+
+###
+
+### Lấy danh sách người dùng đã hoàn thành 1 khóa học
+GET http://localhost:8080/course/list-user-complete?course_id=...&page=1&pageSize=1
+Content-Type: application/json
+
+###
+
+### Thêm module cho khóa học
+POST http://localhost:8080/course/module
+Content-Type: application/json
+
+{
+    "course_id": "...",
+    "module_title": "Hello"
+}
