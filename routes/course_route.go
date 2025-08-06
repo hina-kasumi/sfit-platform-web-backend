@@ -20,4 +20,6 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
     router.POST("/course/favourite", r.handler.MarkCourseAsFavourite)
     router.DELETE("/course/favourite", r.handler.UnmarkCourseAsFavourite)
     router.PUT("/course", r.handler.UpdateCourse)
+    router.GET("/course/list-user-complete", r.handler.GetListUserCompleteCourse)
+    router.POST("/course/module", r.handler.AddModuleToCourse)
 }

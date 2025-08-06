@@ -623,3 +623,70 @@ func (r *CourseRepository) EnsureCourseExists(courseID uuid.UUID) error {
 	}
 	return nil
 }
+
+func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, pageSize, offset int) ([]dtos.UserListItem, int64, error) {
+	// Ensure course exists
+	if err := r.EnsureCourseExists(filter.CourseID); err != nil {
+		return nil, 0, fmt.Errorf("course does not exist: %w", err)
+	}
+
+	// Get total lessons for the course
+	var totalLessons int
+	totalLessonQuery := `
+		SELECT COUNT(DISTINCT l.id) AS total_lessons
+		FROM courses c
+		LEFT JOIN modules m ON m.course_id = c.id
+		LEFT JOIN lessons l ON l.module_id = m.id
+		WHERE c.id = ?
+	`
+	if err := r.db.Raw(totalLessonQuery, filter.CourseID).Scan(&totalLessons).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get total lessons: %w", err)
+	}
+
+	// If no lessons, return empty result
+	if totalLessons == 0 {
+		return []dtos.UserListItem{}, 0, nil
+	}
+
+	// Query users who completed all lessons (status = 'present')
+	var users []dtos.UserListItem
+	query := `
+		SELECT 
+			u.id,
+			u.username,
+			u.email
+		FROM users u
+		JOIN lesson_attendances la ON u.id = la.user_id
+		JOIN lessons l ON l.id = la.lesson_id
+		JOIN modules m ON m.id = l.module_id
+		WHERE m.course_id = ? AND la.status = 'present'
+		GROUP BY u.id, u.username, u.email
+		HAVING COUNT(DISTINCT la.lesson_id) = ?
+		LIMIT ? OFFSET ?
+	`
+
+	if err := r.db.Raw(query, filter.CourseID, totalLessons, pageSize, offset).Scan(&users).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get users: %w", err)
+	}
+
+	// Query total count for pagination
+	var totalUser int64
+	countQuery := `
+		SELECT COUNT(*) FROM (
+			SELECT u.id
+			FROM users u
+			JOIN lesson_attendances la ON u.id = la.user_id
+			JOIN lessons l ON l.id = la.lesson_id
+			JOIN modules m ON m.id = l.module_id
+			WHERE m.course_id = ? AND la.status = 'present'
+			GROUP BY u.id
+			HAVING COUNT(DISTINCT la.lesson_id) = ?
+		) AS completed_users
+	`
+
+	if err := r.db.Raw(countQuery, filter.CourseID, totalLessons).Scan(&totalUser).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	return users, totalUser, nil
+}

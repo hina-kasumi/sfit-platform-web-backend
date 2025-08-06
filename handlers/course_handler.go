@@ -23,10 +23,10 @@ type CourseHandler struct {
 
 func NewCourseHandler(base *BaseHandler, course *services.CourseService, tag *services.TagService, tagTemp *services.TagTempService) *CourseHandler {
 	return &CourseHandler{
-		BaseHandler:     base,
-		courseService:   course,
-		tagService:      tag,
-		tagTempService:  tagTemp,
+		BaseHandler:    base,
+		courseService:  course,
+		tagService:     tag,
+		tagTempService: tagTemp,
 	}
 }
 
@@ -113,7 +113,6 @@ func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
 	response.Success(ctx, "Course detail retrieved successfully", courseDetail)
 }
 
-
 // POST /courses/favourite
 func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
 	// userID := utils.GetUserIDFromContext(ctx)
@@ -199,6 +198,56 @@ func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
 		UpdatedAt: updatedAt.Format(time.RFC3339),
 	}
 	response.Success(ctx, "Course update successfully", resp)
+}
+
+// GET /course/list-user-complete
+func (h *CourseHandler) GetListUserCompleteCourse(ctx *gin.Context) {
+	page, pageSize, valid := parsePagination(ctx)
+	if !valid {
+		return
+	}
+
+	courseID := ctx.Query("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	listUser, err := h.courseService.GetListUserCompleteCourse(
+		courseID, page, pageSize,
+	)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get user complete courses")
+		return
+	}
+
+	response.Success(ctx, "Courses retrieved successfully", listUser)
+}
+
+// GET /course/module
+func (h *CourseHandler) AddModuleToCourse(ctx *gin.Context) {
+	var req dtos.AddModuleToCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	if req.CourseID == "" || req.ModuleTitle == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID and Module Title are required")
+		return
+	}
+
+	moduleID, create_at, err := h.courseService.AddModuleToCourse(req.CourseID, req.ModuleTitle)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to add module to course")
+		return
+	}
+	addResponse := dtos.AddModuleToCourseResponse{
+		ModuleID:    moduleID.String(),
+		CourseID:    req.CourseID,
+		ModuleTitle: req.ModuleTitle,
+		CreatedAt:   create_at.Format(time.RFC3339),
+	}
+	response.Success(ctx, "Module added to course successfully", addResponse)
 }
 
 //

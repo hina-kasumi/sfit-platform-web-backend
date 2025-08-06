@@ -42,6 +42,11 @@ type UpdateCourseRequest struct {
 	Tags        []string `json:"tags"`
 }
 
+type AddModuleToCourseRequest struct {
+	CourseID    string `json:"course_id" binding:"required"`
+	ModuleTitle string `json:"module_title" binding:"required"`
+}
+
 //
 // RESPONSE DTOs
 //
@@ -97,10 +102,10 @@ type CourseDetailResponse struct {
 }
 
 type CourseContentResponse struct {
-	ID          string           `json:"id"`
-	ModuleTitle string           `json:"module_title"`
+	ID          string `json:"id"`
+	ModuleTitle string `json:"module_title"`
 	// TotalTime   int              `json:"total_time"`
-	Lessons     []LessonResponse `json:"lessons"`
+	Lessons []LessonResponse `json:"lessons"`
 }
 
 type LessonResponse struct {
@@ -119,7 +124,14 @@ type RateResponse struct {
 
 type UpdateCourseResponse struct {
 	// ID string  `json:"id"`
-	UpdatedAt string  `json:"updated_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type AddModuleToCourseResponse struct {
+	ModuleID    string `json:"module_id"`
+	CourseID    string `json:"course_id"`
+	ModuleTitle string `json:"module_title"`
+	CreatedAt   string `json:"created_at"`
 }
 
 //
@@ -168,6 +180,7 @@ type CourseFilter struct {
 	CourseType   string
 	Level        string
 	UserID       uuid.UUID
+	CourseID     uuid.UUID
 	Page         int
 	PageSize     int
 }
