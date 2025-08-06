@@ -237,3 +237,39 @@ func (s *CourseService) UpdateCourse(
 
 	return updatedCourse.UpdatedAt, nil
 }
+
+func (s *CourseService) GetListUserCompleteCourse(
+	courseID string,
+	page, pageSize int,
+) (*dtos.UserListResponse, error) {
+	// Sanitize pagination
+	page, pageSize = validatePagination(page, pageSize)
+	offset := (page - 1) * pageSize
+
+	// Join lesson_attendance and user_course to get users who completed the course
+	// Build filter
+	parsedCourseID, err := uuid.Parse(courseID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid course ID: %w", err)
+	}
+	filter := dtos.CourseFilter{
+		CourseID: parsedCourseID,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	// Query course list
+	users, total, err := s.courseRepo.GetListUserCompleteCourses(filter, pageSize, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	totalPages := (int(total) + pageSize - 1) / pageSize
+
+	return &dtos.UserListResponse{
+		Users:    users,
+		Page:     page,
+		PageSize: pageSize,
+		Total:    int64(totalPages),
+	}, nil
+}

@@ -201,6 +201,30 @@ func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
 	response.Success(ctx, "Course update successfully", resp)
 }
 
+// GET /course/list-user-complete
+func (h *CourseHandler) GetListUserCompleteCourse(ctx *gin.Context) {
+	page, pageSize, valid := parsePagination(ctx)
+	if !valid {
+		return
+	}
+
+	courseID := ctx.Query("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	listUser, err := h.courseService.GetListUserCompleteCourse(
+		courseID, page, pageSize,
+	)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get user complete courses")
+		return
+	}
+
+	response.Success(ctx, "Courses retrieved successfully", listUser)
+}
+
 //
 // Helper
 //

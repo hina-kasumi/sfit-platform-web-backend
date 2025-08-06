@@ -97,10 +97,10 @@ type CourseDetailResponse struct {
 }
 
 type CourseContentResponse struct {
-	ID          string           `json:"id"`
-	ModuleTitle string           `json:"module_title"`
+	ID          string `json:"id"`
+	ModuleTitle string `json:"module_title"`
 	// TotalTime   int              `json:"total_time"`
-	Lessons     []LessonResponse `json:"lessons"`
+	Lessons []LessonResponse `json:"lessons"`
 }
 
 type LessonResponse struct {
@@ -119,7 +119,7 @@ type RateResponse struct {
 
 type UpdateCourseResponse struct {
 	// ID string  `json:"id"`
-	UpdatedAt string  `json:"updated_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 //
@@ -168,6 +168,7 @@ type CourseFilter struct {
 	CourseType   string
 	Level        string
 	UserID       uuid.UUID
+	CourseID     uuid.UUID
 	Page         int
 	PageSize     int
 }
