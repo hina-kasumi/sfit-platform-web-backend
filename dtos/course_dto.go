@@ -42,6 +42,11 @@ type UpdateCourseRequest struct {
 	Tags        []string `json:"tags"`
 }
 
+type AddModuleToCourseRequest struct {
+	CourseID    string `json:"course_id" binding:"required"`
+	ModuleTitle string `json:"module_title" binding:"required"`
+}
+
 //
 // RESPONSE DTOs
 //
@@ -120,6 +125,13 @@ type RateResponse struct {
 type UpdateCourseResponse struct {
 	// ID string  `json:"id"`
 	UpdatedAt string `json:"updated_at"`
+}
+
+type AddModuleToCourseResponse struct {
+	ModuleID    string `json:"module_id"`
+	CourseID    string `json:"course_id"`
+	ModuleTitle string `json:"module_title"`
+	CreatedAt   string `json:"created_at"`
 }
 
 //

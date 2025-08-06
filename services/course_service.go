@@ -273,3 +273,11 @@ func (s *CourseService) GetListUserCompleteCourse(
 		Total:    int64(totalPages),
 	}, nil
 }
+
+func (s *CourseService) AddModuleToCourse(courseID, moduleTitle string) (uuid.UUID, time.Time, error) {
+	moduleID, create_at, err := s.moduleRepo.AddModuleToCourse(courseID, moduleTitle)
+	if err != nil {
+		return uuid.Nil, time.Time{}, fmt.Errorf("failed to add module to course: %w", err)
+	}
+	return moduleID, create_at, nil
+}
