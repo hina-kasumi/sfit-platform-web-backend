@@ -95,11 +95,6 @@ func (er *EventRepository) CountRegistedEvent(eventID string) (int64, error) {
 	return count, nil
 }
 
-// lấy danh sách event đã đăng kí
-func (er *EventRepository) GetRegistedEvent(page int, size int, userID string) ([]entities.Event, error) {
-	return er.GetEvents(page, size, "", "", "", true, userID)
-}
-
 // lấy thông tin event theo id
 func (er *EventRepository) GetEventByID(id string) (*entities.Event, error) {
 	eventID, err := uuid.Parse(id)

@@ -102,64 +102,6 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 	})
 }
 
-// Lấy danh sách các event đã đăng ký của người dùng
-// Tham số:
-// - page: số trang
-// - pageSize: số lượng event mỗi trang
-// - userID: id người dùng
-func (eventHandler *EventHandler) GetRegistedEventList(ctx *gin.Context) {
-	userID := middlewares.GetPrincipal(ctx)
-	// Lấy tham số từ query
-	page := ctx.Query("page")
-	size := ctx.Query("pageSize")
-	var pageNum, pageSize = 1, 20
-	// Kiểm tra có phải là số
-	if page != "" {
-		pageNum, _ = strconv.Atoi(page)
-	}
-	if size != "" {
-		pageSize, _ = strconv.Atoi(size)
-	}
-	events, err := eventHandler.EventSer.GetRegistedEvent(pageNum, pageSize, userID)
-	if eventHandler.isError(ctx, err) {
-		return
-	}
-	type EventResponse struct {
-		ID          string    `json:"id"`
-		Title       string    `json:"title"`
-		Description string    `json:"description"`
-		Location    string    `json:"location"`
-		BeginAt     time.Time `json:"begin_at"`
-		Agency      string    `json:"agency"`
-		MaxPeople   int       `json:"max_people"`
-		Type        string    `json:"type"`
-		Priority    int       `json:"priority"`
-		Registed    bool      `json:"registed"`
-	}
-
-	eventResponses := make([]EventResponse, 0, len(events))
-	for _, e := range events {
-		eventResponses = append(eventResponses, EventResponse{
-			ID:          e.ID.String(),
-			Title:       e.Title,
-			Description: e.Description,
-			Location:    e.Location,
-			BeginAt:     e.BeginAt, // hoặc format theo nhu cầu
-			Agency:      e.Agency,
-			MaxPeople:   e.MaxPeople,
-			Type:        e.Type,
-			Priority:    e.Priority,
-			Registed:    true, //TODO: logic check user đã đăng ký hay chưa
-		})
-	}
-	response.Success(ctx, "Get registed event list successfully", gin.H{
-		"events":   eventResponses,
-		"page":     pageNum,
-		"pageSize": pageSize,
-		"total":    len(events),
-	})
-}
-
 // Lấy chi tiết event theo id
 func (eventHandler *EventHandler) GetEventDetail(ctx *gin.Context) {
 

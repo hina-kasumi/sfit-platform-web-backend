@@ -17,10 +17,10 @@ func NewUserProfileRoute(handler *handlers.UserProfileHandler) *UserProfileRoute
 }
 
 func (userprofileRoute *UserProfileRoute) RegisterRoutes(router *gin.Engine) {
-	group := router.Group("/user-profile")
+	group := router.Group("/user-profiles")
 	group.DELETE("/:user_id", userprofileRoute.handler.DeleteUser)
 	group.GET("/:user_id", userprofileRoute.handler.GetUserProfile)
 	group.Use(middlewares.EnforceAuthenticatedMiddleware())
-	group.PUT("/", userprofileRoute.handler.UpdateUserProfile)
-	group.POST("/", userprofileRoute.handler.CreateUserProfile)
+	group.PUT("", userprofileRoute.handler.UpdateUserProfile)
+	group.POST("", userprofileRoute.handler.CreateUserProfile)
 }

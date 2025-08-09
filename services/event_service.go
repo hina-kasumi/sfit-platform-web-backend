@@ -22,9 +22,7 @@ func NewEventService(eventRepo *repositories.EventRepository) *EventService {
 func (eventSer *EventService) GetEvents(page int, size int, title string, etype string, status string, registed bool, userID string) ([]entities.Event, error) {
 	return eventSer.eventRepo.GetEvents(page, size, title, etype, status, registed, userID)
 }
-func (eventSer *EventService) GetRegistedEvent(page int, size int, userID string) ([]entities.Event, error) {
-	return eventSer.eventRepo.GetRegistedEvent(page, size, userID)
-}
+
 func (eventSer *EventService) GetEventByID(id string) (*entities.Event, error) {
 	return eventSer.eventRepo.GetEventByID(id)
 }

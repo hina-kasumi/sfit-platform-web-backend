@@ -30,7 +30,7 @@ func NewUser(username, email, password string) *Users {
 	}
 }
 
-func (u *Users) IsValidPasswrod(password string) error {
+func (u *Users) IsValidPassword(password string) error {
 	bytePassword := []byte(password)
 	byteHashedPassword := []byte(u.Password)
 	return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)

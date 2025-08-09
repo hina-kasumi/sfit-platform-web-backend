@@ -20,15 +20,14 @@ func NewEventRoute(eventHandler *handlers.EventHandler) *EventRoutes {
 func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
 	eventHandler := eventRou.eventHandler
 
-	task := router.Group("/event")
+	task := router.Group("/events")
 	task.GET("", eventHandler.GetEventList)
 	task.GET("/:event_id", eventHandler.GetEventDetail)
 	task.GET("/list-register", eventHandler.GetEventRegistedList)
 	task.GET("/list-attendance", eventHandler.GetEventAttendanceList)
 
-	taskAuth := router.Group("/event")
+	taskAuth := router.Group("/events")
 	taskAuth.Use(middlewares.EnforceAuthenticatedMiddleware())
-	taskAuth.GET("/event-list-registed", eventHandler.GetRegistedEventList)
 	taskAuth.POST("/user-attendance", eventHandler.EventAttendance)
 	taskAuth.POST("/subscribe", eventHandler.SubscribeEvent)
 	taskAuth.POST("", eventHandler.CreateEvent)
