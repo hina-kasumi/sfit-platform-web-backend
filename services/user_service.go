@@ -9,10 +9,11 @@ import (
 
 type UserService struct {
 	user_repo *repositories.UserRepository
+	role_repo *RoleService
 }
 
-func NewUserService(user_repo *repositories.UserRepository) *UserService {
-	return &UserService{user_repo: user_repo}
+func NewUserService(user_repo *repositories.UserRepository, role_repo *RoleService) *UserService {
+	return &UserService{user_repo: user_repo, role_repo: role_repo}
 }
 
 func (user_ser *UserService) GetUserByID(id string) (*entities.Users, error) {

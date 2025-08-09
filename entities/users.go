@@ -8,12 +8,13 @@ import (
 )
 
 type Users struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Username  string    `gorm:"unique;not null"`
-	Email     string    `gorm:"unique;not null"`
-	Password  string    `gorm:"not null"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	ID        uuid.UUID  `gorm:"type:uuid;primaryKey"`
+	Username  string     `gorm:"unique;not null"`
+	Email     string     `gorm:"unique;not null"`
+	Password  string     `gorm:"not null"`
+	Roles     []UserRole `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	CreatedAt time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt time.Time  `gorm:"autoUpdateTime"`
 }
 
 func NewUser(username, email, password string) *Users {

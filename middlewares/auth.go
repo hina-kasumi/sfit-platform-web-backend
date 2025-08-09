@@ -27,7 +27,14 @@ func UserLoaderMiddleware(jwtSer *services.JwtService) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		roles, ok := claims["roles"]
+		if !ok {
+			response.Error(c, 401, "Invalid token")
+			c.Abort()
+			return
+		}
 		c.Set("subject", sub)
+		c.Set("roles", roles)
 	}
 }
 
@@ -50,4 +57,22 @@ func GetPrincipal(c *gin.Context) string {
 		return ""
 	}
 	return sub.(string)
+}
+
+func GetRoles(c *gin.Context) []string {
+	raw, exists := c.Get("roles")
+	if !exists {
+		return nil
+	}
+	if raw == nil {
+		return nil
+	}
+	inter := raw.([]any)
+	var roles []string
+	for _, item := range inter {
+		if str, ok := item.(string); ok {
+			roles = append(roles, str)
+		}
+	}
+	return roles
 }

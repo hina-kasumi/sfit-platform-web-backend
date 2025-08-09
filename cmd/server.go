@@ -28,9 +28,10 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 		err := db.AutoMigrate(
 			&entities.Log{}, &entities.Device{}, &entities.Users{}, &entities.UserProfile{},
 			&entities.Teams{}, &entities.Event{}, &entities.Course{}, &entities.Module{},
-			&entities.Task{}, &entities.Lesson{}, &entities.Tag{}, &entities.FavoriteCourse{},
-			&entities.EventAttendance{}, &entities.TagTemp{}, &entities.TeamMembers{}, &entities.UserEvent{},
-			&entities.UserCourse{}, &entities.LessonAttendance{}, &entities.Newsfeed{}, &entities.UserRate{},
+			&entities.Task{}, &entities.TaskAssignments{}, &entities.Lesson{}, &entities.Tag{},
+			&entities.FavoriteCourse{}, &entities.EventAttendance{}, &entities.TagTemp{}, &entities.TeamMembers{},
+			&entities.UserEvent{}, &entities.UserCourse{}, &entities.LessonAttendance{}, &entities.Newsfeed{},
+			&entities.UserRate{}, &entities.Role{}, &entities.UserRole{},
 		)
 		if err != nil {
 			log.Fatalf("AutoMigrate failed: %v", err)
@@ -52,7 +53,6 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 
 		// Đắng ký router
 		routes.NewCourseRoute(depInject.CourseHandler),
-
 	}
 
 	r := gin.Default()
