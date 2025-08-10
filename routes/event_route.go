@@ -23,16 +23,15 @@ func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
 	task := router.Group("/events")
 	task.GET("", eventHandler.GetEventList)
 	task.GET("/:event_id", eventHandler.GetEventDetail)
-	task.GET("/list-register", eventHandler.GetEventRegistedList)
-	task.GET("/list-attendance", eventHandler.GetEventAttendanceList)
+	task.GET("/:event_id/users", eventHandler.GetUsersInEvent)
 
 	taskAuth := router.Group("/events")
 	taskAuth.Use(middlewares.EnforceAuthenticatedMiddleware())
-	taskAuth.POST("/user-attendance", eventHandler.EventAttendance)
-	taskAuth.POST("/subscribe", eventHandler.SubscribeEvent)
 	taskAuth.POST("", eventHandler.CreateEvent)
 	taskAuth.PUT("", eventHandler.UpdateEvent)
 	taskAuth.DELETE("/:event_id", eventHandler.DeleteEvent)
-	taskAuth.POST("/unsubscribe", eventHandler.UnsubscribeEvent)
 
+	attendEvent := router.Group("/users/:user_id/events/:event_id")
+	attendEvent.Use(middlewares.EnforceAuthenticatedMiddleware())
+	attendEvent.POST("", eventHandler.UpdateStatusUserAttendance)
 }

@@ -93,7 +93,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	tagHandler := handlers.NewTagHandler(baseHandler, tagSer)
 	teamHandler := handlers.NewTeamHandler(baseHandler, teamSer)
 	teamMembersHandler := handlers.NewTeamMembersHandler(handlers.NewBaseHandler(), teamMembersService)
-	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
+	eventHandler := handlers.NewEventHandler(baseHandler, eventSer, tagSer, tagTempSer)
 	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
 	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 

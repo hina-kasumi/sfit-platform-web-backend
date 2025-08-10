@@ -33,6 +33,23 @@ func (r *TagTempRepository) CreateNewTagTemp(tagID string, courseID uuid.UUID) (
 	return tagTemp, nil
 }
 
+func (r *TagTempRepository) CreateNewTagTempEvent(eventID uuid.UUID, tagIDs []string) ([]entities.TagTemp, error) {
+	var tagTemps []entities.TagTemp
+	for _, tagID := range tagIDs {
+		tagTemps = append(tagTemps, entities.TagTemp{
+			ID:      uuid.New(),
+			TagID:   tagID,
+			EventID: eventID,
+		})
+	}
+	if len(tagTemps) > 0 {
+		if err := r.db.Create(&tagTemps).Error; err != nil {
+			return nil, fmt.Errorf("failed to create tag temp events: %w", err)
+		}
+	}
+	return tagTemps, nil
+}
+
 func (r *TagTempRepository) UpdateTagTemp(courseID string, tags []entities.Tag) error {
 	cid, err := uuid.Parse(courseID)
 	if err != nil {
@@ -64,3 +81,14 @@ func (r *TagTempRepository) UpdateTagTemp(courseID string, tags []entities.Tag) 
 	return nil
 }
 
+func (r *TagTempRepository) FindByEvent(eventID string) ([]entities.TagTemp, error) {
+	var tags []entities.TagTemp
+	result := r.db.Where("event_id = ?", eventID).Find(&tags)
+	return tags, result.Error
+}
+
+func (r *TagTempRepository) FindByCourse(courseID string) ([]entities.TagTemp, error) {
+	var tags []entities.TagTemp
+	result := r.db.Where("course_id = ?", courseID).Find(&tags)
+	return tags, result.Error
+}

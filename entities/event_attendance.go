@@ -9,9 +9,8 @@ import (
 type EventAttendanceStatus string
 
 const (
-	Registered   EventAttendanceStatus = "REGISTERED"
-	Attended     EventAttendanceStatus = "ATTENDED"
-	NotAttending EventAttendanceStatus = "NOT_ATTENDING"
+	Registered EventAttendanceStatus = "REGISTERED"
+	Attended   EventAttendanceStatus = "ATTENDED"
 )
 
 type EventAttendance struct {
@@ -19,4 +18,5 @@ type EventAttendance struct {
 	EventID   uuid.UUID             `gorm:"type:uuid;primaryKey;column:event_id"`
 	Status    EventAttendanceStatus `gorm:"type:varchar;column:status"`
 	CreatedAt time.Time             `gorm:"column:create_at"`
+	UpdatedAt time.Time             `gorm:"column:update_at"`
 }

@@ -25,11 +25,6 @@ func (repo *UserProfileRepository) DeleteUser(userID uuid.UUID) error {
 		return err
 	}
 
-	if err := tx.Where("user_id = ?", userID).Delete(&entities.UserEvent{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
 	if err := tx.Where("user_id = ?", userID).Delete(&entities.FavoriteCourse{}).Error; err != nil {
 		tx.Rollback()
 		return err

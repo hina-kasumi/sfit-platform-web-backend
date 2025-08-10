@@ -6,23 +6,25 @@ import (
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/tidwall/gjson"
 )
 
 type EventHandler struct {
 	*BaseHandler
-	EventSer *services.EventService
+	EventSer   *services.EventService
+	TagSer     *services.TagService
+	TagTempSer *services.TagTempService
 }
 
-func NewEventHandler(baseHandler *BaseHandler, eventSer *services.EventService) *EventHandler {
+func NewEventHandler(baseHandler *BaseHandler, eventSer *services.EventService, tagSer *services.TagService, tagTempSer *services.TagTempService) *EventHandler {
 	return &EventHandler{
 		BaseHandler: baseHandler,
 		EventSer:    eventSer,
+		TagSer:      tagSer,
+		TagTempSer:  tagTempSer,
 	}
 }
 
@@ -37,30 +39,17 @@ func NewEventHandler(baseHandler *BaseHandler, eventSer *services.EventService) 
 // - userID: id người dùng
 // - onlyRegisted: chỉ lấy event đã đăng ký của người dùng
 func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
-	// Lấy tham số từ query
-	page := ctx.Query("page")
-	size := ctx.Query("pageSize")
-	title := ctx.Query("title")
-	status := ctx.Query("status")
-	etype := ctx.Query("type")
-	onlyRegisted := ctx.Query("onlyRegisted")
-
-	var pageNum, pageSize = 1, 20
-	olRegisted := false
-
-	if page != "" {
-		pageNum, _ = strconv.Atoi(page)
-	}
-	if size != "" {
-		pageSize, _ = strconv.Atoi(size)
-	}
-	if onlyRegisted != "" {
-		olRegisted = true
+	var rq dtos.ListEventReq
+	if !eventHandler.canBindQuery(ctx, &rq) {
+		return
 	}
 
 	userID := middlewares.GetPrincipal(ctx)
 
-	events, err := eventHandler.EventSer.GetEvents(pageNum, pageSize, title, etype, status, olRegisted, userID)
+	events, total, err := eventHandler.EventSer.
+		GetEvents(
+			rq.Page, rq.PageSize, rq.Title, rq.Type, rq.Status, userID,
+		)
 
 	if eventHandler.isError(ctx, err) {
 		return
@@ -76,6 +65,7 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 		Type        string    `json:"type"`
 		Priority    int       `json:"priority"`
 		Registed    bool      `json:"registed"`
+		Tag         []string  `json:"tag"`
 	}
 
 	eventResponses := make([]EventResponse, 0, len(events))
@@ -92,71 +82,67 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 			Type:        e.Type,
 			Priority:    e.Priority,
 			Registed:    Registed, //TODO: logic check user đã đăng ký hay chưa
+			Tag:         eventHandler.TagTempSer.GetByEventOrCourse(e.ID.String(), ""),
 		})
 	}
 	response.Success(ctx, "Get event list successfully", gin.H{
 		"events":   eventResponses,
-		"page":     pageNum,
-		"pageSize": pageSize,
-		"total":    len(events),
+		"page":     rq.Page,
+		"pageSize": rq.PageSize,
+		"total":    total,
 	})
 }
 
 // Lấy chi tiết event theo id
 func (eventHandler *EventHandler) GetEventDetail(ctx *gin.Context) {
-
 	eventID := ctx.Param("event_id")
 
 	event, err := eventHandler.EventSer.GetEventByID(eventID)
+	tags := eventHandler.TagTempSer.GetByEventOrCourse(eventID, "")
 
 	if eventHandler.isError(ctx, err) {
 		return
 	}
 
-	response.Success(ctx, "Get event detail successfully", event)
-}
-
-// Điểm danh sự kiện
-func (eventHandler *EventHandler) EventAttendance(ctx *gin.Context) {
-
-	raw, _ := ctx.GetRawData()
-	eventID := gjson.GetBytes(raw, "event_id").String()
-	userID := gjson.GetBytes(raw, "user_id").String()
-
-	err := eventHandler.EventSer.EventAttendance(userID, eventID)
-
-	if eventHandler.isError(ctx, err) {
-		return
+	eventRp := dtos.EventDetailRp{
+		Event: *event,
+		Tags:  tags,
 	}
 
-	response.Success(ctx, "Attendance event successfully", nil)
+	response.Success(ctx, "Get event detail successfully", eventRp)
 }
 
-// Đăng kí sự kiện
-func (eventHandler *EventHandler) SubscribeEvent(ctx *gin.Context) {
-	raw, _ := ctx.GetRawData()
-	eventID := gjson.GetBytes(raw, "event_id").String()
+// cập nhật trạng thái người dùng tham gia sự kiện
+func (eventHandler *EventHandler) UpdateStatusUserAttendance(ctx *gin.Context) {
+	eventID := ctx.Param("event_id")
 	if eventID == "" {
 		response.Error(ctx, http.StatusBadRequest, "Missing event_id")
 		return
 	}
-	userID := middlewares.GetPrincipal(ctx)
+	userID := ctx.Param("user_id")
 	if userID == "" {
-		response.Error(ctx, http.StatusUnauthorized, "Unauthorized 2")
+		response.Error(ctx, http.StatusUnauthorized, "Missing user_id")
 		return
 	}
 
-	err := eventHandler.EventSer.SubscribeEvent(userID, eventID)
+	var updateReq dtos.UpdateUserAttendanceReq
+	err := ctx.ShouldBindJSON(&updateReq)
+	if err != nil {
+		response.Error(ctx, http.StatusBadRequest, "Invalid input")
+		return
+	}
+
+	err = eventHandler.EventSer.UpdateStatusUserAttendance(userID, eventID, updateReq.Status)
+
 	if eventHandler.isError(ctx, err) {
 		return
 	}
 
-	response.Success(ctx, "Subscribe event successfully", nil)
+	response.Success(ctx, "Update user attendance status successfully", nil)
 }
 
 // Tạo sự kiện mới
 func (eventHandler *EventHandler) CreateEvent(ctx *gin.Context) {
-
 	var eventReq dtos.NewEventRequest
 	if err := ctx.ShouldBindJSON(&eventReq); err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid input")
@@ -168,6 +154,10 @@ func (eventHandler *EventHandler) CreateEvent(ctx *gin.Context) {
 	if eventHandler.isError(ctx, err) {
 		return
 	}
+	// Tạo tag cho event
+	eventHandler.TagSer.EnsureTags(eventReq.Tags)
+	// Tạo TagTemp cho event
+	eventHandler.TagTempSer.CreateTagTempEvent(eventResponse.ID, eventReq.Tags)
 
 	response.Success(ctx, "Create new event successfully", gin.H{
 		"id":        eventResponse.ID,
@@ -210,39 +200,17 @@ func (eventHandler *EventHandler) DeleteEvent(ctx *gin.Context) {
 	response.Success(ctx, "Deleted successfully", nil)
 }
 
-// Hủy đăng kí sự kiện
-func (eventHandler *EventHandler) UnsubscribeEvent(ctx *gin.Context) {
-
-	raw, _ := ctx.GetRawData()
-	eventID := gjson.GetBytes(raw, "event_id").String()
-
-	userID := middlewares.GetPrincipal(ctx)
-
-	err := eventHandler.EventSer.UnsubscribeEvent(userID, eventID)
-	if err != nil {
-		response.Error(ctx, 400, "Unsubscribe event failed")
+// Lấy danh sách các user đã đăng ký sự kiện
+func (eventHandler *EventHandler) GetUsersInEvent(ctx *gin.Context) {
+	eventID := ctx.Param("event_id")
+	var query dtos.QueryUsersInEvent
+	if !eventHandler.canBindQuery(ctx, &query) {
 		return
 	}
 
-	response.Success(ctx, "Unsubscribe event successfully", nil)
-}
-
-// Lấy danh sách các user đã đăng ký sự kiện
-// Tham số:
-// - page: số trang
-// - pageSize: số lượng user mỗi trang
-// - eventID: id sự kiện
-func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
-	page, _ := strconv.ParseInt(ctx.Query("page"), 10, 64)
-	size, _ := strconv.ParseInt(ctx.Query("pageSize"), 10, 64)
-	if page == 0 {
-		page = 1
-	}
-	if size == 0 {
-		size = 20
-	}
-	eventID := ctx.Query("eventID")
-	users, err := eventHandler.EventSer.GetEventRegisted(int(page), int(size), eventID)
+	users, total, err := eventHandler.EventSer.GetUsersInEvent(
+		eventID, query.Page, query.PageSize, query.Status,
+	)
 	if eventHandler.isError(ctx, err) {
 		return
 	}
@@ -262,49 +230,8 @@ func (eventHandler *EventHandler) GetEventRegistedList(ctx *gin.Context) {
 	}
 	response.Success(ctx, "Get event registed list successfully", gin.H{
 		"users":    userResponses,
-		"page":     page,
-		"pageSize": size,
-		"total":    len(users),
-	})
-}
-
-// Lấy danh sách các user đã điểm danh sự kiện
-// Tham số:
-// - page: số trang
-// - pageSize: số lượng user mỗi trang
-// - eventID: id sự kiện
-func (eventHandler *EventHandler) GetEventAttendanceList(ctx *gin.Context) {
-	page, _ := strconv.ParseInt(ctx.Query("page"), 10, 64)
-	size, _ := strconv.ParseInt(ctx.Query("pageSize"), 10, 64)
-	if page == 0 {
-		page = 1
-	}
-	if size == 0 {
-		size = 20
-	}
-	eventID := ctx.Query("eventID")
-	users, err := eventHandler.EventSer.GetEventAttendance(int(page), int(size), eventID)
-	if eventHandler.isError(ctx, err) {
-		return
-	}
-	type UserResponse struct {
-		ID       uuid.UUID `json:"id"`
-		Username string    `json:"username"`
-		Email    string    `json:"email"`
-	}
-
-	userResponses := make([]UserResponse, 0, len(users))
-	for _, u := range users {
-		userResponses = append(userResponses, UserResponse{
-			ID:       u.ID,
-			Username: u.Username,
-			Email:    u.Email,
-		})
-	}
-	response.Success(ctx, "Get event attendances list successfully", gin.H{
-		"users":    userResponses,
-		"page":     page,
-		"pageSize": size,
-		"total":    len(users),
+		"page":     query.Page,
+		"pageSize": query.PageSize,
+		"total":    total,
 	})
 }

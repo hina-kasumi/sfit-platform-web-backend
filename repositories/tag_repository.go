@@ -17,17 +17,17 @@ func NewTagRepository(db *gorm.DB) *TagRepository {
 }
 
 func (r *TagRepository) FindByID(id string) (*entities.Tag, error) {
-    var tag entities.Tag
-    err := r.db.Where("id = ?", id).First(&tag).Error
-    if err != nil {
-        return nil, err
-    }
-    return &tag, nil
+	var tag entities.Tag
+	err := r.db.Where("id = ?", id).First(&tag).Error
+	if err != nil {
+		return nil, err
+	}
+	return &tag, nil
 }
 
 // Tạo tag mới
 func (r *TagRepository) CreateNewTag(tag *entities.Tag) error {
-    return r.db.Create(tag).Error
+	return r.db.Create(tag).Error
 }
 
 func (r *TagRepository) FindAll() ([]entities.Tag, error) {
