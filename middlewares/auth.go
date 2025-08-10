@@ -3,6 +3,7 @@ package middlewares
 import (
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,6 +49,30 @@ func EnforceAuthenticatedMiddleware() gin.HandlerFunc {
 			return
 		}
 		c.Next()
+	}
+}
+
+/* RequireRoles checks if the user has one of the required roles
+* Have to be used after UserLoaderMiddleware
+* input: roles ...string (recommend use entities.RoleEnum)
+ */
+func RequireRoles(roles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRoles := GetRoles(c)
+		if len(userRoles) == 0 {
+			response.Error(c, 403, "Forbidden")
+			c.Abort()
+			return
+		}
+
+		for _, role := range roles {
+			if slices.Contains(userRoles, role) {
+				c.Next()
+				return
+			}
+		}
+		response.Error(c, 403, "Forbidden")
+		c.Abort()
 	}
 }
 

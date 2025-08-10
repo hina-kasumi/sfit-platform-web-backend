@@ -33,5 +33,5 @@ func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
 
 	attendEvent := router.Group("/users/:user_id/events/:event_id")
 	attendEvent.Use(middlewares.EnforceAuthenticatedMiddleware())
-	attendEvent.POST("", eventHandler.UpdateStatusUserAttendance)
+	attendEvent.PUT("", eventHandler.UpdateStatusUserAttendance)
 }
