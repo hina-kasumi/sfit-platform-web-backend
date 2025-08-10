@@ -14,10 +14,10 @@ func NewTeamRoute(teamHandler *handlers.TeamHandler) *TeamRoute {
 }
 
 func (r *TeamRoute) RegisterRoutes(router *gin.Engine) {
-	group := router.Group("/team")
+	group := router.Group("/teams")
 	{
 		group.POST("", r.teamHandler.CreateTeam)
 		group.PUT("", r.teamHandler.UpdateTeam)
-		group.DELETE("/:id", r.teamHandler.DeleteTeam)
+		group.DELETE("/:team_id", r.teamHandler.DeleteTeam)
 	}
 }

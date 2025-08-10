@@ -1,9 +1,7 @@
 package dtos
 
 type AddTeamMemberRequest struct {
-	TeamID string `json:"team_id" binding:"required"`
-	UserID string `json:"user_id" binding:"required"`
-	Role   string `json:"role" binding:"required"`
+	Role string `json:"role" binding:"required"`
 }
 
 type AddTeamMemberResponse struct {
@@ -12,9 +10,7 @@ type AddTeamMemberResponse struct {
 }
 
 type UpdateTeamMemberRequest struct {
-	TeamID string `json:"team_id" binding:"required"`
-	UserID string `json:"user_id" binding:"required"`
-	Role   string `json:"role" binding:"required"`
+	Role string `json:"role" binding:"required"`
 }
 
 type UserJoinedTeamResponse struct {

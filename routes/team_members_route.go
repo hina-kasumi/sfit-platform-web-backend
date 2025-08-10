@@ -15,16 +15,13 @@ func NewTeamMembersRoute(handler *handlers.TeamMembersHandler) *TeamMembersRoute
 }
 
 func (r *TeamMembersRoute) RegisterRoutes(router *gin.Engine) {
-	group := router.Group("/team-member")
+	group := router.Group("/teams")
 	{
-		group.POST("", r.handler.AddMember)
-		group.DELETE("/:team_id/:user_id", r.handler.DeleteMember)
-		group.PUT("", r.handler.UpdateMemberRole)
+		group.GET("/:team_id/users", r.handler.GetTeamMembers)
+		group.PUT("/:team_id/users/:user_id", r.handler.SaveMember)
+		// group.POST("/:team_id/users/:user_id", r.handler.AddMember)
+		group.DELETE("/:team_id/users/:user_id", r.handler.DeleteMember)
 	}
-	group1 := router.Group("/team")
-	{
-		group1.GET("/joined/:user_id", r.handler.GetTeamsJoinedByUser)
-	}
-	router.GET("/team/member", r.handler.GetTeamMembers)
 
+	router.GET("/users/:user_id/teams", r.handler.GetTeamsJoinedByUser)
 }

@@ -1,9 +1,9 @@
 package repositories
 
 import (
+	"errors"
 	"sfit-platform-web-backend/dtos"
 	entities "sfit-platform-web-backend/entities"
-	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -36,15 +36,28 @@ func (r *TeamMembersRepository) DeleteByUserIDAndTeamID(userID, teamID uuid.UUID
 	return result.Error
 }
 
-func (r *TeamMembersRepository) UpdateRole(userID, teamID uuid.UUID, role string) error {
-	updateData := map[string]interface{}{
-		"role":       role,
-		"updated_at": time.Now(),
+func (r *TeamMembersRepository) SaveMember(userID, teamID uuid.UUID, role string) error {
+	// Kiểm tra bản ghi hiện có
+	var member entities.TeamMembers
+	err := r.db.Where("user_id = ? AND team_id = ?", userID, teamID).First(&member).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Nếu không tìm thấy → tạo mới
+		newMember := entities.TeamMembers{
+			UserID: userID,
+			TeamID: teamID,
+			Role:   entities.RoleEnum(role),
+		}
+		return r.db.Create(&newMember).Error
 	}
-	result := r.db.Model(&entities.TeamMembers{}).
-		Where("user_id = ? AND team_id = ?", userID, teamID).
-		Updates(updateData)
-	return result.Error
+
+	if err != nil {
+		return err
+	}
+
+	// Nếu đã tồn tại → update role
+	member.Role = entities.RoleEnum(role)
+	return r.db.Save(&member).Error
 }
 
 func (r *TeamMembersRepository) FindTeamsByUserID(userID uuid.UUID) ([]dtos.UserJoinedTeamResponse, error) {

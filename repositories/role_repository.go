@@ -32,7 +32,10 @@ func (rr *RoleRepository) CreateRoles(ids ...string) error {
 	for _, id := range ids {
 		roles = append(roles, entities.Role{ID: entities.RoleEnum(id)})
 	}
-	return rr.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&roles).Error
+	return rr.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}}, // chỉ định cột key
+		DoNothing: true,
+	}).Create(&roles).Error
 }
 
 // DeleteRole deletes a role from the database
@@ -79,7 +82,10 @@ func (rr *RoleRepository) AddUserRole(userID string, roleIDs ...entities.RoleEnu
 	for _, roleID := range roleIDs {
 		userRoles = append(userRoles, entities.UserRole{UserID: uuidUserID, RoleID: roleID})
 	}
-	return rr.db.Clauses(clause.OnConflict{DoNothing: true}).Create(&userRoles).Error
+	return rr.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "role_id"}, {Name: "user_id"}}, // chỉ định cột key
+		DoNothing: true,
+	}).Create(&userRoles).Error
 }
 
 // RemoveUserRole removes roles from a specific user
@@ -89,4 +95,47 @@ func (rr *RoleRepository) RemoveUserRole(userID string, roleIDs ...string) error
 		return err
 	}
 	return rr.db.Where("user_id = ? AND role_id IN ?", uuidUserID, roleIDs).Delete(&entities.UserRole{}).Error
+}
+
+func (rr *RoleRepository) SyncRoles(userID string) error {
+	var members []entities.TeamMembers
+	err := rr.db.Where("user_id = ?", userID).Find(&members).Error
+	if err != nil {
+		return err
+	}
+	roleSet := make(map[entities.RoleEnum]bool)
+	for _, m := range members {
+		roleSet[m.Role] = true
+	}
+
+	uniqueRoles := make([]entities.RoleEnum, 0, len(roleSet))
+	for role := range roleSet {
+		uniqueRoles = append(uniqueRoles, entities.RoleEnum(role))
+	}
+
+	rr.AddUserRole(userID, uniqueRoles...)
+
+	roleEnums, err := rr.GetUserRoles(userID)
+	if err != nil {
+		return err
+	}
+
+	listRoles := make([]string, 0, len(roleEnums))
+	for _, v := range roleEnums {
+		switch v {
+		case entities.RoleEnumHead:
+			if _, exists := roleSet[entities.RoleEnumHead]; !exists {
+				listRoles = append(listRoles, string(entities.RoleEnumHead))
+			}
+		case entities.RoleEnumVice:
+			if _, exists := roleSet[entities.RoleEnumVice]; !exists {
+				listRoles = append(listRoles, string(entities.RoleEnumVice))
+			}
+		case entities.RoleEnumMember:
+			if _, exists := roleSet[entities.RoleEnumMember]; !exists {
+				listRoles = append(listRoles, string(entities.RoleEnumMember))
+			}
+		}
+	}
+	return rr.RemoveUserRole(userID, listRoles...)
 }

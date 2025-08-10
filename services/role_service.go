@@ -28,3 +28,7 @@ func (rs *RoleService) AddUserRole(userID string, roleIDs ...string) error {
 func (rs *RoleService) RemoveUserRole(userID string, roleIDs ...string) error {
 	return rs.roleRepo.RemoveUserRole(userID, roleIDs...)
 }
+
+func (rs *RoleService) SyncRoles(userID string) error {
+	return rs.roleRepo.SyncRoles(userID)
+}

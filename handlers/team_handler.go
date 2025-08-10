@@ -56,7 +56,7 @@ func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
 }
 
 func (h *TeamHandler) DeleteTeam(ctx *gin.Context) {
-	teamID := ctx.Param("id")
+	teamID := ctx.Param("team_id")
 	if h.isNilOrWhiteSpaceWithMessage(ctx, teamID, "team id is required") {
 		return
 	}

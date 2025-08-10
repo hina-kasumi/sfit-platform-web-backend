@@ -4,7 +4,7 @@ type RoleEnum string
 
 const (
 	RoleEnumAdmin  RoleEnum = "ADMIN"
-	RoleEnumHead   RoleEnum = "HEAD"
+	RoleEnumHead   RoleEnum = "HEADER"
 	RoleEnumVice   RoleEnum = "VICE"
 	RoleEnumMember RoleEnum = "MEMBER"
 	RoleEnumUser   RoleEnum = "USER"
