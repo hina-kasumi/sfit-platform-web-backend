@@ -13,9 +13,8 @@ type CreateTeamResponse struct {
 }
 
 type UpdateTeamRequest struct {
-	ID          uuid.UUID `json:"id" binding:"required"`
-	Name        string    `json:"name" binding:"required"`
-	Description string    `json:"description" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description" binding:"required"`
 }
 type UpdateTeamResponse struct {
 	UpdatedAt string `json:"updateAt"`

@@ -37,7 +37,7 @@ func (authSer *AuthService) Login(username, email, password string) (string, str
 	if err != nil {
 		return "", "", err
 	}
-	if err := user.IsValidPasswrod(password); err != nil {
+	if err := user.IsValidPassword(password); err != nil {
 		return "", "", err
 	}
 

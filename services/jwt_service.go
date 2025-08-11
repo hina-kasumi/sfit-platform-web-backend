@@ -54,13 +54,18 @@ func NewJwtService(redisService *RedisService) *JwtService {
 func (jwtSer *JwtService) GenerateToken(user entities.Users) (string, error) {
 	secretKey := []byte(jwtSer.secretKey)
 	expSecs := jwtSer.expToken
-
 	exp := time.Now().Unix() + expSecs
 
+	roles := make([]string, len(user.Roles))
+	for i, role := range user.Roles {
+		roles[i] = string(role.RoleID)
+	}
+
 	claims := jwt.MapClaims{
-		"jti": uuid.New().String(),
-		"sub": user.ID.String(),
-		"exp": exp,
+		"jti":   uuid.New().String(),
+		"sub":   user.ID.String(),
+		"exp":   exp,
+		"roles": roles,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

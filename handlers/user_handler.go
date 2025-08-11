@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
@@ -21,19 +22,33 @@ func NewUserHandler(baseHandler *BaseHandler, userSer *services.UserService) *Us
 	}
 }
 
-func (userHandler *UserHandler) ChangePassword(ctx *gin.Context) {
-	var req dtos.ChangePasswordRequest
+func (userHandler *UserHandler) UpdateUser(ctx *gin.Context) {
+	var req dtos.UpdateUserDto
 	if !userHandler.canBindJSON(ctx, &req) {
 		return
 	}
 
-	userID := middlewares.GetPrincipal(ctx)
+	userID := ctx.Param("id")
 	if userID == "" {
 		response.Error(ctx, 401, "Unauthorized")
 		return
 	}
 
-	err := userHandler.userSer.ChangePassword(userID, req.OldPassword, req.NewPassword)
+	user, err := userHandler.userSer.GetUserByID(userID)
+	if err != nil {
+		response.Error(ctx, 404, "User not found")
+		return
+	}
+
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.NewPassword != "" && user.IsValidPassword(req.OldPassword) == nil ||
+		middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		user.SetPassword(req.NewPassword)
+	}
+
+	_, err = userHandler.userSer.UpdateUser(user)
 	if userHandler.isErrorWithMessage(ctx, err, 500, "Change password error") {
 		return
 	}

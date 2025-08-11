@@ -21,30 +21,31 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 }
 
 // lấy danh sách event (lọc có điều kiện)
-func (er *EventRepository) GetEvents(page int, size int, title string, etype string, status string, registed bool, userID string) ([]entities.Event, error) {
+func (er *EventRepository) GetEvents(page int, size int, title string, status string, userEventStatus string, userID string) ([]entities.Event, int64, error) {
 	var events []entities.Event
 	query := er.db.Model(&entities.Event{})
 	if title != "" {
 		query = query.Where("title ILIKE ?", "%"+title+"%")
 	}
-	if etype != "" {
-		query = query.Where("event_type = ?", etype)
-	}
 	if status != "" {
 		query = query.Where("status ILIKE ?", status)
 	}
-	if registed {
+	if userEventStatus != "" {
 		userID, _ := uuid.Parse(userID)
-		query = query.Joins("JOIN user_events ue ON ue.event_id = events.id").
-			Where("ue.user_id = ?", userID)
+		query = query.
+			Joins("JOIN event_attendances ue ON ue.event_id = events.id").
+			Where("ue.user_id = ? AND ue.status = ?", userID, userEventStatus)
 	}
+	var count int64
+	query.Count(&count)
+
 	query = query.Order("begin_at, priority DESC")
 	offset := (page - 1) * size
 	result := query.Offset(offset).Limit(size).Find(&events)
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, 0, result.Error
 	}
-	return events, nil
+	return events, count, nil
 }
 
 // user đã đăng kí event chưa
@@ -53,8 +54,11 @@ func (er *EventRepository) CheckRegisted(userID string, event entities.Event) (b
 	if err != nil {
 		return false, err
 	}
-	var userEvent entities.UserEvent
-	result := er.db.Where("user_id = ? AND event_id = ?", UserID, event.ID).First(&userEvent)
+	var userEvent entities.EventAttendance
+	result := er.db.
+		Where("user_id = ? AND event_id = ?", UserID, event.ID).
+		Where("status = ?", entities.Registered).
+		First(&userEvent)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
@@ -71,7 +75,10 @@ func (er *EventRepository) CheckAttendance(userID string, event entities.Event) 
 		return false, err
 	}
 	var eventAttendance entities.EventAttendance
-	result := er.db.Where("user_id = ? AND event_id = ?", UserID, event.ID).First(&eventAttendance)
+	result := er.db.
+		Where("user_id = ? AND event_id = ?", UserID, event.ID).
+		Where("status = ?", entities.Attended).
+		First(&eventAttendance)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return false, nil
 	}
@@ -88,16 +95,14 @@ func (er *EventRepository) CountRegistedEvent(eventID string) (int64, error) {
 		return 0, err
 	}
 	var count int64
-	result := er.db.Model(&entities.UserEvent{}).Where("event_id = ?", EventID).Count(&count)
+	result := er.db.Model(&entities.EventAttendance{}).
+		Where("event_id = ?", EventID).
+		Where("status = ?", entities.Registered).
+		Count(&count)
 	if result.Error != nil {
 		return 0, result.Error
 	}
 	return count, nil
-}
-
-// lấy danh sách event đã đăng kí
-func (er *EventRepository) GetRegistedEvent(page int, size int, userID string) ([]entities.Event, error) {
-	return er.GetEvents(page, size, "", "", "", true, userID)
 }
 
 // lấy thông tin event theo id
@@ -128,7 +133,6 @@ func (er *EventRepository) CreateEvent(eventReq *dtos.NewEventRequest) (*entitie
 		Priority:    eventReq.Priority,
 		MaxPeople:   eventReq.MaxPeople,
 		Agency:      eventReq.Agency,
-		EventType:   eventReq.EventType,
 		Status:      eventReq.Status,
 		BeginAt:     eventReq.BeginAt,
 		EndAt:       eventReq.EndAt,
@@ -151,7 +155,6 @@ func (er *EventRepository) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*enti
 		Priority:    eventReq.Priority,
 		MaxPeople:   eventReq.MaxPeople,
 		Agency:      eventReq.Agency,
-		EventType:   eventReq.EventType,
 		Status:      eventReq.Status,
 		BeginAt:     eventReq.BeginAt,
 		EndAt:       eventReq.EndAt,
@@ -184,70 +187,42 @@ func (er *EventRepository) DeleteEvent(id string) error {
 	return nil
 }
 
-// hủy đăng kí event
-func (er *EventRepository) UnsubscribeEvent(userID string, eventID string) error {
-	UserEvent := entities.UserEvent{
+func (er *EventRepository) UpdateStatusUserAttendance(userID, eventID string, status entities.EventAttendanceStatus) error {
+	EventAttendance := entities.EventAttendance{
 		UserID:  uuid.MustParse(userID),
 		EventID: uuid.MustParse(eventID),
+		Status:  status,
 	}
-	result := er.db.Delete(&UserEvent)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return errors.New("event not found")
-	}
-	return nil
+	return er.db.Save(&EventAttendance).Error
 }
 
-// đăng kí event
-func (er *EventRepository) SubscribeEvent(userID string, eventID string) error {
-	UserEvent := entities.UserEvent{
-		UserID:  uuid.MustParse(userID),
-		EventID: uuid.MustParse(eventID),
-	}
-	return er.db.Create(&UserEvent).Error
-}
-
-// điểm danh sự kiện
-func (er *EventRepository) EventAttendance(userID string, eventID string) error {
+func (er *EventRepository) DeleteEventAttendance(userID, eventID string) error {
 	EventAttendance := entities.EventAttendance{
 		UserID:  uuid.MustParse(userID),
 		EventID: uuid.MustParse(eventID),
 	}
-	return er.db.Create(&EventAttendance).Error
+	return er.db.Delete(&EventAttendance).Error
 }
 
-// lấy danh sách những nguoi đã đăng kí vào sự kiện
-func (er *EventRepository) GetEventRegisted(page int, size int, eventID string) ([]entities.Users, error) {
+// lấy danh sách những nguoi đã đăng kí, tham gia sự kiện vào sự kiện
+func (er *EventRepository) GetUsersInEvent(page int, size int, eventID string, status string) ([]entities.Users, int64, error) {
 	EventID, err := uuid.Parse(eventID)
 	if err != nil {
-		return nil, err
-	}
-	var users []entities.Users
-	query := er.db.Model(&entities.Users{}).Joins("JOIN user_events ue ON ue.user_id = users.id").
-		Where("ue.event_id = ?", EventID)
-	offset := (page - 1) * size
-	result := query.Offset(offset).Limit(size).Find(&users)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return users, nil
-}
-
-// lấy danh sách những người đã điểm danh vào sự kiện
-func (er *EventRepository) GetEventAttendance(page int, size int, eventID string) ([]entities.Users, error) {
-	EventID, err := uuid.Parse(eventID)
-	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	var users []entities.Users
 	query := er.db.Model(&entities.Users{}).Joins("JOIN event_attendances ea ON ea.user_id = users.id").
 		Where("ea.event_id = ?", EventID)
+	if status != "" {
+		query = query.Where("ea.status = ?", status)
+	}
+	var total int64
+	query.Count(&total)
+
 	offset := (page - 1) * size
 	result := query.Offset(offset).Limit(size).Find(&users)
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, 0, result.Error
 	}
-	return users, nil
+	return users, total, nil
 }

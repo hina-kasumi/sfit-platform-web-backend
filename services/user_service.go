@@ -1,7 +1,6 @@
 package services
 
 import (
-	"log"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
@@ -9,10 +8,11 @@ import (
 
 type UserService struct {
 	user_repo *repositories.UserRepository
+	role_repo *RoleService
 }
 
-func NewUserService(user_repo *repositories.UserRepository) *UserService {
-	return &UserService{user_repo: user_repo}
+func NewUserService(user_repo *repositories.UserRepository, role_repo *RoleService) *UserService {
+	return &UserService{user_repo: user_repo, role_repo: role_repo}
 }
 
 func (user_ser *UserService) GetUserByID(id string) (*entities.Users, error) {
@@ -33,21 +33,6 @@ func (user_ser *UserService) UpdateUser(user *entities.Users) (*entities.Users, 
 
 func (user_ser *UserService) DeleteUser(id string) error {
 	return user_ser.user_repo.DeleteUser(id)
-}
-
-func (user_ser *UserService) ChangePassword(userID, oldPass, newPass string) error {
-	user, err := user_ser.user_repo.GetUserByID(userID)
-	if err != nil {
-		return err
-	}
-	if err := user.IsValidPasswrod(oldPass); err != nil {
-		log.Println("Old password is invalid")
-		return err
-	}
-
-	user.SetPassword(newPass)
-	_, err = user_ser.UpdateUser(user)
-	return err
 }
 
 func (user_ser *UserService) GetUserList(page, pageSize int) ([]dtos.UserListItem, int, int, int64, error) {

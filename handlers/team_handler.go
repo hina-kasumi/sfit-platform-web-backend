@@ -1,22 +1,28 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type TeamHandler struct {
 	*BaseHandler
-	teamService *services.TeamService
+	teamService    *services.TeamService
+	teamMembersSer *services.TeamMembersService
 }
 
-func NewTeamHandler(base *BaseHandler, teamService *services.TeamService) *TeamHandler {
+func NewTeamHandler(base *BaseHandler, teamService *services.TeamService, teamMembersSer *services.TeamMembersService) *TeamHandler {
 	return &TeamHandler{
-		BaseHandler: base,
-		teamService: teamService,
+		BaseHandler:    base,
+		teamService:    teamService,
+		teamMembersSer: teamMembersSer,
 	}
 }
 
@@ -39,12 +45,31 @@ func (h *TeamHandler) CreateTeam(ctx *gin.Context) {
 }
 
 func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
+	teamID := ctx.Param("team_id")
+
 	var req dtos.UpdateTeamRequest
 	if !h.canBindJSON(ctx, &req) {
 		return
 	}
 
-	updatedTeam, err := h.teamService.UpdateTeam(req.ID, req.Name, req.Description)
+	userID := middlewares.GetPrincipal(ctx)
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		role, err := h.teamMembersSer.GetRoleUserInTeam(userID, teamID)
+		if h.isError(ctx, err) {
+			return
+		} else if role != string(entities.RoleEnumHead) {
+			response.Error(ctx, 403, "You are not allowed to update this team")
+			return
+		}
+	}
+
+	uuidTeamID, err := uuid.Parse(teamID)
+	if err != nil {
+		response.Error(ctx, 400, "Invalid team ID")
+		return
+	}
+
+	updatedTeam, err := h.teamService.UpdateTeam(uuidTeamID, req.Name, req.Description)
 	if h.isError(ctx, err) {
 		return
 	}
@@ -56,9 +81,20 @@ func (h *TeamHandler) UpdateTeam(ctx *gin.Context) {
 }
 
 func (h *TeamHandler) DeleteTeam(ctx *gin.Context) {
-	teamID := ctx.Param("id")
+	teamID := ctx.Param("team_id")
 	if h.isNilOrWhiteSpaceWithMessage(ctx, teamID, "team id is required") {
 		return
+	}
+
+	userID := middlewares.GetPrincipal(ctx)
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		role, err := h.teamMembersSer.GetRoleUserInTeam(userID, teamID)
+		if h.isError(ctx, err) {
+			return
+		} else if role != string(entities.RoleEnumHead) {
+			response.Error(ctx, 403, "You are not allowed to delete this team")
+			return
+		}
 	}
 
 	err := h.teamService.DeleteTeam(teamID)

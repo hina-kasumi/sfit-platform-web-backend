@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/handlers"
 	"sfit-platform-web-backend/middlewares"
 
@@ -20,20 +21,29 @@ func NewEventRoute(eventHandler *handlers.EventHandler) *EventRoutes {
 func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
 	eventHandler := eventRou.eventHandler
 
-	task := router.Group("/event")
+	task := router.Group("/events")
 	task.GET("", eventHandler.GetEventList)
 	task.GET("/:event_id", eventHandler.GetEventDetail)
-	task.GET("/list-register", eventHandler.GetEventRegistedList)
-	task.GET("/list-attendance", eventHandler.GetEventAttendanceList)
+	task.GET("/:event_id/users", eventHandler.GetUsersInEvent)
 
-	taskAuth := router.Group("/event")
+	taskAuth := router.Group("/events")
 	taskAuth.Use(middlewares.EnforceAuthenticatedMiddleware())
-	taskAuth.GET("/event-list-registed", eventHandler.GetRegistedEventList)
-	taskAuth.POST("/user-attendance", eventHandler.EventAttendance)
-	taskAuth.POST("/subscribe", eventHandler.SubscribeEvent)
+	taskAuth.Use(middlewares.RequireRoles(
+		string(entities.RoleEnumAdmin),
+		string(entities.RoleEnumHead),
+		string(entities.RoleEnumVice),
+	))
 	taskAuth.POST("", eventHandler.CreateEvent)
 	taskAuth.PUT("", eventHandler.UpdateEvent)
 	taskAuth.DELETE("/:event_id", eventHandler.DeleteEvent)
-	taskAuth.POST("/unsubscribe", eventHandler.UnsubscribeEvent)
 
+	attendEvent := router.Group("/users/:user_id/events/:event_id")
+	attendEvent.Use(middlewares.EnforceAuthenticatedMiddleware())
+	attendEvent.Use(middlewares.RequireRoles(
+		string(entities.RoleEnumAdmin),
+		string(entities.RoleEnumHead),
+		string(entities.RoleEnumVice),
+		string(entities.RoleEnumMember),
+	))
+	attendEvent.PUT("", eventHandler.UpdateStatusUserAttendance)
 }

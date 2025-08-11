@@ -24,6 +24,7 @@ type DI struct {
 	TeamMembersRepo *repositories.TeamMembersRepository
 	EventRepo       *repositories.EventRepository
 	UserProfileRepo *repositories.UserProfileRepository
+	RoleRepo        *repositories.RoleRepository
 
 	// service
 	UserService        *services.UserService
@@ -36,6 +37,7 @@ type DI struct {
 	TagService         *services.TagService
 	CourseService      *services.CourseService
 	TagTempService     *services.TagTempService
+	RoleService        *services.RoleService
 
 	EventService       *services.EventService
 	UserProfileService *services.UserProfileService
@@ -58,6 +60,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	tagTempRepo := repositories.NewTagTempRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
 	favorCourseRepo := repositories.NewFavoriteCourseRepository(db)
+	roleRepo := repositories.NewRoleRepository(db)
 	lessonRepo := repositories.NewLessonRepository(db)
 	userCourseRepo := repositories.NewUserCourseRepository(db)
 	userRateRepo := repositories.NewUserRateRepository(db)
@@ -69,9 +72,10 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	userProfileRepo := repositories.NewUserProfileRepository(db)
 
 	// Khởi tạo Service
-	userSer := services.NewUserService(userRepo)
+	roleSer := services.NewRoleService(roleRepo)
+	userSer := services.NewUserService(userRepo, roleSer)
 	tagSer := services.NewTagService(tagRepo)
-	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo)
+	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo, roleSer)
 	teamSer := services.NewTeamService(teamRepo, teamMembersService)
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
@@ -87,13 +91,14 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer, tagSer, tagTempSer)
 	tagHandler := handlers.NewTagHandler(baseHandler, tagSer)
-	teamHandler := handlers.NewTeamHandler(baseHandler, teamSer)
+	teamHandler := handlers.NewTeamHandler(baseHandler, teamSer, teamMembersService)
 	teamMembersHandler := handlers.NewTeamMembersHandler(handlers.NewBaseHandler(), teamMembersService)
-	eventHandler := handlers.NewEventHandler(baseHandler, eventSer)
+	eventHandler := handlers.NewEventHandler(baseHandler, eventSer, tagSer, tagTempSer)
 	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
 	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 
 	return &DI{
+		RoleRepo:        roleRepo,
 		UserRepo:        userRepo,
 		TagRepo:         tagRepo,
 		TeamRepo:        teamRepo,
@@ -103,6 +108,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		CourseRepo:      courseRepo,
 		TagTempRepo:     tagTempRepo,
 
+		RoleService:        roleSer,
 		UserService:        userSer,
 		TagService:         tagSer,
 		TeamService:        teamSer,
