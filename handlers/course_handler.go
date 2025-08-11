@@ -232,9 +232,9 @@ func parsePagination(ctx *gin.Context) (page, pageSize int, ok bool) {
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
 	// Lấy userID từ URL parameter
-	userID := c.Param("user_id")
-	if userID == "" {
-		response.Error(c, http.StatusBadRequest, "User ID is required")
+	userId := middlewares.GetPrincipal(c)
+	if userId == "" {
+		response.Error(c, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
