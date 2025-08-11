@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 
@@ -41,7 +43,8 @@ func (userHandler *UserHandler) UpdateUser(ctx *gin.Context) {
 	if req.Email != "" {
 		user.Email = req.Email
 	}
-	if req.NewPassword != "" && user.IsValidPassword(req.OldPassword) == nil {
+	if req.NewPassword != "" && user.IsValidPassword(req.OldPassword) == nil ||
+		middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
 		user.SetPassword(req.NewPassword)
 	}
 

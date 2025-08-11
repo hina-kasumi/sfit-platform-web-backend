@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
@@ -129,6 +130,16 @@ func (eventHandler *EventHandler) UpdateStatusUserAttendance(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&updateReq)
 	if err != nil {
 		response.Error(ctx, http.StatusBadRequest, "Invalid input")
+		return
+	}
+
+	// Kiểm tra quyền hạn chỉ người dùng có vai trò Admin, Vice, Head mới được cập nhật trạng thái điểm danh
+	if updateReq.Status == string(entities.Attended) &&
+		!middlewares.HasRole(ctx,
+			string(entities.RoleEnumAdmin),
+			string(entities.RoleEnumVice),
+			string(entities.RoleEnumHead)) {
+		response.Error(ctx, http.StatusForbidden, "Forbidden")
 		return
 	}
 

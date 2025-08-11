@@ -107,3 +107,15 @@ func (r *TeamMembersRepository) DeleteAllMembersInTeam(teamID uuid.UUID) error {
 	result := r.db.Where("team_id = ?", teamID).Delete(&entities.TeamMembers{})
 	return result.Error
 }
+
+func (r *TeamMembersRepository) FindRoleByUserIDAndTeamID(userID, teamID uuid.UUID) (string, error) {
+	var role string
+	err := r.db.Table("team_members").
+		Select("role").
+		Where("user_id = ? AND team_id = ?", userID, teamID).
+		Scan(&role).Error
+	if err != nil {
+		return "", err
+	}
+	return role, nil
+}

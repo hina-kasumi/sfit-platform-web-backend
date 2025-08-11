@@ -1,9 +1,11 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/handlers"
 	"sfit-platform-web-backend/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserProfileRoute struct {
@@ -18,9 +20,10 @@ func NewUserProfileRoute(handler *handlers.UserProfileHandler) *UserProfileRoute
 
 func (userprofileRoute *UserProfileRoute) RegisterRoutes(router *gin.Engine) {
 	group := router.Group("/user-profiles")
-	group.DELETE("/:user_id", userprofileRoute.handler.DeleteUser)
 	group.GET("/:user_id", userprofileRoute.handler.GetUserProfile)
+
 	group.Use(middlewares.EnforceAuthenticatedMiddleware())
+	group.DELETE("/:user_id", middlewares.RequireRoles(string(entities.RoleEnumAdmin)), userprofileRoute.handler.DeleteUser)
 	group.PUT("", userprofileRoute.handler.UpdateUserProfile)
 	group.POST("", userprofileRoute.handler.CreateUserProfile)
 }

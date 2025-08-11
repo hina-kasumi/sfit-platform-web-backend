@@ -101,3 +101,13 @@ func GetRoles(c *gin.Context) []string {
 	}
 	return roles
 }
+
+func HasRole(c *gin.Context, role ...string) bool {
+	userRoles := GetRoles(c)
+	for _, r := range role {
+		if slices.Contains(userRoles, r) {
+			return true
+		}
+	}
+	return false
+}

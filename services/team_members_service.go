@@ -109,3 +109,20 @@ func (s *TeamMembersService) DeleteAllMemberInTeam(teamID string) error {
 
 	return nil
 }
+
+func (s *TeamMembersService) GetRoleUserInTeam(userIDStr, teamIDStr string) (string, error) {
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return "", errors.New("invalid user_id format")
+	}
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		return "", errors.New("invalid team_id format")
+	}
+
+	role, err := s.repo.FindRoleByUserIDAndTeamID(userID, teamID)
+	if err != nil {
+		return "", err
+	}
+	return role, nil
+}

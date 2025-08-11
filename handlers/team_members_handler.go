@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 	"strconv"
@@ -35,6 +37,17 @@ func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
 		return
 	}
 
+	curUserID := middlewares.GetPrincipal(ctx)
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		role, err := h.service.GetRoleUserInTeam(curUserID, teamID)
+		if h.isError(ctx, err) {
+			return
+		} else if role != string(entities.RoleEnumHead) {
+			response.Error(ctx, 403, "You are not allowed to delete this team member")
+			return
+		}
+	}
+
 	err := h.service.DeleteMember(userID, teamID)
 	if h.isError(ctx, err) {
 		return
@@ -59,6 +72,17 @@ func (h *TeamMembersHandler) SaveMember(ctx *gin.Context) {
 	var req dtos.UpdateTeamMemberRequest
 	if !h.canBindJSON(ctx, &req) {
 		return
+	}
+
+	curUserID := middlewares.GetPrincipal(ctx)
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		role, err := h.service.GetRoleUserInTeam(curUserID, teamID)
+		if h.isError(ctx, err) {
+			return
+		} else if role != string(entities.RoleEnumHead) {
+			response.Error(ctx, 403, "You are not allowed to update this team member")
+			return
+		}
 	}
 
 	err := h.service.SaveMember(userID, teamID, req.Role)
