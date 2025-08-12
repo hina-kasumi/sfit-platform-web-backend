@@ -783,6 +783,15 @@ func (cr *CourseRepository) CheckCourseExists(courseID uuid.UUID) (bool, error) 
 	err := cr.db.Model(&entities.Course{}).
 		Where("id = ?", courseID).
 		Count(&count).Error
-
+	
 	return count > 0, err
+}
+
+// Helper: chuyển string JSON sang []string
+func ParseStringArray(data string) []string {
+	var arr []string
+	if err := json.Unmarshal([]byte(data), &arr); err != nil {
+		return []string{}
+	}
+	return arr
 }

@@ -23,12 +23,10 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
 	router.DELETE("/course/favourite", r.handler.UnmarkCourseAsFavourite)
 	router.PUT("/course", r.handler.UpdateCourse)
 
-	protected := router.Group("")
-    protected.Use(middlewares.EnforceAuthenticatedMiddleware())
-    protected.GET("/users/:user_id/courses", r.handler.GetRegisteredCourses)
-    protected.GET("/course/:course_id/lessons", r.handler.GetCourseLessons)
-	protected.POST("/users/:user_id/rate/courses/:course_id", r.handler.RateCourse)
-	protected.DELETE("/course/:course_id", middlewares.RequireRoles("ADMIN","HEAD"), r.handler.DeleteCourse)
-	protected.POST("/users/:user_id/courses", r.handler.RegisterUserToCourse)
-	protected.GET("/course/:course_id/users", middlewares.RequireRoles("ADMIN","HEAD"), r.handler.GetRegisteredUsers)
+	router.GET("/users/:user_id/courses", r.handler.GetRegisteredCourses)
+	router.GET("/course/:course_id/lessons", r.handler.GetCourseLessons)
+	router.POST("/users/:user_id/rate/courses/:course_id", r.handler.RateCourse)
+	router.DELETE("/course/:course_id", middlewares.RequireRoles("ADMIN","HEAD"), r.handler.DeleteCourse)
+	router.POST("/users/:user_id/courses", r.handler.RegisterUserToCourse)
+	router.GET("/course/:course_id/users", middlewares.RequireRoles("ADMIN","HEAD"), r.handler.GetRegisteredUsers)
 }

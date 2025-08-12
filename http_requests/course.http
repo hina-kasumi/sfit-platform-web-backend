@@ -101,3 +101,45 @@ Content-Type: application/json
     "Không bug"
   ]
 }
+
+### Đăng ký người dùng vào khóa học
+POST http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/courses
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+{
+  "course_id": "3d003944-0be2-41d1-8777-c463342d977c"
+}
+
+### Lấy danh sách khóa học của người dùng
+GET http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/courses
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+### Lấy danh sách bai hoc cua khoa hoc
+GET http://localhost:8080/course/3d003944-0be2-41d1-8777-c463342d977c/lessons
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+### Đánh giá khóa học
+POST http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/rate/courses/3d003944-0be2-41d1-8777-c463342d977c
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+{
+  "course" : "f9df03cf-eda7-4805-ab67-7fa9f8528764",
+  "star": 5,
+  "comment": "Khóa học rất hay!"
+}
+
+
+###role ADMIN , HEAD
+### Xóa khóa học 
+DELETE http://localhost:8080/course/3d003944-0be2-41d1-8777-c463342d977c
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+### Lấy danh sách người dùng đã đăng ký khóa học
+GET http://localhost:8080/course/3d003944-0be2-41d1-8777-c463342d977c/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg

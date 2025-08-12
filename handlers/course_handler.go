@@ -231,7 +231,7 @@ func parsePagination(ctx *gin.Context) (page, pageSize int, ok bool) {
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
-	// Lấy userID từ URL parameter
+	// Lấy userID từ JWT token
 	userID := middlewares.GetPrincipal(c)
 	if userID == "" {
 		response.Error(c, http.StatusUnauthorized, "Unauthorized")
