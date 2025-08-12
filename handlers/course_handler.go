@@ -122,12 +122,18 @@ func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
 		return
 	}
 
-	var req dtos.SetFavouriteCourseRequest
-	if !h.canBindJSON(ctx, &req) {
+	// var req dtos.SetFavouriteCourseRequest
+	// if !h.canBindJSON(ctx, &req) {
+	// 	return
+	// }
+
+	courseID := ctx.Param("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
 		return
 	}
 
-	if err := h.courseService.MarkCourseAsFavourite(userID, req.CourseID); err != nil {
+	if err := h.courseService.MarkCourseAsFavourite(userID, courseID); err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to mark course as favourite")
 		return
 	}
@@ -144,12 +150,18 @@ func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
 		return
 	}
 
-	var req dtos.SetFavouriteCourseRequest
-	if !h.canBindJSON(ctx, &req) {
+	// var req dtos.SetFavouriteCourseRequest
+	// if !h.canBindJSON(ctx, &req) {
+	// 	return
+	// }
+
+	courseID := ctx.Param("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
 		return
 	}
 
-	if err := h.courseService.UnmarkCourseAsFavourite(userID, req.CourseID); err != nil {
+	if err := h.courseService.UnmarkCourseAsFavourite(userID, courseID); err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to unmark course as favourite")
 		return
 	}
@@ -207,7 +219,12 @@ func (h *CourseHandler) GetListUserCompleteCourse(ctx *gin.Context) {
 		return
 	}
 
-	courseID := ctx.Query("course_id")
+	// courseID := ctx.Query("course_id")
+	// if courseID == "" {
+	// 	response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+	// 	return
+	// }
+	courseID := ctx.Param("course_id")
 	if courseID == "" {
 		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
 		return
