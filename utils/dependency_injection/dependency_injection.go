@@ -51,7 +51,6 @@ type DI struct {
 	EventHandler       *handlers.EventHandler
 	UserProfileHandler *handlers.UserProfileHandler
 	UserHandler        *handlers.UserHandler
-	TaskHandler        *handlers.TaskHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -71,7 +70,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	teamMembersRepo := repositories.NewTeamMembersRepository(db)
 	eventRepo := repositories.NewEventRepository(db)
 	userProfileRepo := repositories.NewUserProfileRepository(db)
-	taskRepo := repositories.NewTaskRepository(db)
 
 	// Khởi tạo Service
 	roleSer := services.NewRoleService(roleRepo)
@@ -87,7 +85,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
 	eventSer := services.NewEventService(eventRepo)
 	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
-	taskSer := services.NewTaskService(taskRepo)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
@@ -99,7 +96,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	eventHandler := handlers.NewEventHandler(baseHandler, eventSer, tagSer, tagTempSer)
 	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
 	userHandler := handlers.NewUserHandler(baseHandler, userSer)
-	taskHandler := handlers.NewTaskHandler(baseHandler, taskSer)
 
 	return &DI{
 		RoleRepo:        roleRepo,
@@ -135,6 +131,5 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		EventHandler:       eventHandler,
 		UserProfileHandler: profileHandler,
 		UserHandler:        userHandler,
-		TaskHandler:        taskHandler,
 	}
 }
