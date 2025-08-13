@@ -47,6 +47,11 @@ type AddModuleToCourseRequest struct {
 	ModuleTitle string `json:"module_title" binding:"required"`
 }
 
+type GetUserProgressInCourseRequest struct {
+	CourseID string `json:"course_id" binding:"required"`
+	UserID   string `json:"user_id" binding:"required"`
+}
+
 //
 // RESPONSE DTOs
 //
@@ -132,6 +137,11 @@ type AddModuleToCourseResponse struct {
 	CourseID    string `json:"course_id"`
 	ModuleTitle string `json:"module_title"`
 	CreatedAt   string `json:"created_at"`
+}
+
+type GetUserProgressInCourseResponse struct {
+	Learned      int `json:"learned"`
+	TotalLessons int `json:"total_lessons"`
 }
 
 //

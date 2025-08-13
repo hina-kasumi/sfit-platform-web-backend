@@ -294,3 +294,37 @@ func parsePagination(ctx *gin.Context) (page, pageSize int, ok bool) {
 
 	return page, pageSize, true
 }
+
+// POST /course/user-progress
+func (h *CourseHandler) GetUserProgressInCourse(ctx *gin.Context) {
+	// var req dtos.GetUserProgressInCourseRequest
+	// if !h.canBindJSON(ctx, &req) {
+	// 	return
+	// }
+
+	// if req.CourseID == "" || req.UserID == "" {
+	// 	response.Error(ctx, http.StatusBadRequest, "Course ID and User ID are required")
+	// 	return
+	// }
+
+	userID := ctx.Param("user_id")
+	courseID := ctx.Param("course_id")
+	if courseID == "" || userID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID and User ID are required")
+		return
+	}
+
+	// Learned, TotalLessons, err := h.courseService.GetUserProgressInCourse(req.CourseID, req.UserID)
+
+	Learned, TotalLessons, err := h.courseService.GetUserProgressInCourse(courseID, userID)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get user progress in course")
+		return
+	}
+
+	resp := dtos.GetUserProgressInCourseResponse{
+		Learned:      Learned,
+		TotalLessons: TotalLessons,
+	}
+	response.Success(ctx, "User progress retrieved successfully", resp)
+}

@@ -18,15 +18,15 @@ func NewCourseRoute(handler *handlers.CourseHandler) *CourseRoute {
 
 func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
 
-    publicCourse := router.Group("course")
+    publicCourse := router.Group("")
     publicCourse.Use(middlewares.EnforceAuthenticatedMiddleware())
     {
-        publicCourse.GET("", r.handler.GetListCourse)
-        publicCourse.GET("/:course_id", r.handler.GetCourseDetailByID)
-        publicCourse.POST("/:course_id/favourite-course", r.handler.MarkCourseAsFavourite)
-        publicCourse.DELETE("/:course_id/favourite-course", r.handler.UnmarkCourseAsFavourite)
+        publicCourse.GET("/course", r.handler.GetListCourse)
+        publicCourse.GET("/course/:course_id", r.handler.GetCourseDetailByID)
+        publicCourse.POST("course/:course_id/favourite", r.handler.MarkCourseAsFavourite)
+        publicCourse.DELETE("course/:course_id/favourite", r.handler.UnmarkCourseAsFavourite)
+        publicCourse.GET("users/:user_id/courses/:course_id/progress", r.handler.GetUserProgressInCourse)
     }
-
     protectedCourse := router.Group("/course")
     protectedCourse.Use(middlewares.EnforceAuthenticatedMiddleware())
     protectedCourse.Use(middlewares.RequireRoles(

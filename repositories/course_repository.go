@@ -341,9 +341,9 @@ func (r *CourseRepository) buildCountWhereConditions(filter dtos.CourseFilter) (
 func (r *CourseRepository) getCourseBasicInfo(courseID, userID string) (*dtos.CourseDetailResponse, error) {
 	var courseRaw dtos.CourseDetailRaw
 	// COALESCE(SUM(
-	// 	CASE 
+	// 	CASE
 	// 		WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
-	// 		WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int  
+	// 		WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
 	// 		WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
 	// 		ELSE 0
 	// 	END
@@ -475,11 +475,11 @@ func (r *CourseRepository) getCourseContent(courseID, userID string) ([]dtos.Cou
 		ORDER BY m.create_at ASC`
 
 	// moduleQuery := `
-	// 	SELECT 
+	// 	SELECT
 	// 		m.id,
 	// 		m.module_title,
 	// 		COALESCE(SUM(
-	// 			CASE 
+	// 			CASE
 	// 				WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
 	// 				WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
 	// 				WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
@@ -689,4 +689,28 @@ func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, 
 	}
 
 	return users, totalUser, nil
+}
+
+func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) (int, int, error) {
+	var res dtos.GetUserProgressInCourseResponse
+
+	query := `
+        SELECT 
+            (SELECT COALESCE(SUM(la.timestamp / 60), 0)
+             FROM lesson_attendances la
+             JOIN lessons l ON l.id = la.lesson_id
+             JOIN modules m ON m.id = l.module_id
+             WHERE m.course_id = ? AND la.user_id = ?) AS learned,
+            (SELECT COUNT(l.id)
+             FROM lessons l
+             JOIN modules m ON m.id = l.module_id
+             WHERE m.course_id = ?) AS total_lessons
+    `
+
+	err := r.db.Raw(query, courseID, userID, courseID).Scan(&res).Error
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get progress: %w", err)
+	}
+
+	return res.Learned, res.TotalLessons, nil
 }

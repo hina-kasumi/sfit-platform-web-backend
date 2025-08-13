@@ -281,3 +281,22 @@ func (s *CourseService) AddModuleToCourse(courseID, moduleTitle string) (uuid.UU
 	}
 	return moduleID, create_at, nil
 }
+
+func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, int, error) {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
+		return 0, 0, fmt.Errorf("user not found: %w", err)
+	}
+
+	// Check course exists
+	if _, err := s.courseRepo.GetCourseByID(courseID, userID); err != nil {
+		return 0, 0, fmt.Errorf("course not found: %w", err)
+	}
+
+	Learned, TotalLessons, err := s.userCourseRepo.GetUserProgressInCourse(courseID, userID)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get user progress: %w", err)
+	}
+
+	return Learned, TotalLessons, nil
+}
