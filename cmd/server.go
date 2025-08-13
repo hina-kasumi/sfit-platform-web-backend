@@ -53,7 +53,6 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 
 		// Đắng ký router
 		routes.NewCourseRoute(depInject.CourseHandler),
-		routes.NewTaskRoute(depInject.TaskHandler),
 	}
 
 	r := gin.Default()
