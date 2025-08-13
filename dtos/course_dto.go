@@ -59,31 +59,6 @@ type UpdateCourseResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-type CourseListResponse struct {
-	Courses    []CourseGeneralInformationResponse `json:"courses"`
-	Pagination PaginationResponse                 `json:"pagination"`
-}
-
-type PaginationResponse struct {
-	CurrentPage  int `json:"currentPage"`
-	TotalPages   int `json:"totalPages"`
-	TotalCourses int `json:"totalCourses"`
-}
-
-type CourseGeneralInformationResponse struct {
-	ID             string   `json:"id"`
-	Title          string   `json:"title"`
-	Description    string   `json:"description"`
-	Type           string   `json:"type"`
-	Teachers       []string `json:"teachers"`
-	NumberLessons  int      `json:"numberLessons"`
-	TimeLearn      int      `json:"timeLearned"`
-	Rate           float64  `json:"rate"`
-	Tags           []string `json:"tags"`
-	LearnedLessons int      `json:"learnedLessons"`
-	Registed       bool     `json:"registed"`
-}
-
 type CourseDetailResponse struct {
 	Title          string                  `json:"title"`
 	Description    string                  `json:"description"`
@@ -152,6 +127,32 @@ type LessonInfo struct {
 	Learned   bool   `json:"learned"`
 	StudyTime int    `json:"study_time"`
 }
+
+type CourseGeneralInformationResponse struct {
+	ID             string   `json:"id"`
+	Title          string   `json:"title"`
+	Description    string   `json:"description"`
+	Type           string   `json:"type"`
+	Teachers       []string `json:"teachers"`
+	NumberLessons  int      `json:"number_lessons"`
+	TimeLearn      int      `json:"time_learn"`
+	Rate           float64  `json:"rate"`
+	Tags           []string `json:"tags"`
+	LearnedLessons int      `json:"learned_lessons"`
+	Registed       bool     `json:"registed"`
+}
+
+type CourseListResponse struct {
+	Courses    []CourseGeneralInformationResponse `json:"courses"`
+	Pagination PaginationResponse                 `json:"pagination"`
+}
+
+type PaginationResponse struct {
+	CurrentPage  int `json:"current_page"`
+	TotalPages   int `json:"total_pages"`
+	TotalCourses int `json:"total_courses"`
+}
+
 
 // ===================== INTERNAL USE STRUCT =====================
 type CourseRaw struct {

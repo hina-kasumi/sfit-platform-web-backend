@@ -625,18 +625,48 @@ func (r *CourseRepository) EnsureCourseExists(courseID uuid.UUID) error {
 }
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
-func (cr *CourseRepository) GetCoursesByUserIDWithPagination(userID string, offset, limit int, total *int64) ([]entities.Course, error) {
-	var courses []entities.Course
-	err := cr.db.
-		Table("courses").
-		Joins("JOIN user_courses ON user_courses.course_id = courses.id").
-		Where("user_courses.user_id = ?", userID).
-		Count(total).
-		Offset(offset).
-		Limit(limit).
-		Find(&courses).Error
+func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
+    userID string,
+    offset, limit int,
+    total *int64,
+) ([]dtos.CourseGeneralInformationResponse, error) {
 
-	return courses, err
+    var courses []dtos.CourseGeneralInformationResponse
+
+    // Đếm tổng
+    if err := cr.db.
+        Table("courses").
+        Joins("JOIN user_courses ON user_courses.course_id = courses.id").
+        Where("user_courses.user_id = ?", userID).
+        Count(total).Error; err != nil {
+        return nil, err
+    }
+
+    // Lấy dữ liệu: convert text[] thành JSON để map an toàn vào []string
+    query := `
+        SELECT 
+            courses.id,
+            courses.title,
+            courses.description,
+            courses.level AS type,
+            COALESCE(ARRAY(SELECT unnest(teachers)), '{}') AS teachers,
+            0 AS number_lessons,
+            0 AS time_learn,
+            5 AS rate,
+            '{}'::text[] AS tags,
+            0 AS learned_lessons,
+            TRUE AS registed
+        FROM courses
+        JOIN user_courses ON user_courses.course_id = courses.id
+        WHERE user_courses.user_id = ?
+        OFFSET ? LIMIT ?
+    `
+
+    if err := cr.db.Raw(query, userID, offset, limit).Scan(&courses).Error; err != nil {
+        return nil, err
+    }
+
+    return courses, nil
 }
 
 // Lấy số bài học và bài học đã học của người dùng trong khóa học
