@@ -442,7 +442,8 @@ func (ch *CourseHandler) DeleteCourse(c *gin.Context) {
 // Lấy danh sách người dùng đã đăng ký khóa học với phân trang
 func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
 	// Lấy course_id từ query parameter
-	courseID := c.Query("course_id")
+	// courseID := c.Query("course_id")
+	courseID := c.Param("course_id")
 	if courseID == "" {
 		response.Error(c, http.StatusBadRequest, "Course ID is required")
 		return
@@ -505,5 +506,3 @@ func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 
 	response.Success(c, "Successfully registered for course", nil)
 }
-
-
