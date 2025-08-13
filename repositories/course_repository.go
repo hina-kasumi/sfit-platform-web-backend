@@ -150,7 +150,7 @@ func (r *CourseRepository) buildCoursesQuery(filter dtos.CourseFilter, pageSize,
 			SELECT 
 				m.course_id,
 				COUNT(CASE WHEN la.status = 'present' THEN 1 END) AS learned,
-				COALESCE(SUM(EXTRACT(EPOCH FROM la.timestamp)::int / 60), 0) AS time_learn
+				COALESCE(SUM(la.timestamp / 60), 0) AS time_learn
 			FROM lesson_attendances la
 			INNER JOIN lessons l ON l.id = la.lesson_id
 			INNER JOIN modules m ON m.id = l.module_id

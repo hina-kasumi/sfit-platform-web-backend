@@ -19,7 +19,7 @@ type LessonAttendance struct {
 	UserID      uuid.UUID `gorm:"type:uuid;primaryKey;column:user_id"`
 	LessonID    uuid.UUID `gorm:"type:uuid;primaryKey;column:lesson_id"`
 	QuizPoint   int       `gorm:"column:quiz_point"`
-	Duration    time.Time `gorm:"column:timestamp"`
+	Duration    int       `gorm:"column:timestamp"`
 	Status      string    `gorm:"type:varchar;check:status in ('present', 'absent', 'late')"`
 	DeviceID    uuid.UUID `gorm:"type:uuid;column:device_id"`
 	ModeratorID uuid.UUID `gorm:"type:uuid;column:moderator_id"`
