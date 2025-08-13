@@ -118,3 +118,9 @@ Content-Type: application/json
     "course_id": "...",
     "module_title": "Hello"
 }
+
+###
+
+### Lấy tiến độ
+GET http://localhost:8080/users/user_id/courses/course_id/progress
+Content-Type: application/json
