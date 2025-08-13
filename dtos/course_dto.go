@@ -7,10 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-//
-// REQUEST DTOs
-//
-
+// ===================== REQUEST DTOs =====================
 type CreateCourseRequest struct {
 	Title       string   `json:"title" binding:"required"`
 	Description string   `json:"description" binding:"required"`
@@ -22,10 +19,6 @@ type CreateCourseRequest struct {
 	Certificate bool     `json:"certificate"`
 	Level       string   `json:"level" binding:"required"`
 	Tags        []string `json:"tags"`
-}
-
-type SetFavouriteCourseRequest struct {
-	CourseID string `json:"course_id" binding:"required"`
 }
 
 type UpdateCourseRequest struct {
@@ -52,38 +45,28 @@ type GetUserProgressInCourseRequest struct {
 	UserID   string `json:"user_id" binding:"required"`
 }
 
-//
-// RESPONSE DTOs
-//
+type SetFavouriteCourseRequest struct {
+	CourseID string `json:"course_id" binding:"required"`
+}
 
+type CourseRegisterRequest struct {
+	CourseID string `json:"course_id" binding:"required"`
+}
+
+type CourseRateRequest struct {
+	Course  string `json:"course" binding:"required"`
+	Star    int    `json:"star" binding:"required,min=1,max=5"`
+	Comment string `json:"comment"`
+}
+
+// ===================== RESPONSE DTOs =====================
 type CreateCourseResponse struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"createdAt"`
 }
 
-type CourseListResponse struct {
-	Courses    []CourseGeneralInformationResponse `json:"courses"`
-	Pagination PaginationResponse                 `json:"pagination"`
-}
-
-type PaginationResponse struct {
-	CurrentPage  int `json:"currentPage"`
-	TotalPages   int `json:"totalPages"`
-	TotalCourses int `json:"totalCourses"`
-}
-
-type CourseGeneralInformationResponse struct {
-	ID             string   `json:"id"`
-	Title          string   `json:"title"`
-	Description    string   `json:"description"`
-	Type           string   `json:"type"`
-	Teachers       []string `json:"teachers"`
-	NumberLessons  int      `json:"numberLessons"`
-	TimeLearn      int      `json:"timeLearned"`
-	Rate           float64  `json:"rate"`
-	Tags           []string `json:"tags"`
-	LearnedLessons int      `json:"learnedLessons"`
-	Registed       bool     `json:"registed"`
+type UpdateCourseResponse struct {
+	UpdatedAt string `json:"updated_at"`
 }
 
 type CourseDetailResponse struct {
@@ -98,7 +81,7 @@ type CourseDetailResponse struct {
 	Tags           []string                `json:"tags"`
 	Target         []string                `json:"target"`
 	Require        []string                `json:"require"`
-	TotalTime      int                     `json:"total_time"` // total time in seconds
+	TotalTime      int                     `json:"total_time"`
 	TotalRegitered int                     `json:"total_registered"`
 	UpdatedAt      time.Time               `json:"updated_at"`
 	Language       string                  `json:"language"`
@@ -107,10 +90,21 @@ type CourseDetailResponse struct {
 }
 
 type CourseContentResponse struct {
-	ID          string `json:"id"`
+	ID          string           `json:"id"`
+	ModuleTitle string           `json:"module_title"`
+	Lessons     []LessonResponse `json:"lessons"`
+}
+
+type AddModuleToCourseResponse struct {
+	ModuleID    string `json:"module_id"`
+	CourseID    string `json:"course_id"`
 	ModuleTitle string `json:"module_title"`
-	// TotalTime   int              `json:"total_time"`
-	Lessons []LessonResponse `json:"lessons"`
+	CreatedAt   string `json:"created_at"`
+}
+
+type GetUserProgressInCourseResponse struct {
+	Learned      int `json:"learned"`
+	TotalLessons int `json:"total_lesson"`
 }
 
 type LessonResponse struct {
@@ -127,37 +121,71 @@ type RateResponse struct {
 	CreatedAt string  `json:"created_at"`
 }
 
-type UpdateCourseResponse struct {
-	// ID string  `json:"id"`
-	UpdatedAt string `json:"updated_at"`
+type CourseLessonsResponse []ModuleInfo
+
+type RegisteredUsersResponse struct {
+	Users    []RegisteredUserInfo `json:"users"`
+	Page     int                  `json:"page"`
+	PageSize int                  `json:"pageSize"`
+	Total    int64                `json:"total"`
 }
 
-type AddModuleToCourseResponse struct {
-	ModuleID    string `json:"module_id"`
-	CourseID    string `json:"course_id"`
-	ModuleTitle string `json:"module_title"`
-	CreatedAt   string `json:"created_at"`
+type RegisteredUserInfo struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
-type GetUserProgressInCourseResponse struct {
-	Learned      int `json:"learned"`
-	TotalLessons int `json:"total_lessons"`
+type ModuleInfo struct {
+	ID          string       `json:"id"`
+	ModuleTitle string       `json:"module_title"`
+	TotalTime   int          `json:"total_time"`
+	Lessons     []LessonInfo `json:"lessons"`
 }
 
-//
-// INTERNAL USE STRUCT
-//
+type LessonInfo struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	Learned   bool   `json:"learned"`
+	StudyTime int    `json:"study_time"`
+}
 
+type CourseGeneralInformationResponse struct {
+	ID             string   `json:"id"`
+	Title          string   `json:"title"`
+	Description    string   `json:"description"`
+	Type           string   `json:"type"`
+	Teachers       []string `json:"teachers"`
+	NumberLessons  int      `json:"number_lessons"`
+	TimeLearn      int      `json:"time_learn"`
+	Rate           float64  `json:"rate"`
+	Tags           []string `json:"tags"`
+	LearnedLessons int      `json:"learned_lessons"`
+	Registed       bool     `json:"registed"`
+}
+
+type CourseListResponse struct {
+	Courses    []CourseGeneralInformationResponse `json:"courses"`
+	Pagination PaginationResponse                 `json:"pagination"`
+}
+
+type PaginationResponse struct {
+	CurrentPage  int `json:"current_page"`
+	TotalPages   int `json:"total_pages"`
+	TotalCourses int `json:"total_courses"`
+}
+
+// ===================== INTERNAL USE STRUCT =====================
 type CourseRaw struct {
 	ID             string          `json:"id"`
 	Title          string          `json:"title"`
 	Description    string          `json:"description"`
 	Type           string          `json:"type"`
-	Teachers       json.RawMessage `json:"teachers"` // JSON array of strings
+	Teachers       json.RawMessage `json:"teachers"`
 	NumberLessons  int             `json:"number_lessons"`
 	TimeLearn      int             `json:"time_learn"`
 	Rate           float64         `json:"rate"`
-	Tags           json.RawMessage `json:"tags"` // JSON array of UUID strings
+	Tags           json.RawMessage `json:"tags"`
 	LearnedLessons int             `json:"learned_lessons"`
 	Registed       bool            `json:"registed"`
 }
@@ -180,10 +208,7 @@ type CourseDetailRaw struct {
 	Language        string          `json:"language"`
 }
 
-//
-// FILTER STRUCT
-//
-
+// ===================== FILTER STRUCT =====================
 type CourseFilter struct {
 	Title        string
 	OnlyRegisted bool
