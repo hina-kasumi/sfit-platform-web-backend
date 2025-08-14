@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
@@ -81,7 +82,7 @@ func (th *TaskHandler) ListTasks(ctx *gin.Context) {
 		return
 	}
 
-	tasks, totalCount, err := th.taskService.GetTasks(query.Page, query.PageSize, query.Name, query.EventID)
+	tasks, totalCount, err := th.taskService.GetTasks(query.Page, query.PageSize, query.Name, query.EventID, query.IsCompleted)
 	if th.isError(ctx, err) {
 		return
 	}
@@ -95,12 +96,12 @@ func (th *TaskHandler) ListTasksByEventID(ctx *gin.Context) {
 		return
 	}
 
-	var query *dtos.PageListQuery
+	var query *dtos.ListTasksByEventID
 	if !th.canBindQuery(ctx, &query) {
 		return
 	}
 
-	tasks, totalCount, err := th.taskService.GetTasks(query.Page, query.PageSize, "", eventID)
+	tasks, totalCount, err := th.taskService.GetTasks(query.Page, query.PageSize, "", eventID, query.IsCompleted)
 	if th.isError(ctx, err) {
 		return
 	}
@@ -111,12 +112,12 @@ func (th *TaskHandler) ListTasksByEventID(ctx *gin.Context) {
 func (th *TaskHandler) ListTasksByUserID(ctx *gin.Context) {
 	userID := ctx.Param("user_id")
 
-	var query dtos.PageListQuery
+	var query dtos.ListTaskOfUserReq
 	if !th.canBindQuery(ctx, &query) {
 		return
 	}
 
-	tasks, totalCount, err := th.taskService.ListTasksByUserID(userID, query.Page, query.PageSize)
+	tasks, totalCount, err := th.taskService.ListTasksByUserID(userID, query.Page, query.PageSize, query.IsCompleted)
 	if th.isError(ctx, err) {
 		return
 	}
@@ -159,4 +160,33 @@ func (th *TaskHandler) DeleteUserTask(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, "Task deleted successfully", nil)
+}
+
+func (th *TaskHandler) UpdateTaskUserStatus(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	taskID := ctx.Param("task_id")
+
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin), string(entities.RoleEnumHead), string(entities.RoleEnumVice)) {
+		if userID != middlewares.GetPrincipal(ctx) {
+			response.Error(ctx, 403, "You are not allowed to update this task")
+			return
+		}
+	}
+
+	if th.isNilOrWhiteSpaceWithMessage(ctx, userID, "User ID is required") ||
+		th.isNilOrWhiteSpaceWithMessage(ctx, taskID, "Task ID is required") {
+		return
+	}
+
+	var req dtos.UpdateTaskUserStatusReq
+	if !th.canBindJSON(ctx, &req) {
+		return
+	}
+
+	err := th.taskService.UpdateTaskUserStatus(taskID, userID, req.IsCompleted)
+	if th.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "Task user status updated successfully", nil)
 }

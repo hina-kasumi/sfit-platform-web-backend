@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 	"time"
@@ -19,14 +20,14 @@ func NewTaskService(repo *repositories.TaskRepository) *TaskService {
 	}
 }
 
-func (ts *TaskService) GetTasks(page, pageSize int, name, eventID string) ([]*entities.Task, int64, error) {
+func (ts *TaskService) GetTasks(page, pageSize int, name, eventID string, isCompleted *bool) ([]*entities.Task, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 {
 		pageSize = 10
 	}
-	return ts.taskRepo.GetTasks(page, pageSize, name, eventID)
+	return ts.taskRepo.GetTasks(page, pageSize, name, eventID, isCompleted)
 }
 
 func (ts *TaskService) CreateTask(createdBy, name, description, eventID string, startDate, deadline time.Time) (*entities.Task, error) {
@@ -56,7 +57,7 @@ func (ts *TaskService) DeleteTask(id string) error {
 	return ts.taskRepo.DeleteTask(id)
 }
 
-func (ts *TaskService) ListTasksByUserID(userID string, page, pageSize int) ([]*entities.Task, int64, error) {
+func (ts *TaskService) ListTasksByUserID(userID string, page, pageSize int, isCompleted *bool) ([]*dtos.ResponseTasksOfUser, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -67,7 +68,7 @@ func (ts *TaskService) ListTasksByUserID(userID string, page, pageSize int) ([]*
 	if err != nil {
 		return nil, 0, err
 	}
-	return ts.taskRepo.ListTasksByUserID(userIDParsed, page, pageSize)
+	return ts.taskRepo.ListTasksByUserID(userIDParsed, page, pageSize, isCompleted)
 }
 
 func (ts *TaskService) AddUserTask(userID, taskID string) (*entities.TaskAssignments, error) {
@@ -80,6 +81,19 @@ func (ts *TaskService) AddUserTask(userID, taskID string) (*entities.TaskAssignm
 		return nil, err
 	}
 	return ts.taskRepo.AddUserTask(taskIDParsed, userIDParsed)
+}
+
+func (ts *TaskService) UpdateTaskUserStatus(taskID, userID string, isCompleted bool) error {
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	taskIDParsed, err := uuid.Parse(taskID)
+	if err != nil {
+		return err
+	}
+
+	return ts.taskRepo.UpdateTaskUserStatus(taskIDParsed, userIDParsed, isCompleted)
 }
 
 func (ts *TaskService) DeleteUserTask(userID, taskID string) error {

@@ -19,5 +19,5 @@ func (userRoute *UserRoute) RegisterRoutes(router *gin.Engine) {
 	auth := router.Group("/users")
 	auth.Use(middlewares.EnforceAuthenticatedMiddleware())
 	auth.GET("", userRoute.userHandler.GetUserList)
-	auth.PATCH("/:id", userRoute.userHandler.UpdateUser)
+	auth.PATCH("/:user_id", userRoute.userHandler.UpdateUser)
 }

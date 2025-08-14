@@ -35,6 +35,7 @@ func (tr *TaskRouter) RegisterRoutes(router *gin.Engine) {
 	userTasksGroup := router.Group("/users/:user_id/tasks")
 	userTasksGroup.Use(middlewares.EnforceAuthenticatedMiddleware())
 	userTasksGroup.GET("", tr.handler.ListTasksByUserID)
+	userTasksGroup.PATCH("/:task_id", tr.handler.UpdateTaskUserStatus)
 	userTasksGroup.Use(middlewares.RequireRoles(
 		string(entities.RoleEnumAdmin),
 		string(entities.RoleEnumHead),

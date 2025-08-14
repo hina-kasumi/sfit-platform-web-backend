@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"time"
 
@@ -18,7 +19,7 @@ func NewTaskRepository(db *gorm.DB) *TaskRepository {
 	}
 }
 
-func (tr *TaskRepository) GetTasks(page, pageSize int, name, eventID string) ([]*entities.Task, int64, error) {
+func (tr *TaskRepository) GetTasks(page, pageSize int, name, eventID string, isComplete *bool) ([]*entities.Task, int64, error) {
 	var tasks []*entities.Task
 	query := tr.db.Model(&entities.Task{})
 
@@ -28,7 +29,10 @@ func (tr *TaskRepository) GetTasks(page, pageSize int, name, eventID string) ([]
 	if eventID != "" {
 		query = query.Where("event_id = ?", eventID)
 	}
-
+	if isComplete != nil {
+		query = query.Joins("JOIN task_assignments ON task_assignments.task_id = tasks.id").
+			Where("task_assignments.is_completed = ?", *isComplete)
+	}
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
 		return nil, 0, err
@@ -91,8 +95,9 @@ func (tr *TaskRepository) DeleteTask(id string) error {
 
 func (tr *TaskRepository) AddUserTask(taskID, userID uuid.UUID) (*entities.TaskAssignments, error) {
 	taskAssignment := &entities.TaskAssignments{
-		TaskID: taskID,
-		UserID: userID,
+		TaskID:      taskID,
+		UserID:      userID,
+		IsCompleted: false,
 	}
 	if err := tr.db.Create(taskAssignment).Error; err != nil {
 		return nil, err
@@ -100,19 +105,41 @@ func (tr *TaskRepository) AddUserTask(taskID, userID uuid.UUID) (*entities.TaskA
 	return taskAssignment, nil
 }
 
-func (tr *TaskRepository) ListTasksByUserID(userID uuid.UUID, page, pageSize int) ([]*entities.Task, int64, error) {
-	var tasks []*entities.Task
+func (tr *TaskRepository) ListTasksByUserID(userID uuid.UUID, page, pageSize int, isCompleted *bool) ([]*dtos.ResponseTasksOfUser, int64, error) {
+	sql := "SELECT tasks.*, is_completed FROM tasks JOIN task_assignments ON tasks.id = task_assignments.task_id WHERE user_id = ?;"
+	var responseTasks []*dtos.ResponseTasksOfUser
 	var totalCount int64
-	query := tr.db.Model(&entities.Task{}).Joins("JOIN task_assignments ON task_assignments.task_id = tasks.id").
-		Where("task_assignments.user_id = ?", userID)
+	query := tr.db.Raw(sql, userID).Scan(&responseTasks)
+	if err := query.Error; err != nil {
+		return nil, 0, err
+	}
+	return responseTasks, totalCount, nil
+}
 
-	if err := query.Count(&totalCount).Error; err != nil {
-		return nil, 0, err
+func (tr *TaskRepository) UpdateTaskUserStatus(taskID, userID uuid.UUID, isCompleted bool) error {
+	err := tr.db.Model(&entities.TaskAssignments{}).
+		Where("task_id = ? AND user_id = ?", taskID, userID).
+		Update("is_completed", isCompleted).Error
+
+	if err != nil {
+		return err
 	}
-	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&tasks).Error; err != nil {
-		return nil, 0, err
+
+	var completePercent float32
+	err = tr.db.Model(&entities.TaskAssignments{}).
+		Where("task_id = ?", taskID).
+		Select("AVG(CASE WHEN is_completed THEN 1 ELSE 0 END) * 100").
+		Scan(&completePercent).Error
+
+	if err != nil {
+		return err
 	}
-	return tasks, totalCount, nil
+
+	return tr.db.Model(&entities.Task{}).
+		Where("id = ?", taskID).
+		Updates(map[string]interface{}{
+			"percent_complete": completePercent,
+		}).Error
 }
 
 func (tr *TaskRepository) DeleteUserTask(taskID, userID uuid.UUID) error {
