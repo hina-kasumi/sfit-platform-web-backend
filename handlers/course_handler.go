@@ -332,9 +332,11 @@ func (h *CourseHandler) GetUserProgressInCourse(ctx *gin.Context) {
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
 	// Lấy userID từ JWT token
-	userID := middlewares.GetPrincipal(c)
+	// userID := middlewares.GetPrincipal(c)
+	userID := c.Param("user_id")
 	if userID == "" {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusUnauthorized, "User   ID is required")
 		return
 	}
 
@@ -394,9 +396,11 @@ func (ch *CourseHandler) GetCourseLessons(c *gin.Context) {
 func (ch *CourseHandler) RateCourse(c *gin.Context) {
 
 	// Lấy userID từ JWT token
-	userID := middlewares.GetPrincipal(c)
+	// userID := middlewares.GetPrincipal(c)
+	userID := c.Param("user_id")
 	if userID == "" {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusUnauthorized, "User   ID is required")
 		return
 	}
 
@@ -478,11 +482,14 @@ func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
 // Đăng ký người dùng vào khóa học
 func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 	// Lấy userID từ JWT token
-	userID := middlewares.GetPrincipal(c)
+	// userID := middlewares.GetPrincipal(c)
+	userID := c.Param("user_id")
 	if userID == "" {
-		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusUnauthorized, "User   ID is required")
 		return
 	}
+
 	var req dtos.CourseRegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "Invalid request body")
