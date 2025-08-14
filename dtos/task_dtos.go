@@ -24,3 +24,7 @@ type ListTaskQuery struct {
 	Name     string `form:"name"`
 	EventID  string `form:"event_id"`
 }
+
+type AddUserTaskReq struct {
+	TaskID string `json:"task_id" binding:"required"`
+}

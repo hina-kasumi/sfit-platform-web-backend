@@ -5,6 +5,8 @@ import (
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type TaskService struct {
@@ -52,4 +54,42 @@ func (ts *TaskService) DeleteTask(id string) error {
 		return errors.New("invalid task ID")
 	}
 	return ts.taskRepo.DeleteTask(id)
+}
+
+func (ts *TaskService) ListTasksByUserID(userID string, page, pageSize int) ([]*entities.Task, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, 0, err
+	}
+	return ts.taskRepo.ListTasksByUserID(userIDParsed, page, pageSize)
+}
+
+func (ts *TaskService) AddUserTask(userID, taskID string) (*entities.TaskAssignments, error) {
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+	taskIDParsed, err := uuid.Parse(taskID)
+	if err != nil {
+		return nil, err
+	}
+	return ts.taskRepo.AddUserTask(taskIDParsed, userIDParsed)
+}
+
+func (ts *TaskService) DeleteUserTask(userID, taskID string) error {
+	userIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	taskIDParsed, err := uuid.Parse(taskID)
+	if err != nil {
+		return err
+	}
+	return ts.taskRepo.DeleteUserTask(taskIDParsed, userIDParsed)
 }

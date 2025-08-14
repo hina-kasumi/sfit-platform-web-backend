@@ -88,3 +88,37 @@ func (tr *TaskRepository) UpdateTask(id, name, description string, percent_compl
 func (tr *TaskRepository) DeleteTask(id string) error {
 	return tr.db.Delete(&entities.Task{}, "id = ?", id).Error
 }
+
+func (tr *TaskRepository) AddUserTask(taskID, userID uuid.UUID) (*entities.TaskAssignments, error) {
+	taskAssignment := &entities.TaskAssignments{
+		TaskID: taskID,
+		UserID: userID,
+	}
+	if err := tr.db.Create(taskAssignment).Error; err != nil {
+		return nil, err
+	}
+	return taskAssignment, nil
+}
+
+func (tr *TaskRepository) ListTasksByUserID(userID uuid.UUID, page, pageSize int) ([]*entities.Task, int64, error) {
+	var tasks []*entities.Task
+	var totalCount int64
+	query := tr.db.Model(&entities.Task{}).Joins("JOIN task_assignments ON task_assignments.task_id = tasks.id").
+		Where("task_assignments.user_id = ?", userID)
+
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&tasks).Error; err != nil {
+		return nil, 0, err
+	}
+	return tasks, totalCount, nil
+}
+
+func (tr *TaskRepository) DeleteUserTask(taskID, userID uuid.UUID) error {
+	taskAssign := &entities.TaskAssignments{
+		TaskID: taskID,
+		UserID: userID,
+	}
+	return tr.db.Delete(taskAssign).Error
+}

@@ -86,10 +86,77 @@ func (th *TaskHandler) ListTasks(ctx *gin.Context) {
 		return
 	}
 
-	response.Success(ctx, "Tasks retrieved successfully", gin.H{
-		"tasks":       tasks,
-		"total_count": totalCount,
-		"page":        query.Page,
-		"page_size":   query.PageSize,
-	})
+	response.GetListResp(ctx, "Tasks retrieved successfully", query.Page, query.PageSize, totalCount, tasks)
+}
+
+func (th *TaskHandler) ListTasksByEventID(ctx *gin.Context) {
+	eventID := ctx.Param("event_id")
+	if th.isNilOrWhiteSpaceWithMessage(ctx, eventID, "Event ID is required") {
+		return
+	}
+
+	var query *dtos.PageListQuery
+	if !th.canBindQuery(ctx, &query) {
+		return
+	}
+
+	tasks, totalCount, err := th.taskService.GetTasks(query.Page, query.PageSize, "", eventID)
+	if th.isError(ctx, err) {
+		return
+	}
+
+	response.GetListResp(ctx, "Tasks retrieved successfully", query.Page, query.PageSize, totalCount, tasks)
+}
+
+func (th *TaskHandler) ListTasksByUserID(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+
+	var query dtos.PageListQuery
+	if !th.canBindQuery(ctx, &query) {
+		return
+	}
+
+	tasks, totalCount, err := th.taskService.ListTasksByUserID(userID, query.Page, query.PageSize)
+	if th.isError(ctx, err) {
+		return
+	}
+
+	response.GetListResp(ctx, "Tasks retrieved successfully", query.Page, query.PageSize, totalCount, tasks)
+}
+
+func (th *TaskHandler) AddUserTask(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+
+	if th.isNilOrWhiteSpaceWithMessage(ctx, userID, "User ID is required") {
+		return
+	}
+
+	var req dtos.AddUserTaskReq
+	if !th.canBindJSON(ctx, &req) {
+		return
+	}
+
+	_, err := th.taskService.AddUserTask(userID, req.TaskID)
+	if th.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "Task created successfully", nil)
+}
+
+func (th *TaskHandler) DeleteUserTask(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	taskID := ctx.Param("task_id")
+
+	if th.isNilOrWhiteSpaceWithMessage(ctx, userID, "User ID is required") ||
+		th.isNilOrWhiteSpaceWithMessage(ctx, taskID, "Task ID is required") {
+		return
+	}
+
+	err := th.taskService.DeleteUserTask(userID, taskID)
+	if th.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "Task deleted successfully", nil)
 }
