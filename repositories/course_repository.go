@@ -150,7 +150,7 @@ func (r *CourseRepository) buildCoursesQuery(filter dtos.CourseFilter, pageSize,
 			SELECT 
 				m.course_id,
 				COUNT(CASE WHEN la.status = 'present' THEN 1 END) AS learned,
-				COALESCE(SUM(EXTRACT(EPOCH FROM la.timestamp)::int / 60), 0) AS time_learn
+				COALESCE(SUM(la.timestamp / 60), 0) AS time_learn
 			FROM lesson_attendances la
 			INNER JOIN lessons l ON l.id = la.lesson_id
 			INNER JOIN modules m ON m.id = l.module_id
@@ -341,9 +341,9 @@ func (r *CourseRepository) buildCountWhereConditions(filter dtos.CourseFilter) (
 func (r *CourseRepository) getCourseBasicInfo(courseID, userID string) (*dtos.CourseDetailResponse, error) {
 	var courseRaw dtos.CourseDetailRaw
 	// COALESCE(SUM(
-	// 	CASE 
+	// 	CASE
 	// 		WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
-	// 		WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int  
+	// 		WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
 	// 		WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
 	// 		ELSE 0
 	// 	END
@@ -475,11 +475,11 @@ func (r *CourseRepository) getCourseContent(courseID, userID string) ([]dtos.Cou
 		ORDER BY m.create_at ASC`
 
 	// moduleQuery := `
-	// 	SELECT 
+	// 	SELECT
 	// 		m.id,
 	// 		m.module_title,
 	// 		COALESCE(SUM(
-	// 			CASE 
+	// 			CASE
 	// 				WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
 	// 				WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
 	// 				WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
@@ -622,6 +622,97 @@ func (r *CourseRepository) EnsureCourseExists(courseID uuid.UUID) error {
 		return fmt.Errorf("course with ID %s does not exist", courseID)
 	}
 	return nil
+}
+
+func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, pageSize, offset int) ([]dtos.UserListItem, int64, error) {
+	// Ensure course exists
+	if err := r.EnsureCourseExists(filter.CourseID); err != nil {
+		return nil, 0, fmt.Errorf("course does not exist: %w", err)
+	}
+
+	// Get total lessons for the course
+	var totalLessons int
+	totalLessonQuery := `
+		SELECT COUNT(DISTINCT l.id) AS total_lessons
+		FROM courses c
+		LEFT JOIN modules m ON m.course_id = c.id
+		LEFT JOIN lessons l ON l.module_id = m.id
+		WHERE c.id = ?
+	`
+	if err := r.db.Raw(totalLessonQuery, filter.CourseID).Scan(&totalLessons).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get total lessons: %w", err)
+	}
+
+	// If no lessons, return empty result
+	if totalLessons == 0 {
+		return []dtos.UserListItem{}, 0, nil
+	}
+
+	// Query users who completed all lessons (status = 'present')
+	var users []dtos.UserListItem
+	query := `
+		SELECT 
+			u.id,
+			u.username,
+			u.email
+		FROM users u
+		JOIN lesson_attendances la ON u.id = la.user_id
+		JOIN lessons l ON l.id = la.lesson_id
+		JOIN modules m ON m.id = l.module_id
+		WHERE m.course_id = ? AND la.status = 'present'
+		GROUP BY u.id, u.username, u.email
+		HAVING COUNT(DISTINCT la.lesson_id) = ?
+		LIMIT ? OFFSET ?
+	`
+
+	if err := r.db.Raw(query, filter.CourseID, totalLessons, pageSize, offset).Scan(&users).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get users: %w", err)
+	}
+
+	// Query total count for pagination
+	var totalUser int64
+	countQuery := `
+		SELECT COUNT(*) FROM (
+			SELECT u.id
+			FROM users u
+			JOIN lesson_attendances la ON u.id = la.user_id
+			JOIN lessons l ON l.id = la.lesson_id
+			JOIN modules m ON m.id = l.module_id
+			WHERE m.course_id = ? AND la.status = 'present'
+			GROUP BY u.id
+			HAVING COUNT(DISTINCT la.lesson_id) = ?
+		) AS completed_users
+	`
+
+	if err := r.db.Raw(countQuery, filter.CourseID, totalLessons).Scan(&totalUser).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	return users, totalUser, nil
+}
+
+func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) (int, int, error) {
+	var res dtos.GetUserProgressInCourseResponse
+
+	query := `
+        SELECT 
+            (SELECT COALESCE(SUM(la.timestamp / 60), 0)
+             FROM lesson_attendances la
+             JOIN lessons l ON l.id = la.lesson_id
+             JOIN modules m ON m.id = l.module_id
+             WHERE m.course_id = ? AND la.user_id = ?) AS learned,
+            (SELECT COUNT(l.id)
+             FROM lessons l
+             JOIN modules m ON m.id = l.module_id
+             WHERE m.course_id = ?) AS total_lessons
+    `
+
+	err := r.db.Raw(query, courseID, userID, courseID).Scan(&res).Error
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get progress: %w", err)
+	}
+
+	return res.Learned, res.TotalLessons, nil
 }
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang

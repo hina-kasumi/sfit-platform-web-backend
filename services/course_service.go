@@ -239,6 +239,69 @@ func (s *CourseService) UpdateCourse(
 	return updatedCourse.UpdatedAt, nil
 }
 
+func (s *CourseService) GetListUserCompleteCourse(
+	courseID string,
+	page, pageSize int,
+) (*dtos.UserListResponse, error) {
+	// Sanitize pagination
+	page, pageSize = validatePagination(page, pageSize)
+	offset := (page - 1) * pageSize
+
+	// Join lesson_attendance and user_course to get users who completed the course
+	// Build filter
+	parsedCourseID, err := uuid.Parse(courseID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid course ID: %w", err)
+	}
+	filter := dtos.CourseFilter{
+		CourseID: parsedCourseID,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	// Query course list
+	users, total, err := s.courseRepo.GetListUserCompleteCourses(filter, pageSize, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	totalPages := (int(total) + pageSize - 1) / pageSize
+
+	return &dtos.UserListResponse{
+		Users:    users,
+		Page:     page,
+		PageSize: pageSize,
+		Total:    int64(totalPages),
+	}, nil
+}
+
+func (s *CourseService) AddModuleToCourse(courseID, moduleTitle string) (uuid.UUID, time.Time, error) {
+	moduleID, create_at, err := s.moduleRepo.AddModuleToCourse(courseID, moduleTitle)
+	if err != nil {
+		return uuid.Nil, time.Time{}, fmt.Errorf("failed to add module to course: %w", err)
+	}
+	return moduleID, create_at, nil
+}
+
+func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, int, error) {
+	// Check user exists
+	if _, err := s.userRepo.GetUserByID(userID); err != nil {
+		return 0, 0, fmt.Errorf("user not found: %w", err)
+	}
+
+	// Check course exists
+	if _, err := s.courseRepo.GetCourseByID(courseID, userID); err != nil {
+		return 0, 0, fmt.Errorf("course not found: %w", err)
+	}
+
+	Learned, TotalLessons, err := s.userCourseRepo.GetUserProgressInCourse(courseID, userID)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get user progress: %w", err)
+	}
+
+	return Learned, TotalLessons, nil
+}
+
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.CourseListResponse, error) {
     offset := (page - 1) * pageSize

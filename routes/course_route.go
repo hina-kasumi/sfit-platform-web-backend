@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/handlers"
 	"sfit-platform-web-backend/middlewares"
 
@@ -16,17 +17,37 @@ func NewCourseRoute(handler *handlers.CourseHandler) *CourseRoute {
 }
 
 func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
-	router.POST("/course", r.handler.CreateCourse)
-	router.GET("/course", r.handler.GetListCourse)
-	router.GET("/course/:course_id", r.handler.GetCourseDetailByID)
-	router.POST("/course/favourite", r.handler.MarkCourseAsFavourite)
-	router.DELETE("/course/favourite", r.handler.UnmarkCourseAsFavourite)
-	router.PUT("/course", r.handler.UpdateCourse)
 
-	router.GET("/users/:user_id/courses", r.handler.GetRegisteredCourses)
-	router.GET("/course/:course_id/lessons", r.handler.GetCourseLessons)
-	router.POST("/users/:user_id/rate/courses/:course_id", r.handler.RateCourse)
-	router.DELETE("/course/:course_id", middlewares.RequireRoles("ADMIN","HEAD"), r.handler.DeleteCourse)
-	router.POST("/users/:user_id/courses", r.handler.RegisterUserToCourse)
-	router.GET("/course/:course_id/users", middlewares.RequireRoles("ADMIN","HEAD"), r.handler.GetRegisteredUsers)
+	publicCourse := router.Group("")
+	publicCourse.Use(middlewares.EnforceAuthenticatedMiddleware())
+	{
+		publicCourse.GET("/course", r.handler.GetListCourse)
+		publicCourse.GET("/course/:course_id", r.handler.GetCourseDetailByID)
+		publicCourse.POST("course/:course_id/favourite", r.handler.MarkCourseAsFavourite)
+		publicCourse.DELETE("course/:course_id/favourite", r.handler.UnmarkCourseAsFavourite)
+		publicCourse.GET("users/:user_id/courses/:course_id/progress", r.handler.GetUserProgressInCourse)
+
+		publicCourse.GET("/users/:user_id/courses", r.handler.GetRegisteredCourses)
+		publicCourse.GET("/course/:course_id/lessons", r.handler.GetCourseLessons)
+		publicCourse.POST("/users/:user_id/rate/courses/:course_id", r.handler.RateCourse)
+		publicCourse.POST("/users/:user_id/courses", r.handler.RegisterUserToCourse)
+	}
+
+
+	protectedCourse := router.Group("/course")
+	protectedCourse.Use(middlewares.EnforceAuthenticatedMiddleware())
+	protectedCourse.Use(middlewares.RequireRoles(
+		string(entities.RoleEnumAdmin),
+		string(entities.RoleEnumHead),
+		string(entities.RoleEnumVice),
+	))
+	{
+		protectedCourse.POST("", r.handler.CreateCourse)
+		protectedCourse.PUT("", r.handler.UpdateCourse)
+		protectedCourse.POST("/module", r.handler.AddModuleToCourse)
+	}
+
+    
+	router.DELETE("/course/:course_id", middlewares.RequireRoles("ADMIN", "HEAD"), r.handler.DeleteCourse)
+	router.GET("/course/:course_id/users", middlewares.RequireRoles("ADMIN", "HEAD"), r.handler.GetRegisteredUsers)
 }

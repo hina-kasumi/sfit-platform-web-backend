@@ -102,6 +102,29 @@ Content-Type: application/json
   ]
 }
 
+###
+
+### Lấy danh sách người dùng đã hoàn thành 1 khóa học
+GET http://localhost:8080/course/list-user-complete?course_id=...&page=1&pageSize=1
+Content-Type: application/json
+
+###
+
+### Thêm module cho khóa học
+POST http://localhost:8080/course/module
+Content-Type: application/json
+
+{
+    "course_id": "...",
+    "module_title": "Hello"
+}
+
+###
+
+### Lấy tiến độ
+GET http://localhost:8080/users/user_id/courses/course_id/progress
+Content-Type: application/json
+
 ### Đăng ký người dùng vào khóa học
 POST http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/courses
 Content-Type: application/json

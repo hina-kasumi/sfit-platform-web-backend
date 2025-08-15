@@ -35,6 +35,16 @@ type UpdateCourseRequest struct {
 	Tags        []string `json:"tags"`
 }
 
+type AddModuleToCourseRequest struct {
+	CourseID    string `json:"course_id" binding:"required"`
+	ModuleTitle string `json:"module_title" binding:"required"`
+}
+
+type GetUserProgressInCourseRequest struct {
+	CourseID string `json:"course_id" binding:"required"`
+	UserID   string `json:"user_id" binding:"required"`
+}
+
 type SetFavouriteCourseRequest struct {
 	CourseID string `json:"course_id" binding:"required"`
 }
@@ -83,6 +93,18 @@ type CourseContentResponse struct {
 	ID          string           `json:"id"`
 	ModuleTitle string           `json:"module_title"`
 	Lessons     []LessonResponse `json:"lessons"`
+}
+
+type AddModuleToCourseResponse struct {
+	ModuleID    string `json:"module_id"`
+	CourseID    string `json:"course_id"`
+	ModuleTitle string `json:"module_title"`
+	CreatedAt   string `json:"created_at"`
+}
+
+type GetUserProgressInCourseResponse struct {
+	Learned      int `json:"learned"`
+	TotalLessons int `json:"total_lesson"`
 }
 
 type LessonResponse struct {
@@ -153,7 +175,6 @@ type PaginationResponse struct {
 	TotalCourses int `json:"total_courses"`
 }
 
-
 // ===================== INTERNAL USE STRUCT =====================
 type CourseRaw struct {
 	ID             string          `json:"id"`
@@ -194,6 +215,7 @@ type CourseFilter struct {
 	CourseType   string
 	Level        string
 	UserID       uuid.UUID
+	CourseID     uuid.UUID
 	Page         int
 	PageSize     int
 }
