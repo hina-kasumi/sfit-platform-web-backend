@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"log"
+	"os"
 	"sfit-platform-web-backend/entities"
 
 	"github.com/google/uuid"
@@ -14,6 +16,27 @@ type RoleRepository struct {
 
 // NewRoleRepository creates a new RoleRepository
 func NewRoleRepository(db *gorm.DB) *RoleRepository {
+	var count int64
+	db.Model(&entities.Users{}).Count(&count)
+	if count == 0 {
+		user := entities.NewUser(
+			os.Getenv("INIT_ADMIN_USERNAME"),
+			os.Getenv("INIT_ADMIN_EMAIL"),
+			os.Getenv("INIT_ADMIN_PASSWORD"),
+		)
+		err := db.Create(&user).Error
+		if err != nil {
+			log.Fatalf("Failed to create initial admin user: %v", err)
+		}
+
+		userRoles := []entities.UserRole{}
+		userRoles = append(userRoles, entities.UserRole{
+			UserID: user.ID,
+			RoleID: entities.RoleEnumAdmin,
+		})
+		db.Create(&userRoles)
+	}
+
 	// Insert all RoleEnum values into the roles table if not exists
 	allRoles := []entities.Role{
 		{ID: entities.RoleEnumAdmin},
