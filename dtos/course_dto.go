@@ -22,7 +22,6 @@ type CreateCourseRequest struct {
 }
 
 type UpdateCourseRequest struct {
-	ID          string   `json:"id" binding:"required"`
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	Type        string   `json:"type"`
@@ -36,7 +35,6 @@ type UpdateCourseRequest struct {
 }
 
 type AddModuleToCourseRequest struct {
-	CourseID    string `json:"course_id" binding:"required"`
 	ModuleTitle string `json:"module_title" binding:"required"`
 }
 

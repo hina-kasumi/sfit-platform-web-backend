@@ -169,8 +169,9 @@ func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
 	response.Success(ctx, "Course unmarked as favourite successfully", nil)
 }
 
-// PUT /courses
+// PUT /courses/:course_id
 func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
+	courseID := ctx.Param("course_id")
 	userID := middlewares.GetPrincipal(ctx)
 	if userID == "" {
 		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
@@ -182,7 +183,7 @@ func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
 		return
 	}
 
-	if req.ID == "" {
+	if courseID == "" {
 		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
 		return
 	}
@@ -193,14 +194,14 @@ func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
 	}
 
 	updatedAt, err := h.courseService.UpdateCourse(
-		req.ID, req.Title, req.Description, req.Type, req.Target,
+		courseID, req.Title, req.Description, req.Type, req.Target,
 		req.Require, req.Teachers, req.Language, req.Certificate, req.Level,
 	)
 	if h.isError(ctx, err) {
 		return
 	}
 
-	err = h.tagTempService.UpdateTagTemp(req.ID, tags)
+	err = h.tagTempService.UpdateTagTemp(courseID, tags)
 	if h.isError(ctx, err) {
 		return
 	}
@@ -243,24 +244,25 @@ func (h *CourseHandler) GetListUserCompleteCourse(ctx *gin.Context) {
 
 // GET /course/module
 func (h *CourseHandler) AddModuleToCourse(ctx *gin.Context) {
+	courseID := ctx.Param("course_id")
 	var req dtos.AddModuleToCourseRequest
 	if !h.canBindJSON(ctx, &req) {
 		return
 	}
 
-	if req.CourseID == "" || req.ModuleTitle == "" {
+	if courseID == "" || req.ModuleTitle == "" {
 		response.Error(ctx, http.StatusBadRequest, "Course ID and Module Title are required")
 		return
 	}
 
-	moduleID, create_at, err := h.courseService.AddModuleToCourse(req.CourseID, req.ModuleTitle)
+	moduleID, create_at, err := h.courseService.AddModuleToCourse(courseID, req.ModuleTitle)
 	if err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to add module to course")
 		return
 	}
 	addResponse := dtos.AddModuleToCourseResponse{
 		ModuleID:    moduleID.String(),
-		CourseID:    req.CourseID,
+		CourseID:    courseID,
 		ModuleTitle: req.ModuleTitle,
 		CreatedAt:   create_at.Format(time.RFC3339),
 	}
