@@ -304,42 +304,42 @@ func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, i
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.CourseListResponse, error) {
-    offset := (page - 1) * pageSize
-    var total int64
-    var result dtos.CourseListResponse
+	offset := (page - 1) * pageSize
+	var total int64
+	var result dtos.CourseListResponse
 
-    userUUID, err := uuid.Parse(userID)
-    if err != nil {
-        return result, err
-    }
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return result, err
+	}
 
-    // Lấy danh sách khóa học đã đăng ký (theo DTO)
-    courses, err := cs.courseRepo.GetCoursesByUserIDWithPagination(userID, offset, pageSize, &total)
-    if err != nil {
-        return result, err
-    }
+	// Lấy danh sách khóa học đã đăng ký (theo DTO)
+	courses, err := cs.courseRepo.GetCoursesByUserIDWithPagination(userID, offset, pageSize, &total)
+	if err != nil {
+		return result, err
+	}
 
-    // Bổ sung thông tin lessons, tags
-    for i := range courses {
-        courseID, _ := uuid.Parse(courses[i].ID)
-        totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseID)
-        tags := cs.courseRepo.GetCourseTags(courseID)
+	// Bổ sung thông tin lessons, tags
+	for i := range courses {
+		courseID, _ := uuid.Parse(courses[i].ID)
+		totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseID)
+		tags := cs.courseRepo.GetCourseTags(courseID)
 
-        courses[i].NumberLessons = totalLessons
-        courses[i].LearnedLessons = learnedLessons
-        courses[i].Tags = tags
-    }
+		courses[i].NumberLessons = totalLessons
+		courses[i].LearnedLessons = learnedLessons
+		courses[i].Tags = tags
+	}
 
-    totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
-    result = dtos.CourseListResponse{
-        Courses: courses,
-        Pagination: dtos.PaginationResponse{
-            CurrentPage:  page,
-            TotalPages:   totalPages,
-            TotalCourses: int(total),
-        },
-    }
-    return result, nil
+	totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
+	result = dtos.CourseListResponse{
+		Courses: courses,
+		Pagination: dtos.PaginationResponse{
+			CurrentPage:  page,
+			TotalPages:   totalPages,
+			TotalCourses: int(total),
+		},
+	}
+	return result, nil
 }
 
 // Lấy danh sách bài học trong khóa học
@@ -374,14 +374,14 @@ func (cs *CourseService) GetCourseLessons(courseID string, userID string) (dtos.
 
 			switch lesson.Type {
 			case "Quiz":
-				title = lesson.QuizContent.Data.Description
-				duration = lesson.QuizContent.Data.Duration
+				title = lesson.Description
+				duration = lesson.Duration
 			case "Online":
-				title = lesson.OnlineContent.Data.Title
-				duration = lesson.OnlineContent.Data.Duration
+				title = lesson.Title
+				duration = lesson.Duration
 			case "Offline":
 				title = lesson.OfflineContent.Data.Location
-				duration = lesson.OfflineContent.Data.Duration
+				duration = lesson.Duration
 			}
 
 			totalTime += duration
@@ -495,4 +495,13 @@ func (cs *CourseService) RegisterUserToCourse(userID string, courseID string) er
 
 	// Đăng ký người dùng vào khóa học
 	return cs.courseRepo.RegisterUserToCourse(userUUID, courseUUID)
+}
+
+func (s *CourseService) UpdateTotalTime(module_id string, time int) error {
+	moduleUUID, err := uuid.Parse(module_id)
+	if err != nil {
+		return err
+	}
+
+	return s.courseRepo.UpdateTotalTime(moduleUUID, time)
 }

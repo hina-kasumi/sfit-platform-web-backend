@@ -717,24 +717,24 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
-    userID string,
-    offset, limit int,
-    total *int64,
+	userID string,
+	offset, limit int,
+	total *int64,
 ) ([]dtos.CourseGeneralInformationResponse, error) {
 
-    var courses []dtos.CourseGeneralInformationResponse
+	var courses []dtos.CourseGeneralInformationResponse
 
-    // Đếm tổng
-    if err := cr.db.
-        Table("courses").
-        Joins("JOIN user_courses ON user_courses.course_id = courses.id").
-        Where("user_courses.user_id = ?", userID).
-        Count(total).Error; err != nil {
-        return nil, err
-    }
+	// Đếm tổng
+	if err := cr.db.
+		Table("courses").
+		Joins("JOIN user_courses ON user_courses.course_id = courses.id").
+		Where("user_courses.user_id = ?", userID).
+		Count(total).Error; err != nil {
+		return nil, err
+	}
 
-    // Lấy dữ liệu: convert text[] thành JSON để map an toàn vào []string
-    query := `
+	// Lấy dữ liệu: convert text[] thành JSON để map an toàn vào []string
+	query := `
         SELECT 
             courses.id,
             courses.title,
@@ -753,11 +753,11 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
         OFFSET ? LIMIT ?
     `
 
-    if err := cr.db.Raw(query, userID, offset, limit).Scan(&courses).Error; err != nil {
-        return nil, err
-    }
+	if err := cr.db.Raw(query, userID, offset, limit).Scan(&courses).Error; err != nil {
+		return nil, err
+	}
 
-    return courses, nil
+	return courses, nil
 }
 
 // Lấy số bài học và bài học đã học của người dùng trong khóa học
@@ -904,7 +904,7 @@ func (cr *CourseRepository) CheckCourseExists(courseID uuid.UUID) (bool, error) 
 	err := cr.db.Model(&entities.Course{}).
 		Where("id = ?", courseID).
 		Count(&count).Error
-	
+
 	return count > 0, err
 }
 
@@ -915,4 +915,19 @@ func ParseStringArray(data string) []string {
 		return []string{}
 	}
 	return arr
+}
+
+func (cr *CourseRepository) UpdateTotalTime(moduleID uuid.UUID, time int) error {
+	var courseID string
+	err := cr.db.Model(&entities.Module{}).Where("id = ?", moduleID).Select("course_id").Scan(&courseID).Error
+	if err != nil {
+		return err
+	}
+
+	if time < 0 {
+		time = 0
+	}
+	return cr.db.Model(&entities.Course{}).
+		Where("id = ?", courseID).
+		Update("total_time", gorm.Expr("GREATEST(total_time + ?, 0)", time)).Error
 }

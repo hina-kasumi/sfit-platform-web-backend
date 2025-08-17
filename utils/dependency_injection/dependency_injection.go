@@ -26,6 +26,7 @@ type DI struct {
 	UserProfileRepo *repositories.UserProfileRepository
 	RoleRepo        *repositories.RoleRepository
 	TaskRepo        *repositories.TaskRepository
+	LessonRepo      *repositories.LessonRepository
 
 	// service
 	UserService        *services.UserService
@@ -40,6 +41,7 @@ type DI struct {
 	TagTempService     *services.TagTempService
 	RoleService        *services.RoleService
 	TaskService        *services.TaskService
+	LessonService      *services.LessonService
 
 	EventService       *services.EventService
 	UserProfileService *services.UserProfileService
@@ -55,6 +57,7 @@ type DI struct {
 	UserHandler        *handlers.UserHandler
 	TaskHandler        *handlers.TaskHandler
 	RoleHandler        *handlers.RoleHandler
+	LessonHandler      *handlers.LessonHandler
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -91,6 +94,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	eventSer := services.NewEventService(eventRepo)
 	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
 	taskSer := services.NewTaskService(taskRepo)
+	lessonSer := services.NewLessonService(lessonRepo, courseSer)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
@@ -103,7 +107,8 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	profileHandler := handlers.NewUserProfileHandler(baseHandler, profileSer)
 	userHandler := handlers.NewUserHandler(baseHandler, userSer)
 	taskHandler := handlers.NewTaskHandler(baseHandler, taskSer)
-	roleHander := handlers.NewRoleHandler(baseHandler, roleSer)
+	roleHandler := handlers.NewRoleHandler(baseHandler, roleSer)
+	lessonHandler := handlers.NewLessonHandler(baseHandler, lessonSer)
 
 	return &DI{
 		RoleRepo:        roleRepo,
@@ -116,11 +121,13 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		CourseRepo:      courseRepo,
 		TagTempRepo:     tagTempRepo,
 		TaskRepo:        taskRepo,
+		LessonRepo:      lessonRepo,
 
 		RoleService:        roleSer,
 		UserService:        userSer,
 		TagService:         tagSer,
 		TeamService:        teamSer,
+		LessonService:      lessonSer,
 		TeamMembersService: teamMembersService,
 		RedisService:       redisSer,
 		JwtService:         jwtSer,
@@ -134,6 +141,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		BaseHandler:        baseHandler,
 		AuthHandler:        authHandler,
 		TagTempService:     tagTempSer,
+		LessonHandler:      lessonHandler,
 		CourseHandler:      courseHandler,
 		TagHandler:         tagHandler,
 		TeamHandler:        teamHandler,
@@ -142,6 +150,6 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		UserProfileHandler: profileHandler,
 		UserHandler:        userHandler,
 		TaskHandler:        taskHandler,
-		RoleHandler:        roleHander,
+		RoleHandler:        roleHandler,
 	}
 }
