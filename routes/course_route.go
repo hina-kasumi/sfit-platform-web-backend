@@ -39,13 +39,14 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
 		string(entities.RoleEnumAdmin),
 		string(entities.RoleEnumHead),
 		string(entities.RoleEnumVice),
+		string(entities.RoleEnumTeacher),
 	))
 	{
 		protectedCourse.POST("", r.handler.CreateCourse)
 		protectedCourse.PUT("/:course_id", r.handler.UpdateCourse)
 		protectedCourse.POST("/:course_id/modules", r.handler.AddModuleToCourse)
+		protectedCourse.DELETE("/:course_id", r.handler.DeleteCourse)
+		protectedCourse.GET("/:course_id/users", r.handler.GetRegisteredUsers)
 	}
 
-	router.DELETE("/courses/:course_id", middlewares.RequireRoles("ADMIN", "HEAD"), r.handler.DeleteCourse)
-	router.GET("/courses/:course_id/users", middlewares.RequireRoles("ADMIN", "HEAD"), r.handler.GetRegisteredUsers)
 }

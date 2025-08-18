@@ -26,8 +26,15 @@ func (lessonRou *LessonRoute) RegisterRoutes(router *gin.Engine) {
 		string(entities.RoleEnumAdmin),
 		string(entities.RoleEnumHead),
 		string(entities.RoleEnumVice),
+		string(entities.RoleEnumTeacher),
 	))
 	lessonGroup.POST("/", lessonRou.lessonHandler.CreateLesson)
 	lessonGroup.PUT("/:lesson_id", lessonRou.lessonHandler.UpdateLesson)
 	lessonGroup.DELETE("/:lesson_id", lessonRou.lessonHandler.DeleteLesson)
+
+	router.PUT("/users/:user_id/lessons/:lesson_id",
+		middlewares.EnforceAuthenticatedMiddleware(),
+		lessonRou.lessonHandler.UpdateStatusLessonAttendance,
+	)
+	router.GET("/lessons/:lesson_id/users", lessonRou.lessonHandler.GetUsersByLessonID)
 }

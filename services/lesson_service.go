@@ -9,6 +9,7 @@ import (
 	"sfit-platform-web-backend/repositories"
 	"sfit-platform-web-backend/utils/caller"
 	"sfit-platform-web-backend/utils/converter"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -38,8 +39,12 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 	if err != nil {
 		return nil, err
 	}
+	content := req.QuizContent
+	for i := range content {
+		sort.Ints(content[i].CorrectAnswers)
+	}
 	switch req.Type {
-	case string(entities.QuizLesson):
+	case entities.QuizLesson:
 		lesson = entities.NewQuizLesson(
 			parsedModuleID,
 			req.Title,
@@ -47,7 +52,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			req.Duration,
 			req.QuizContent,
 		)
-	case string(entities.OnlineLesson):
+	case entities.OnlineLesson:
 		// Check if the video URL is from YouTube
 		if strings.Contains(req.VideoURL, "youtube.com") {
 			videoID := strings.Split(req.VideoURL, "v=")[1]
@@ -71,7 +76,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			req.Duration,
 			req.VideoURL,
 		)
-	case string(entities.OfflineLesson):
+	case entities.OfflineLesson:
 		if req.Location == "" || req.Date.IsZero() {
 			return nil, errors.New("location and date are required for offline lessons")
 		}
@@ -86,7 +91,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			req.Location,
 			req.Date,
 		)
-	case string(entities.ReadingLesson):
+	case entities.ReadingLesson:
 		lesson = entities.NewReadingLesson(
 			parsedModuleID,
 			req.Title,
@@ -146,4 +151,57 @@ func (s *LessonService) DeleteLessonByID(id string) error {
 		return err
 	}
 	return s.lessonRepo.DeleteLessonByID(id)
+}
+
+func (s *LessonService) UpdateStatusLessonAttendance(
+	userID string,
+	lesson *entities.Lesson,
+	status entities.LessonAttendanceStatus,
+	deviceID string,
+	answer [][]int,
+	currentUserID string,
+	duration int,
+) error {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	typ := lesson.Type
+	quizPoint := 0
+	switch typ {
+	case entities.QuizLesson:
+		if answer != nil {
+			// xử lý đáp án quiz
+			for i := range answer {
+				sort.Ints(answer[i])
+			}
+			for i, data := range lesson.QuizContent.Data {
+				if len(data.CorrectAnswers) != len(answer[i]) {
+					return errors.New("wrong answer")
+				}
+				for j := range answer[i] {
+					if answer[i][j] == data.CorrectAnswers[j] {
+						quizPoint++
+					}
+				}
+			}
+		}
+	case entities.OnlineLesson:
+		// Handle online lesson attendance
+	case entities.OfflineLesson:
+		// Handle offline lesson attendance
+	case entities.ReadingLesson:
+		// Handle reading lesson attendance
+	default:
+		return errors.New("invalid lesson type")
+	}
+	return s.lessonRepo.UpdateStatusLessonAttendance(userUUID, lesson.ID, status, deviceID, quizPoint, currentUserID, duration)
+}
+
+func (s *LessonService) GetUsersByLessonID(lessonID string, query dtos.GetUserAttendanceLessonReq) ([]dtos.GetUserAttendanceLessonRp, int64, error) {
+	lessonUUID, err := uuid.Parse(lessonID)
+	if err != nil {
+		return nil, 0, err
+	}
+	return s.lessonRepo.GetUsersByLessonID(lessonUUID, query)
 }

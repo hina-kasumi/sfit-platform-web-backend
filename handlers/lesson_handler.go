@@ -81,3 +81,59 @@ func (h *LessonHandler) DeleteLesson(ctx *gin.Context) {
 	}
 	response.Success(ctx, "Lesson deleted successfully", nil)
 }
+
+func (h *LessonHandler) UpdateStatusLessonAttendance(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	lessonID := ctx.Param("lesson_id")
+	var req dtos.UpdateStatusLessonAttendanceReq
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	currentUserID := middlewares.GetPrincipal(ctx)
+	lesson, err := h.lessonService.GetLessonByID(lessonID)
+	if h.isError(ctx, err) {
+		return
+	}
+	if !middlewares.HasRole(ctx,
+		string(entities.RoleEnumAdmin),
+		string(entities.RoleEnumHead),
+		string(entities.RoleEnumVice),
+		string(entities.RoleEnumTeacher),
+	) {
+		if lesson.Type == entities.OfflineLesson {
+			response.Error(ctx, 403, "Only admins or heads can update offline lesson attendance")
+		} else if lesson.Type == entities.QuizLesson && req.Answer == nil {
+			response.Error(ctx, 403, "you can't update quiz lesson attendance with out an answer")
+		}
+		if userID != currentUserID {
+			response.Error(ctx, 403, "you can't update another user's lesson attendance")
+		}
+	}
+	err = h.lessonService.UpdateStatusLessonAttendance(
+		userID,
+		lesson,
+		req.Status,
+		req.DeviceID,
+		req.Answer,
+		currentUserID,
+		req.Duration,
+	)
+	if h.isError(ctx, err) {
+		return
+	}
+	response.Success(ctx, "Lesson attendance status updated successfully", nil)
+}
+
+func (h *LessonHandler) GetUsersByLessonID(ctx *gin.Context) {
+	lessonID := ctx.Param("lesson_id")
+	query := dtos.GetUserAttendanceLessonReq{}
+	if !h.canBindQuery(ctx, &query) {
+		return
+	}
+	users, total, err := h.lessonService.GetUsersByLessonID(lessonID, query)
+	if h.isError(ctx, err) {
+		return
+	}
+	response.GetListResp(ctx, "Users retrieved successfully", query.Page, query.PageSize, total, users)
+}
