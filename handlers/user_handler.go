@@ -57,7 +57,7 @@ func (userHandler *UserHandler) UpdateUser(ctx *gin.Context) {
 }
 
 func (userHandler *UserHandler) GetUserList(ctx *gin.Context) {
-	var query dtos.UserListQuery
+	var query dtos.PageListQuery
 	if !userHandler.canBindQuery(ctx, &query) {
 		return
 	}
@@ -67,11 +67,11 @@ func (userHandler *UserHandler) GetUserList(ctx *gin.Context) {
 		return
 	}
 
-	res := dtos.UserListResponse{
-		Users:    users,
-		Page:     page,
-		PageSize: pageSize,
-		Total:    total,
+	res := dtos.PageListResp{
+		Items:      users,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalCount: total,
 	}
 
 	response.Success(ctx, "Get user list successfully", res)

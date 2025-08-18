@@ -8,17 +8,15 @@ import (
 )
 
 type ListEventReq struct {
-	Page     int    `form:"page" binding:"required"`
-	PageSize int    `form:"pageSize" binding:"required"`
-	Title    string `form:"title"`
-	Type     string `form:"type"`
-	Status   string `form:"status"`
+	PageListQuery
+	Title  string `form:"title"`
+	Type   string `form:"type"`
+	Status string `form:"status"`
 }
 
 type QueryUsersInEvent struct {
-	Page     int    `form:"page" binding:"required"`
-	PageSize int    `form:"pageSize" binding:"required"`
-	Status   string `form:"status" binding:"required"`
+	PageListQuery
+	Status string `form:"status" binding:"required"`
 }
 
 type UpdateUserAttendanceReq struct {

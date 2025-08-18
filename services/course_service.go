@@ -242,7 +242,7 @@ func (s *CourseService) UpdateCourse(
 func (s *CourseService) GetListUserCompleteCourse(
 	courseID string,
 	page, pageSize int,
-) (*dtos.UserListResponse, error) {
+) (*dtos.PageListResp, error) {
 	// Sanitize pagination
 	page, pageSize = validatePagination(page, pageSize)
 	offset := (page - 1) * pageSize
@@ -267,11 +267,11 @@ func (s *CourseService) GetListUserCompleteCourse(
 
 	totalPages := (int(total) + pageSize - 1) / pageSize
 
-	return &dtos.UserListResponse{
-		Users:    users,
-		Page:     page,
-		PageSize: pageSize,
-		Total:    int64(totalPages),
+	return &dtos.PageListResp{
+		Items:      users,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalCount: int64(totalPages),
 	}, nil
 }
 

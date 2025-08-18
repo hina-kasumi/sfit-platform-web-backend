@@ -6,7 +6,6 @@ import (
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -113,25 +112,17 @@ func (h *TeamMembersHandler) GetTeamsJoinedByUser(ctx *gin.Context) {
 
 func (h *TeamMembersHandler) GetTeamMembers(ctx *gin.Context) {
 	teamID := ctx.Param("team_id")
-	pageStr := ctx.Query("page")
-	pageSizeStr := ctx.Query("pageSize")
-
 	if teamID == "" {
 		response.Error(ctx, 400, "team_id path parameter is required")
 		return
 	}
 
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		page = 1
+	var query dtos.PageListQuery
+	if !h.canBindQuery(ctx, &query) {
+		return
 	}
 
-	pageSize, err := strconv.Atoi(pageSizeStr)
-	if err != nil || pageSize < 1 {
-		pageSize = 10
-	}
-
-	result, err := h.service.GetMembers(teamID, page, pageSize)
+	result, err := h.service.GetMembers(teamID, query.Page, query.PageSize)
 	if err != nil {
 		response.Error(ctx, 500, err.Error())
 		return

@@ -76,7 +76,7 @@ func (s *TeamMembersService) GetTeamsJoinedByUser(userIDStr string) ([]dtos.User
 	return s.repo.FindTeamsByUserID(userID)
 }
 
-func (s *TeamMembersService) GetMembers(teamID string, page, pageSize int) (*dtos.TeamMembersResponse, error) {
+func (s *TeamMembersService) GetMembers(teamID string, page, pageSize int) (*dtos.PageListResp, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -88,11 +88,11 @@ func (s *TeamMembersService) GetMembers(teamID string, page, pageSize int) (*dto
 		return nil, err
 	}
 
-	return &dtos.TeamMembersResponse{
-		Users:    members,
-		Page:     page,
-		PageSize: pageSize,
-		Total:    total,
+	return &dtos.PageListResp{
+		Items:      members,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalCount: total,
 	}, nil
 }
 

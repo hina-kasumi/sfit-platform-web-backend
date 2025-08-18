@@ -86,12 +86,7 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 			Tag:         eventHandler.TagTempSer.GetByEventOrCourse(e.ID.String(), ""),
 		})
 	}
-	response.Success(ctx, "Get event list successfully", gin.H{
-		"events":   eventResponses,
-		"page":     rq.Page,
-		"pageSize": rq.PageSize,
-		"total":    total,
-	})
+	response.GetListResp(ctx, "Get event list successfully", rq.Page, rq.PageSize, total, eventResponses)
 }
 
 // Lấy chi tiết event theo id
@@ -239,10 +234,5 @@ func (eventHandler *EventHandler) GetUsersInEvent(ctx *gin.Context) {
 			Email:    u.Email,
 		})
 	}
-	response.Success(ctx, "Get event registed list successfully", gin.H{
-		"users":    userResponses,
-		"page":     query.Page,
-		"pageSize": query.PageSize,
-		"total":    total,
-	})
+	response.GetListResp(ctx, "", query.Page, query.PageSize, total, userResponses)
 }
