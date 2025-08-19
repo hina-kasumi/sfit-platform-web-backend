@@ -44,14 +44,14 @@ func (r *CourseRepository) CreateNewCourse(course *entities.Course) error {
 	).Error
 }
 
-// GetCourses retrieves courses with filters, pagination and user-specific data
-func (r *CourseRepository) GetCourses(filter dtos.CourseFilter, pageSize, offset int) ([]dtos.CourseGeneralInformationResponse, int, error) {
-	courses, err := r.getCoursesList(filter, pageSize, offset)
+// GetCourses retrieves courses with queries, pagination and user-specific data
+func (r *CourseRepository) GetCourses(query dtos.CourseQuery) ([]dtos.CourseGeneralInformationResponse, int64, error) {
+	courses, err := r.getCoursesList(query)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get courses: %w", err)
 	}
 
-	total, err := r.getCoursesCount(filter)
+	total, err := r.getCoursesCount(query)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count courses: %w", err)
 	}
@@ -122,12 +122,12 @@ func stringArrayToPGArray(arr []string) string {
 }
 
 // getCoursesList executes the main query to get courses with user-specific data
-func (r *CourseRepository) getCoursesList(filter dtos.CourseFilter, pageSize, offset int) ([]dtos.CourseGeneralInformationResponse, error) {
+func (r *CourseRepository) getCoursesList(query dtos.CourseQuery) ([]dtos.CourseGeneralInformationResponse, error) {
 	var rawCourses []dtos.CourseRaw
 
-	query, args := r.buildCoursesQuery(filter, pageSize, offset)
+	mainQuery, args := r.buildCoursesQuery(query)
 
-	err := r.db.Raw(query, args...).Scan(&rawCourses).Error
+	err := r.db.Raw(mainQuery, args...).Scan(&rawCourses).Error
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +135,9 @@ func (r *CourseRepository) getCoursesList(filter dtos.CourseFilter, pageSize, of
 	return r.transformRawCourses(rawCourses)
 }
 
-// buildCoursesQuery constructs the SQL query for courses with dynamic filters
-func (r *CourseRepository) buildCoursesQuery(filter dtos.CourseFilter, pageSize, offset int) (string, []interface{}) {
+// buildCoursesQuery constructs the SQL query for courses with dynamic querys
+func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []interface{}) {
+	offset := (query.Page - 1) * query.PageSize
 	baseQuery := `
 		WITH course_lessons AS (
 			SELECT 
@@ -190,8 +191,8 @@ func (r *CourseRepository) buildCoursesQuery(filter dtos.CourseFilter, pageSize,
 		LEFT JOIN course_ratings cr ON cr.course_id = c.id
 		LEFT JOIN course_tags ct ON ct.course_id = c.id`
 
-	whereConditions, args := r.buildWhereConditions(filter)
-	args = append([]interface{}{filter.UserID}, args...) // UserID first for CTE
+	whereConditions, args := r.buildWhereConditions(query)
+	args = append([]interface{}{query.UserID}, args...) // UserID first for CTE
 
 	if len(whereConditions) > 0 {
 		baseQuery += " WHERE " + strings.Join(whereConditions, " AND ")
@@ -199,47 +200,47 @@ func (r *CourseRepository) buildCoursesQuery(filter dtos.CourseFilter, pageSize,
 
 	paramIndex := len(args) + 1
 	baseQuery += fmt.Sprintf(" ORDER BY c.id LIMIT $%d OFFSET $%d", paramIndex, paramIndex+1)
-	args = append(args, pageSize, offset)
+	args = append(args, query.PageSize, offset)
 
 	return baseQuery, args
 }
 
-// buildWhereConditions constructs WHERE clause conditions based on filter
-func (r *CourseRepository) buildWhereConditions(filter dtos.CourseFilter) ([]string, []interface{}) {
+// buildWhereConditions constructs WHERE clause conditions based on query
+func (r *CourseRepository) buildWhereConditions(query dtos.CourseQuery) ([]string, []interface{}) {
 	var conditions []string
 	var args []interface{}
 	paramIndex := 2 // Start from $2 since $1 is reserved for UserID in CTE
 
-	if filter.Title != "" {
+	if query.Title != "" {
 		conditions = append(conditions, fmt.Sprintf("c.title ILIKE '%%' || $%d || '%%'", paramIndex))
-		args = append(args, filter.Title)
+		args = append(args, query.Title)
 		paramIndex++
 	}
 
-	if filter.OnlyRegisted {
-		if filter.UserID != uuid.Nil {
+	if query.OnlyRegisted {
+		if query.UserID != uuid.Nil {
 			conditions = append(conditions, fmt.Sprintf(`EXISTS (
 				SELECT 1 FROM lesson_attendances la 
 				INNER JOIN lessons l ON l.id = la.lesson_id 
 				INNER JOIN modules m ON m.id = l.module_id 
 				WHERE la.user_id = $%d AND m.course_id = c.id
 			)`, paramIndex))
-			args = append(args, filter.UserID)
+			args = append(args, query.UserID)
 			paramIndex++
 		} else {
 			conditions = append(conditions, "false")
 		}
 	}
 
-	if filter.CourseType != "" {
+	if query.CourseType != "" {
 		conditions = append(conditions, fmt.Sprintf("c.type = $%d", paramIndex))
-		args = append(args, filter.CourseType)
+		args = append(args, query.CourseType)
 		paramIndex++
 	}
 
-	if filter.Level != "" {
+	if query.Level != "" {
 		conditions = append(conditions, fmt.Sprintf("c.level = $%d", paramIndex))
-		args = append(args, filter.Level)
+		args = append(args, query.Level)
 		paramIndex++
 	}
 
@@ -280,12 +281,12 @@ func (r *CourseRepository) transformRawCourses(rawCourses []dtos.CourseRaw) ([]d
 	return courses, nil
 }
 
-// getCoursesCount gets the total count of courses matching the filter
-func (r *CourseRepository) getCoursesCount(filter dtos.CourseFilter) (int, error) {
-	var total int
+// getCoursesCount gets the total count of courses matching the query
+func (r *CourseRepository) getCoursesCount(query dtos.CourseQuery) (int64, error) {
+	var total int64
 
 	countQuery := "SELECT COUNT(*) FROM courses c"
-	conditions, args := r.buildCountWhereConditions(filter)
+	conditions, args := r.buildCountWhereConditions(query)
 
 	if len(conditions) > 0 {
 		countQuery += " WHERE " + strings.Join(conditions, " AND ")
@@ -296,41 +297,41 @@ func (r *CourseRepository) getCoursesCount(filter dtos.CourseFilter) (int, error
 }
 
 // buildCountWhereConditions builds WHERE conditions for count query
-func (r *CourseRepository) buildCountWhereConditions(filter dtos.CourseFilter) ([]string, []interface{}) {
+func (r *CourseRepository) buildCountWhereConditions(query dtos.CourseQuery) ([]string, []interface{}) {
 	var conditions []string
 	var args []interface{}
 	paramIndex := 1
 
-	if filter.Title != "" {
+	if query.Title != "" {
 		conditions = append(conditions, fmt.Sprintf("c.title ILIKE '%%' || $%d || '%%'", paramIndex))
-		args = append(args, filter.Title)
+		args = append(args, query.Title)
 		paramIndex++
 	}
 
-	if filter.OnlyRegisted {
-		if filter.UserID != uuid.Nil {
+	if query.OnlyRegisted {
+		if query.UserID != uuid.Nil {
 			conditions = append(conditions, fmt.Sprintf(`EXISTS (
 				SELECT 1 FROM lesson_attendances la 
 				INNER JOIN lessons l ON l.id = la.lesson_id 
 				INNER JOIN modules m ON m.id = l.module_id 
 				WHERE la.user_id = $%d AND m.course_id = c.id
 			)`, paramIndex))
-			args = append(args, filter.UserID)
+			args = append(args, query.UserID)
 			paramIndex++
 		} else {
 			conditions = append(conditions, "false")
 		}
 	}
 
-	if filter.CourseType != "" {
+	if query.CourseType != "" {
 		conditions = append(conditions, fmt.Sprintf("c.type = $%d", paramIndex))
-		args = append(args, filter.CourseType)
+		args = append(args, query.CourseType)
 		paramIndex++
 	}
 
-	if filter.Level != "" {
+	if query.Level != "" {
 		conditions = append(conditions, fmt.Sprintf("c.level = $%d", paramIndex))
-		args = append(args, filter.Level)
+		args = append(args, query.Level)
 		paramIndex++
 	}
 
@@ -530,12 +531,8 @@ func (r *CourseRepository) getModuleLessons(moduleID, userID string) ([]dtos.Les
 	lessonQuery := `
 		SELECT 
 			l.id,
-			CASE 
-				WHEN l.lesson_type = 'Quiz' THEN 'Quiz Lesson'
-				WHEN l.lesson_type = 'Online' THEN l.online_content->>'title'
-				WHEN l.lesson_type = 'Offline' THEN 'Offline Lesson'
-				ELSE 'Unknown'
-			END as title,
+			l.title AS title,
+
 			CASE WHEN la.user_id IS NOT NULL THEN true ELSE false END as learned,
 			CASE 
 				WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
@@ -624,9 +621,9 @@ func (r *CourseRepository) EnsureCourseExists(courseID uuid.UUID) error {
 	return nil
 }
 
-func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, pageSize, offset int) ([]dtos.UserListItem, int64, error) {
+func (r *CourseRepository) GetListUserCompleteCourses(query dtos.CourseQuery) ([]dtos.UserListItem, int64, error) {
 	// Ensure course exists
-	if err := r.EnsureCourseExists(filter.CourseID); err != nil {
+	if err := r.EnsureCourseExists(query.CourseID); err != nil {
 		return nil, 0, fmt.Errorf("course does not exist: %w", err)
 	}
 
@@ -639,7 +636,7 @@ func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, 
 		LEFT JOIN lessons l ON l.module_id = m.id
 		WHERE c.id = ?
 	`
-	if err := r.db.Raw(totalLessonQuery, filter.CourseID).Scan(&totalLessons).Error; err != nil {
+	if err := r.db.Raw(totalLessonQuery, query.CourseID).Scan(&totalLessons).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get total lessons: %w", err)
 	}
 
@@ -650,7 +647,7 @@ func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, 
 
 	// Query users who completed all lessons (status = 'present')
 	var users []dtos.UserListItem
-	query := `
+	mainQuery := `
 		SELECT 
 			u.id,
 			u.username,
@@ -665,7 +662,8 @@ func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, 
 		LIMIT ? OFFSET ?
 	`
 
-	if err := r.db.Raw(query, filter.CourseID, totalLessons, pageSize, offset).Scan(&users).Error; err != nil {
+	offset := (query.Page - 1) * query.PageSize
+	if err := r.db.Raw(mainQuery, query.CourseID, totalLessons, query.PageSize, offset).Scan(&users).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get users: %w", err)
 	}
 
@@ -684,7 +682,7 @@ func (r *CourseRepository) GetListUserCompleteCourses(filter dtos.CourseFilter, 
 		) AS completed_users
 	`
 
-	if err := r.db.Raw(countQuery, filter.CourseID, totalLessons).Scan(&totalUser).Error; err != nil {
+	if err := r.db.Raw(countQuery, query.CourseID, totalLessons).Scan(&totalUser).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count users: %w", err)
 	}
 

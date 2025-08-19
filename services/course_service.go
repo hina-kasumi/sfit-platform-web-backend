@@ -5,7 +5,6 @@ import (
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -54,24 +53,18 @@ func NewCourseService(
 	}
 }
 
-func (s *CourseService) CreateCourse(
-	title, description, courseType string,
-	targets, requires, teachers []string,
-	language string,
-	certificate bool,
-	level string,
-) (uuid.UUID, time.Time, error) {
+func (s *CourseService) CreateCourse(req dtos.CreateCourseRequest) (uuid.UUID, time.Time, error) {
 	course := entities.Course{
 		ID:          uuid.New(),
-		Title:       title,
-		Description: description,
-		Type:        courseType,
-		Target:      targets,
-		Require:     requires,
-		Teachers:    teachers,
-		Language:    language,
-		Certificate: certificate,
-		Level:       level,
+		Title:       req.Title,
+		Description: req.Description,
+		Type:        req.Type,
+		Target:      req.Target,
+		Require:     req.Require,
+		Teachers:    req.Teachers,
+		Language:    req.Language,
+		Certificate: req.Certificate,
+		Level:       req.Level,
 		CreatedAt:   time.Now(),
 	}
 	if err := s.courseRepo.CreateNewCourse(&course); err != nil {
@@ -81,73 +74,68 @@ func (s *CourseService) CreateCourse(
 }
 
 // validatePagination ensures page and pageSize are in valid range
-func validatePagination(page, pageSize int) (int, int) {
-	if page < minPage {
-		page = minPage
-	}
-	if pageSize < minPage || pageSize > maxPageSize {
-		pageSize = defaultSize
-	}
-	return page, pageSize
-}
+// func validatePagination(page, pageSize int) (int, int) {
+// 	if page < minPage {
+// 		page = minPage
+// 	}
+// 	if pageSize < minPage || pageSize > maxPageSize {
+// 		pageSize = defaultSize
+// 	}
+// 	return page, pageSize
+// }
 
-func (s *CourseService) GetListCourse(
-	userID string,
-	page, pageSize int,
-	title string,
-	onlyRegistered bool,
-	courseType, level string,
-) (*dtos.CourseListResponse, error) {
+func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.CourseListResponse, error) {
 	// Check user exists
-	if _, err := s.userRepo.GetUserByID(userID); err != nil {
+	if _, err := s.userRepo.GetUserByID(req.UserID.String()); err != nil {
 		return nil, fmt.Errorf("user not found or unauthorized: %w", err)
 	}
 
 	// Sanitize pagination
-	page, pageSize = validatePagination(page, pageSize)
-	offset := (page - 1) * pageSize
+	// page, pageSize = validatePagination(page, pageSize)
+	// offset := (req.Page - 1) * req.PageSize
 
 	// Build filter
-	parsedUserID, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid user ID: %w", err)
-	}
-	filter := dtos.CourseFilter{
-		Title:        strings.TrimSpace(title),
-		OnlyRegisted: onlyRegistered,
-		CourseType:   strings.TrimSpace(courseType),
-		Level:        strings.TrimSpace(level),
-		UserID:       parsedUserID,
-		Page:         page,
-		PageSize:     pageSize,
-	}
+	// parsedUserID, err := uuid.Parse(userID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("invalid user ID: %w", err)
+	// }
+	// filter := dtos.CourseFilter{
+	// 	Title:        strings.TrimSpace(title),
+	// 	OnlyRegisted: onlyRegistered,
+	// 	CourseType:   strings.TrimSpace(courseType),
+	// 	Level:        strings.TrimSpace(level),
+	// 	UserID:       parsedUserID,
+	// 	Page:         page,
+	// 	PageSize:     pageSize,
+	// }
 
 	// Query course list
-	courses, total, err := s.courseRepo.GetCourses(filter, pageSize, offset)
+	// courses, total, err := s.courseRepo.GetCourses(filter, pageSize, offset)
+	courses, total, err := s.courseRepo.GetCourses(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get courses: %w", err)
 	}
 
-	totalPages := (int(total) + pageSize - 1) / pageSize
+	// totalPages := (int(total) + pageSize - 1) / pageSize
 
 	return &dtos.CourseListResponse{
 		Courses: courses,
-		Pagination: dtos.PaginationResponse{
-			CurrentPage:  page,
-			TotalPages:   totalPages,
-			TotalCourses: total,
+		PageListResp: dtos.PageListResp{
+			TotalCount: total,
+			Page:       req.Page,
+			PageSize:   req.PageSize,
 		},
 	}, nil
 }
 
-func (s *CourseService) GetMyCourses(userID string, page, pageSize int, title, courseType, level string) (*dtos.CourseListResponse, error) {
-	// Check user exists
-	if _, err := s.userRepo.GetUserByID(userID); err != nil {
-		return nil, fmt.Errorf("user not found: %w", err)
-	}
-	// Only registered courses
-	return s.GetListCourse(userID, page, pageSize, title, true, courseType, level)
-}
+// func (s *CourseService) GetMyCourses(userID string, page, pageSize int, title, courseType, level string) (*dtos.CourseListResponse, error) {
+// 	// Check user exists
+// 	if _, err := s.userRepo.GetUserByID(userID); err != nil {
+// 		return nil, fmt.Errorf("user not found: %w", err)
+// 	}
+// 	// Only registered courses
+// 	return s.GetListCourse(userID, page, pageSize, title, true, courseType, level)
+// }
 
 func (s *CourseService) GetCourseDetailByID(courseID string, userID string) (*dtos.CourseDetailResponse, error) {
 	// Check user exists
@@ -244,8 +232,8 @@ func (s *CourseService) GetListUserCompleteCourse(
 	page, pageSize int,
 ) (*dtos.PageListResp, error) {
 	// Sanitize pagination
-	page, pageSize = validatePagination(page, pageSize)
-	offset := (page - 1) * pageSize
+	// page, pageSize = validatePagination(page, pageSize)
+	// offset := (page - 1) * pageSize
 
 	// Join lesson_attendance and user_course to get users who completed the course
 	// Build filter
@@ -253,14 +241,17 @@ func (s *CourseService) GetListUserCompleteCourse(
 	if err != nil {
 		return nil, fmt.Errorf("invalid course ID: %w", err)
 	}
-	filter := dtos.CourseFilter{
+	filter := dtos.CourseQuery{
 		CourseID: parsedCourseID,
-		Page:     page,
-		PageSize: pageSize,
+		PageListQuery: dtos.PageListQuery{
+			Page:     page,
+			PageSize: pageSize,
+		},
 	}
 
 	// Query course list
-	users, total, err := s.courseRepo.GetListUserCompleteCourses(filter, pageSize, offset)
+	users, total, err := s.courseRepo.GetListUserCompleteCourses(filter)
+	// users, total, err := s.courseRepo.GetListUserCompleteCourses(filter, pageSize, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -330,13 +321,13 @@ func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int)
 		courses[i].Tags = tags
 	}
 
-	totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
+	// totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
 	result = dtos.CourseListResponse{
 		Courses: courses,
-		Pagination: dtos.PaginationResponse{
-			CurrentPage:  page,
-			TotalPages:   totalPages,
-			TotalCourses: int(total),
+		PageListResp: dtos.PageListResp{
+			Page: page,
+			PageSize: pageSize,
+			TotalCount: total,
 		},
 	}
 	return result, nil
@@ -464,9 +455,11 @@ func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int)
 
 	result = dtos.RegisteredUsersResponse{
 		Users:    usersResp,
-		Page:     page,
-		PageSize: pageSize,
-		Total:    total,
+		PageListResp: dtos.PageListResp{
+			Page: page,
+			PageSize: pageSize,
+			TotalCount: total,
+		},
 	}
 	return result, nil
 }

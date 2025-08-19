@@ -12,6 +12,7 @@ import (
 	"sfit-platform-web-backend/utils/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CourseHandler struct {
@@ -42,10 +43,7 @@ func (h *CourseHandler) CreateCourse(ctx *gin.Context) {
 		return
 	}
 
-	courseID, createdAt, err := h.courseService.CreateCourse(
-		req.Title, req.Description, req.Type, req.Target,
-		req.Require, req.Teachers, req.Language, req.Certificate, req.Level,
-	)
+	courseID, createdAt, err := h.courseService.CreateCourse(req)
 	if h.isError(ctx, err) {
 		return
 	}
@@ -69,22 +67,25 @@ func (h *CourseHandler) CreateCourse(ctx *gin.Context) {
 
 // GET /courses
 func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
-	// userID := utils.GetUserIDFromContext(ctx)
-	userID := middlewares.GetPrincipal(ctx)
+	userID, _ := uuid.Parse(middlewares.GetPrincipal(ctx))
 
-	pageNum, pageSizeNum, valid := parsePagination(ctx)
-	if !valid {
+	// pageNum, pageSizeNum, valid := parsePagination(ctx)
+	// if !valid {
+	// 	return
+	// }
+
+	// title := ctx.Query("title")
+	// onlyRegisted := ctx.Query("onlyRegisted") == "true"
+	// courseType := ctx.Query("type")
+	// level := ctx.Query("level")
+
+	var req dtos.CourseQuery
+	if !h.canBindQuery(ctx, &req) {
 		return
 	}
+	req.UserID = userID
 
-	title := ctx.Query("title")
-	onlyRegisted := ctx.Query("onlyRegisted") == "true"
-	courseType := ctx.Query("type")
-	level := ctx.Query("level")
-
-	courses, err := h.courseService.GetListCourse(
-		userID, pageNum, pageSizeNum, title, onlyRegisted, courseType, level,
-	)
+	courses, err := h.courseService.GetListCourse(req)
 	if err != nil {
 		response.Error(ctx, http.StatusInternalServerError, "Failed to get courses")
 		return
