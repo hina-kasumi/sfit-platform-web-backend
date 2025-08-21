@@ -151,7 +151,7 @@ func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []
 			SELECT 
 				m.course_id,
 				COUNT(CASE WHEN la.status = 'present' THEN 1 END) AS learned,
-				COALESCE(SUM(la.timestamp / 60), 0) AS time_learn
+				la.duration AS time_learn
 			FROM lesson_attendances la
 			INNER JOIN lessons l ON l.id = la.lesson_id
 			INNER JOIN modules m ON m.id = l.module_id
@@ -180,7 +180,7 @@ func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []
 			c.type,
 			to_json(c.teachers)::json AS teachers, 
 			COALESCE(cl.lesson_count, 0) AS number_lessons,
-			COALESCE(up.time_learn, 0) AS time_learn,
+			up.time_learn,
 			COALESCE(cr.rate, 0.0) AS rate,
 			array_to_json(ct.tag_list) AS tags,
 			COALESCE(up.learned, 0) AS learned_lessons,
@@ -190,7 +190,7 @@ func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []
 		LEFT JOIN user_progress up ON up.course_id = c.id
 		LEFT JOIN course_ratings cr ON cr.course_id = c.id
 		LEFT JOIN course_tags ct ON ct.course_id = c.id`
-
+//COALESCE(up.time_learn, 0) AS time_learn,
 	whereConditions, args := r.buildWhereConditions(query)
 	args = append([]interface{}{query.UserID}, args...) // UserID first for CTE
 
@@ -534,12 +534,7 @@ func (r *CourseRepository) getModuleLessons(moduleID, userID string) ([]dtos.Les
 			l.title AS title,
 
 			CASE WHEN la.user_id IS NOT NULL THEN true ELSE false END as learned,
-			CASE 
-				WHEN l.lesson_type = 'Quiz' THEN (l.quiz_content->>'duration')::int
-				WHEN l.lesson_type = 'Online' THEN (l.online_content->>'duration')::int
-				WHEN l.lesson_type = 'Offline' THEN (l.offline_content->>'duration')::int
-				ELSE 0
-			END as study_time
+			l.duration as study_time
 		FROM lessons l
 		LEFT JOIN lesson_attendances la ON l.id = la.lesson_id AND la.user_id = $2::uuid
 		WHERE l.module_id = $1::uuid
