@@ -15,11 +15,17 @@ import (
 type UserProfileService struct {
 	userSer         *UserService
 	userProfileRepo *repositories.UserProfileRepository
+	eventSer        *EventService
+	courseSer       *CourseService
+	taskSer         *TaskService
 }
 
-func NewUserProfileService(userProfileRepo *repositories.UserProfileRepository, userSer *UserService) *UserProfileService {
+func NewUserProfileService(userProfileRepo *repositories.UserProfileRepository, userSer *UserService, eventSer *EventService, courseSer *CourseService, taskSer *TaskService) *UserProfileService {
 	return &UserProfileService{
 		userSer:         userSer,
+		eventSer:        eventSer,
+		courseSer:       courseSer,
+		taskSer:         taskSer,
 		userProfileRepo: userProfileRepo,
 	}
 }
@@ -76,6 +82,14 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 	var socialLink map[string]string
 	_ = json.Unmarshal([]byte(profile.SocialLink), &socialLink)
 
+	_, joinedEvents, _ := profileSer.eventSer.GetEvents(1, 10, "", string(entities.Attended), "", profile.UserID.String())
+
+	isCompleted := true
+	_, completedTasks, _ := profileSer.taskSer.ListTasksByUserID(profile.UserID.String(), 1, 10, &isCompleted)
+
+	listCourse, _ := profileSer.courseSer.GetCourseUserCompletion(profile.UserID)
+	lenCourse := len(listCourse)
+
 	return &dtos.GetUserProfileResponse{
 		UserID:          profile.UserID,
 		FullName:        profile.FullName,
@@ -84,9 +98,9 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 		Phone:           profile.Phone,
 		Introduction:    profile.Introduction,
 		Email:           profile.Email,
-		CompletedCourse: 0,
-		JoinedEvent:     0,
-		CompletedTask:   0,
+		CompletedCourse: int64(lenCourse),
+		JoinedEvent:     joinedEvents,
+		CompletedTask:   completedTasks,
 		SocialLink:      socialLink,
 		CreatedAt:       profile.CreatedAt,
 		UpdatedAt:       profile.UpdatedAt,
