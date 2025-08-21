@@ -689,7 +689,7 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
 
 	query := `
         SELECT 
-            (SELECT COALESCE(SUM(la.timestamp / 60), 0)
+            (SELECT COALESCE(SUM(CASE WHEN la.status = 'present' THEN la.duration ELSE 0 END), 0)
              FROM lesson_attendances la
              JOIN lessons l ON l.id = la.lesson_id
              JOIN modules m ON m.id = l.module_id
