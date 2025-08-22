@@ -42,7 +42,7 @@ func (repo *LessonRepository) UpdateLesson(lesson *entities.Lesson) error {
 }
 
 func (repo *LessonRepository) UpdateStatusLessonAttendance(
-	userID, lessonID uuid.UUID,
+	userID, lessonID, courseID uuid.UUID,
 	status entities.LessonAttendanceStatus,
 	deviceID string, quizPoint int,
 	currentUserID string,
@@ -58,6 +58,7 @@ func (repo *LessonRepository) UpdateStatusLessonAttendance(
 	lessonAttendance := entities.LessonAttendance{
 		UserID:      userID,
 		LessonID:    lessonID,
+		CourseID:    courseID,
 		Status:      status,
 		DeviceID:    dvID,
 		QuizPoint:   &quizPoint,

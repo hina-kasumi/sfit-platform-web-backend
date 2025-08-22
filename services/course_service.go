@@ -325,8 +325,8 @@ func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int)
 	result = dtos.CourseListResponse{
 		Courses: courses,
 		PageListResp: dtos.PageListResp{
-			Page: page,
-			PageSize: pageSize,
+			Page:       page,
+			PageSize:   pageSize,
 			TotalCount: total,
 		},
 	}
@@ -454,10 +454,10 @@ func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int)
 	}
 
 	result = dtos.RegisteredUsersResponse{
-		Users:    usersResp,
+		Users: usersResp,
 		PageListResp: dtos.PageListResp{
-			Page: page,
-			PageSize: pageSize,
+			Page:       page,
+			PageSize:   pageSize,
 			TotalCount: total,
 		},
 	}
@@ -497,4 +497,26 @@ func (s *CourseService) UpdateTotalTime(module_id string, time int) error {
 	}
 
 	return s.courseRepo.UpdateTotalTime(moduleUUID, time)
+}
+
+func (s *CourseService) UpdateTotalLessons(courseID string, lessonCount int) error {
+	courseUUID, err := uuid.Parse(courseID)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.courseRepo.UpdateTotalLesson(courseUUID, lessonCount)
+	return err
+}
+
+func (s *CourseService) GetModuleByID(moduleID string) (*entities.Module, error) {
+	moduleUUID, err := uuid.Parse(moduleID)
+	if err != nil {
+		return nil, err
+	}
+	return s.courseRepo.GetModuleByID(moduleUUID)
+}
+
+func (s *CourseService) GetCourseUserCompletion(userID uuid.UUID) ([]string, error) {
+	return s.courseRepo.GetCourseUserCompletion(userID)
 }

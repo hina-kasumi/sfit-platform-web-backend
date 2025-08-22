@@ -92,8 +92,8 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	tagTempSer := services.NewTagTempService(tagTempRepo)
 	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
 	eventSer := services.NewEventService(eventRepo)
-	profileSer := services.NewUserProfileService(userProfileRepo, userSer)
 	taskSer := services.NewTaskService(taskRepo)
+	profileSer := services.NewUserProfileService(userProfileRepo, userSer, eventSer, courseSer, taskSer)
 	lessonSer := services.NewLessonService(lessonRepo, courseSer)
 
 	// Khởi tạo Hander

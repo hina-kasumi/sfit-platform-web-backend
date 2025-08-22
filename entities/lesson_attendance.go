@@ -18,6 +18,7 @@ const (
 type LessonAttendance struct {
 	UserID      uuid.UUID              `gorm:"type:uuid;primaryKey;column:user_id"`
 	LessonID    uuid.UUID              `gorm:"type:uuid;primaryKey;column:lesson_id"`
+	CourseID    uuid.UUID              `gorm:"type:uuid;column:course_id"`
 	QuizPoint   *int                   `gorm:"column:quiz_point"`
 	Duration    *int                   `gorm:"column:duration"`
 	Status      LessonAttendanceStatus `gorm:"type:varchar"`

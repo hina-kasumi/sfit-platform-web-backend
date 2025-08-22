@@ -35,18 +35,20 @@ func NewLessonService(lessonRepo *repositories.LessonRepository, courseSer *Cour
 func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*entities.Lesson, error) {
 	var lesson *entities.Lesson
 	var err error
-	parsedModuleID, err := uuid.Parse(moduleID)
-	if err != nil {
-		return nil, err
-	}
+
 	content := req.QuizContent
 	for i := range content {
 		sort.Ints(content[i].CorrectAnswers)
 	}
+	module, err := s.courseSer.GetModuleByID(moduleID)
+	if err != nil {
+		return nil, err
+	}
 	switch req.Type {
 	case entities.QuizLesson:
 		lesson = entities.NewQuizLesson(
-			parsedModuleID,
+			module.CourseID,
+			module.ID,
 			req.Title,
 			req.Description,
 			req.Duration,
@@ -70,7 +72,8 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			return nil, errors.New("video URL is required for online lessons")
 		}
 		lesson = entities.NewOnlineLesson(
-			parsedModuleID,
+			module.CourseID,
+			module.ID,
 			req.Title,
 			req.Description,
 			req.Duration,
@@ -84,7 +87,8 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			req.Duration = 7200
 		}
 		lesson = entities.NewOfflineLesson(
-			parsedModuleID,
+			module.CourseID,
+			module.ID,
 			req.Title,
 			req.Description,
 			req.Duration,
@@ -93,7 +97,8 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 		)
 	case entities.ReadingLesson:
 		lesson = entities.NewReadingLesson(
-			parsedModuleID,
+			module.CourseID,
+			module.ID,
 			req.Title,
 			req.Description,
 			req.Duration,
@@ -117,19 +122,26 @@ func (s *LessonService) CreateNewLesson(moduleID string, req dtos.LessonRequest)
 	if err != nil {
 		return nil, err
 	}
+	err = s.courseSer.UpdateTotalLessons(lesson.CourseID.String(), 1)
+	if err != nil {
+		return nil, err
+	}
 	return s.lessonRepo.CreateLesson(lesson)
 }
 
 func (s *LessonService) UpdateLesson(moduleID string, lessonID string, req dtos.LessonRequest) error {
+	oldLesson, err := s.lessonRepo.GetLessonByID(lessonID)
+	if err != nil {
+		return err
+	}
+
 	lesson, err := s.createLesson(moduleID, req)
 	if err != nil {
 		return err
 	}
-	parsedLessonID, err := uuid.Parse(lessonID)
-	if err != nil {
-		return err
-	}
-	lesson.ID = parsedLessonID
+
+	lesson.ID = oldLesson.ID
+	s.courseSer.UpdateTotalTime(moduleID, lesson.Duration-oldLesson.Duration)
 	return s.lessonRepo.UpdateLesson(lesson)
 }
 
@@ -147,6 +159,10 @@ func (s *LessonService) DeleteLessonByID(id string) error {
 		return err
 	}
 	err = s.courseSer.UpdateTotalTime(lesson.ModuleID.String(), -lesson.Duration)
+	if err != nil {
+		return err
+	}
+	err = s.courseSer.UpdateTotalLessons(lesson.CourseID.String(), -1)
 	if err != nil {
 		return err
 	}
@@ -195,7 +211,7 @@ func (s *LessonService) UpdateStatusLessonAttendance(
 	default:
 		return errors.New("invalid lesson type")
 	}
-	return s.lessonRepo.UpdateStatusLessonAttendance(userUUID, lesson.ID, status, deviceID, quizPoint, currentUserID, duration)
+	return s.lessonRepo.UpdateStatusLessonAttendance(userUUID, lesson.ID, lesson.CourseID, status, deviceID, quizPoint, currentUserID, duration)
 }
 
 func (s *LessonService) GetUsersByLessonID(lessonID string, query dtos.GetUserAttendanceLessonReq) ([]dtos.GetUserAttendanceLessonRp, int64, error) {

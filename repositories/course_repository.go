@@ -924,3 +924,54 @@ func (cr *CourseRepository) UpdateTotalTime(moduleID uuid.UUID, time int) error 
 		Where("id = ?", courseID).
 		Update("total_time", gorm.Expr("GREATEST(total_time + ?, 0)", time)).Error
 }
+
+func (cr *CourseRepository) UpdateTotalLesson(courseID uuid.UUID, lessonCount int) (*entities.Course, error) {
+	var course entities.Course
+	err := cr.db.Model(&course).
+		Where("id = ?", courseID).
+		Update("total_lessons", gorm.Expr("GREATEST(total_lessons + ?, 0)", lessonCount)).Error
+	if err != nil {
+		return nil, err
+	}
+	return &course, nil
+
+}
+
+func (cr *CourseRepository) GetModuleByID(moduleID uuid.UUID) (*entities.Module, error) {
+	var module entities.Module
+	err := cr.db.Where("id = ?", moduleID).First(&module).Error
+	if err != nil {
+		return nil, err
+	}
+	return &module, nil
+}
+
+func (cr *CourseRepository) GetCourseUserCompletion(userID uuid.UUID) ([]string, error) {
+	var courseIDs []string
+
+	err := cr.db.Table("courses").
+		Select("id").
+		Where("total_lessons <= (?)",
+			cr.db.Table("lesson_attendances").
+				Select("COUNT(lesson_id)").
+				Where("course_id = courses.id AND user_id = ?", userID),
+		).Scan(&courseIDs).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return courseIDs, nil
+}
+
+// func (cr *CourseRepository) GetNumberOfCompletedCourses(userID uuid.UUID) (int64) {
+// 	var count int64
+// 	err := cr.db.Model(&entities.UserCourse{}).
+// 		Where("user_id = ? AND status = ?", userID, entities.).
+// 		Count(&count).Error
+
+// 	if err != nil {
+// 		return 0
+// 	}
+
+// 	return count
+// }
