@@ -155,6 +155,7 @@ type CourseGeneralInformationResponse struct {
 	Description    string   `json:"description"`
 	Type           string   `json:"type"`
 	NumberLessons  int      `json:"number_lessons"`
+	Teachers       []string `json:"teachers"`
 	TimeLearn      int      `json:"time_learn"`
 	Rate           float64  `json:"rate"`
 	Tags           []string `json:"tags"`
