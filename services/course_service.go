@@ -84,7 +84,7 @@ func (s *CourseService) CreateCourse(req dtos.CreateCourseRequest) (uuid.UUID, t
 // 	return page, pageSize
 // }
 
-func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.CourseListResponse, error) {
+func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.PageListResp, error) {
 	// Check user exists
 	if _, err := s.userRepo.GetUserByID(req.UserID.String()); err != nil {
 		return nil, fmt.Errorf("user not found or unauthorized: %w", err)
@@ -118,13 +118,11 @@ func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.CourseListRes
 
 	// totalPages := (int(total) + pageSize - 1) / pageSize
 
-	return &dtos.CourseListResponse{
-		Courses: courses,
-		PageListResp: dtos.PageListResp{
-			TotalCount: total,
-			Page:       req.Page,
-			PageSize:   req.PageSize,
-		},
+	return &dtos.PageListResp{
+		TotalCount: total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		Items:      courses,
 	}, nil
 }
 
@@ -294,41 +292,54 @@ func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, i
 }
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
-func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.CourseListResponse, error) {
+func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.PageListResp, error) {
 	offset := (page - 1) * pageSize
 	var total int64
-	var result dtos.CourseListResponse
+	var result dtos.PageListResp
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		return result, err
 	}
 
-	// Lấy danh sách khóa học đã đăng ký (theo DTO)
+	// Lấy danh sách course từ repo
 	courses, err := cs.courseRepo.GetCoursesByUserIDWithPagination(userID, offset, pageSize, &total)
 	if err != nil {
 		return result, err
 	}
 
-	// Bổ sung thông tin lessons, tags
+	// Bổ sung dữ liệu động: lessons, tags, time_learn, rate
 	for i := range courses {
 		courseID, _ := uuid.Parse(courses[i].ID)
-		totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseID)
-		tags := cs.courseRepo.GetCourseTags(courseID)
 
+		// Đếm tổng số bài học và bài đã học
+		totalLessons, learnedLessons, err := cs.courseRepo.CountLessonProgress(userUUID, courseID)
+		if err != nil {
+			return result, err
+		}
 		courses[i].NumberLessons = totalLessons
 		courses[i].LearnedLessons = learnedLessons
+
+		// Lấy tags
+		tags := cs.courseRepo.GetCourseTags(courseID)
 		courses[i].Tags = tags
+
+		// Lấy time_learn (có sẵn ở bảng courses)
+		timeLearn, _ := cs.courseRepo.GetCourseTotalTime(courseID)
+		courses[i].TimeLearn = timeLearn
+
+		// Lấy rate trung bình
+		rate, _ := cs.courseRepo.GetCourseAverageRate(courseID)
+		courses[i].Rate = rate
+
+		courses[i].Registed = true
 	}
 
-	// totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
-	result = dtos.CourseListResponse{
-		Courses: courses,
-		PageListResp: dtos.PageListResp{
-			Page:       page,
-			PageSize:   pageSize,
-			TotalCount: total,
-		},
+	result = dtos.PageListResp{
+		Page:       page,
+		PageSize:   pageSize,
+		TotalCount: total,
+		Items:      courses,
 	}
 	return result, nil
 }

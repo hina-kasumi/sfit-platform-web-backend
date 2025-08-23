@@ -154,19 +154,13 @@ type CourseGeneralInformationResponse struct {
 	Title          string   `json:"title"`
 	Description    string   `json:"description"`
 	Type           string   `json:"type"`
-	Teachers       []string `json:"teachers"`
 	NumberLessons  int      `json:"number_lessons"`
+	Teachers       []string `json:"teachers"`
 	TimeLearn      int      `json:"time_learn"`
 	Rate           float64  `json:"rate"`
 	Tags           []string `json:"tags"`
 	LearnedLessons int      `json:"learned_lessons"`
 	Registed       bool     `json:"registed"`
-}
-
-type CourseListResponse struct {
-	Courses []CourseGeneralInformationResponse `json:"courses"`
-	PageListResp
-	// Pagination PaginationResponse                 `json:"pagination"`
 }
 
 // type PaginationResponse struct {
