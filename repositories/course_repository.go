@@ -706,6 +706,7 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
 	return res.Learned, res.TotalLessons, nil
 }
 
+
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 	userID string,
@@ -724,17 +725,17 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 		return nil, err
 	}
 
-	// Lấy dữ liệu: convert text[] thành JSON để map an toàn vào []string
+	// Core info
 	query := `
         SELECT 
             courses.id,
             courses.title,
             courses.description,
-            courses.level AS type,
-            COALESCE(ARRAY(SELECT unnest(teachers)), '{}') AS teachers,
+            courses.type,
+            COALESCE(array_to_json(teachers), '[]') AS teachers,
             0 AS number_lessons,
             0 AS time_learn,
-            5 AS rate,
+            0.0 AS rate,
             '{}'::text[] AS tags,
             0 AS learned_lessons,
             TRUE AS registed
@@ -751,15 +752,19 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 	return courses, nil
 }
 
-// Tính tổng thời gian học của khóa học (tổng Duration các lesson)
+
+//Lấy tổng thời gian học từ cột total_time trong bảng courses
 func (cr *CourseRepository) GetCourseTotalTime(courseID uuid.UUID) (int, error) {
-    var totalTime int64
-    err := cr.db.
-        Model(&entities.Lesson{}).
-        Where("course_id = ?", courseID).
-        Select("COALESCE(SUM(duration),0)").
-        Scan(&totalTime).Error
-    return int(totalTime), err
+	var totalTime int
+	err := cr.db.
+		Table("courses").
+		Select("total_time").
+		Where("id = ?", courseID).
+		Scan(&totalTime).Error
+	if err != nil {
+		return 0, err
+	}
+	return totalTime, nil
 }
 
 // Tính trung bình rate (sao) của khóa học
@@ -773,35 +778,34 @@ func (cr *CourseRepository) GetCourseAverageRate(courseID uuid.UUID) (float64, e
 	return avg, err
 }
 
-// Lấy số bài học và bài học đã học của người dùng trong khóa học
+// Đếm lessons và số lessons đã học
 func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.UUID) (int, int) {
 	var total, learned int64
 
+	// tổng lessons (dùng total_lessons đã cache sẵn trong courses nếu muốn)
 	cr.db.
 		Table("lessons").
-		Joins("JOIN modules ON lessons.module_id = modules.id").
-		Where("modules.course_id = ?", courseID).
+		Where("course_id = ?", courseID).
 		Count(&total)
 
+	// số lessons user đã học
 	cr.db.
 		Table("lesson_attendances").
 		Joins("JOIN lessons ON lesson_attendances.lesson_id = lessons.id").
-		Joins("JOIN modules ON lessons.module_id = modules.id").
-		Where("lesson_attendances.user_id = ? AND modules.course_id = ?", userID, courseID).
+		Where("lesson_attendances.user_id = ? AND lessons.course_id = ?", userID, courseID).
 		Count(&learned)
 
 	return int(total), int(learned)
 }
 
-// Lấy tags của khóa học
+// Lấy danh sách tag theo course_id
 func (cr *CourseRepository) GetCourseTags(courseID uuid.UUID) []string {
 	var tags []string
 	cr.db.
-		Table("tags").
-		Joins("JOIN tag_temps ON tags.id = tag_temps.tag_id").
-		Where("tag_temps.course_id = ?", courseID).
-		Pluck("tags.id", &tags)
-
+		Table("course_tags").
+		Select("tag").
+		Where("course_id = ?", courseID).
+		Pluck("tag", &tags)
 	return tags
 }
 
