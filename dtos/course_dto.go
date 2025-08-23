@@ -122,7 +122,7 @@ type RateResponse struct {
 type CourseLessonsResponse []ModuleInfo
 
 type RegisteredUsersResponse struct {
-	Users    []RegisteredUserInfo `json:"users"`
+	Users []RegisteredUserInfo `json:"users"`
 	// Page     int                  `json:"page"`
 	// PageSize int                  `json:"pageSize"`
 	// Total    int64                `json:"total"`
@@ -164,7 +164,7 @@ type CourseGeneralInformationResponse struct {
 }
 
 type CourseListResponse struct {
-	Courses    []CourseGeneralInformationResponse `json:"courses"`
+	Courses []CourseGeneralInformationResponse `json:"courses"`
 	PageListResp
 	// Pagination PaginationResponse                 `json:"pagination"`
 }
@@ -210,10 +210,10 @@ type CourseDetailRaw struct {
 
 // ===================== FILTER STRUCT =====================
 type CourseQuery struct {
-	Title        string
-	OnlyRegisted bool
-	CourseType   string
-	Level        string
+	Title        string `form:"title"`
+	OnlyRegisted bool   `form:"only_registed"`
+	CourseType   string `form:"type"`
+	Level        string `form:"level"`
 	UserID       uuid.UUID
 	CourseID     uuid.UUID
 	PageListQuery

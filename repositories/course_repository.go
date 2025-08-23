@@ -141,22 +141,19 @@ func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []
 	baseQuery := `
 		WITH course_lessons AS (
 			SELECT 
-				m.course_id, 
+				l.course_id, 
 				COUNT(l.id) AS lesson_count
-			FROM modules m
-			INNER JOIN lessons l ON l.module_id = m.id
-			GROUP BY m.course_id
+			FROM lessons l
+			GROUP BY l.course_id
 		),
 		user_progress AS (
 			SELECT 
-				m.course_id,
+				la.course_id,
 				COUNT(CASE WHEN la.status = 'present' THEN 1 END) AS learned,
-				la.duration AS time_learn
+				COALESCE(SUM(la.duration), 0) AS time_learn
 			FROM lesson_attendances la
-			INNER JOIN lessons l ON l.id = la.lesson_id
-			INNER JOIN modules m ON m.id = l.module_id
 			WHERE la.user_id = $1
-			GROUP BY m.course_id
+			GROUP BY la.course_id
 		),
 		course_ratings AS (
 			SELECT 
@@ -178,19 +175,21 @@ func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []
 			c.title,
 			c.description,
 			c.type,
-			to_json(c.teachers)::json AS teachers, 
+			to_json(c.teachers) AS teachers, 
 			COALESCE(cl.lesson_count, 0) AS number_lessons,
-			up.time_learn,
+			COALESCE(up.time_learn, 0) AS time_learn,
 			COALESCE(cr.rate, 0.0) AS rate,
-			array_to_json(ct.tag_list) AS tags,
+			COALESCE(array_to_json(ct.tag_list), '[]') AS tags,
 			COALESCE(up.learned, 0) AS learned_lessons,
-			CASE WHEN up.learned > 0 THEN true ELSE false END AS registed
+			(up.learned > 0) AS registed
 		FROM courses c
 		LEFT JOIN course_lessons cl ON cl.course_id = c.id
 		LEFT JOIN user_progress up ON up.course_id = c.id
 		LEFT JOIN course_ratings cr ON cr.course_id = c.id
-		LEFT JOIN course_tags ct ON ct.course_id = c.id`
-//COALESCE(up.time_learn, 0) AS time_learn,
+		LEFT JOIN course_tags ct ON ct.course_id = c.id
+	`
+
+
 	whereConditions, args := r.buildWhereConditions(query)
 	args = append([]interface{}{query.UserID}, args...) // UserID first for CTE
 
@@ -221,9 +220,8 @@ func (r *CourseRepository) buildWhereConditions(query dtos.CourseQuery) ([]strin
 		if query.UserID != uuid.Nil {
 			conditions = append(conditions, fmt.Sprintf(`EXISTS (
 				SELECT 1 FROM lesson_attendances la 
-				INNER JOIN lessons l ON l.id = la.lesson_id 
-				INNER JOIN modules m ON m.id = l.module_id 
-				WHERE la.user_id = $%d AND m.course_id = c.id
+				INNER JOIN lessons l ON l.id = la.lesson_id  
+				WHERE la.user_id = $%d AND l.course_id = c.id
 			)`, paramIndex))
 			args = append(args, query.UserID)
 			paramIndex++
@@ -312,9 +310,8 @@ func (r *CourseRepository) buildCountWhereConditions(query dtos.CourseQuery) ([]
 		if query.UserID != uuid.Nil {
 			conditions = append(conditions, fmt.Sprintf(`EXISTS (
 				SELECT 1 FROM lesson_attendances la 
-				INNER JOIN lessons l ON l.id = la.lesson_id 
-				INNER JOIN modules m ON m.id = l.module_id 
-				WHERE la.user_id = $%d AND m.course_id = c.id
+				INNER JOIN lessons l ON l.id = la.lesson_id
+				WHERE la.user_id = $%d AND l.course_id = c.id
 			)`, paramIndex))
 			args = append(args, query.UserID)
 			paramIndex++
@@ -366,13 +363,11 @@ func (r *CourseRepository) getCourseBasicInfo(courseID, userID string) (*dtos.Co
 				CASE WHEN fc.user_id IS NOT NULL THEN true ELSE false END as like,
 				COALESCE(AVG(ur.star), 0) as star,
 				COUNT(DISTINCT uc.user_id) as total_registered,
-				COUNT(DISTINCT l.id) as total_lessons
+				c.total_lessons
 			FROM courses c
 			LEFT JOIN favorite_courses fc ON c.id = fc.course_id AND fc.user_id = $2::uuid
 			LEFT JOIN user_rates ur ON c.id = ur.courses_id
 			LEFT JOIN user_courses uc ON c.id = uc.course_id
-			LEFT JOIN modules m ON c.id = m.course_id
-			LEFT JOIN lessons l ON m.id = l.module_id
 			WHERE c.id = $1::uuid
 			GROUP BY c.id, c.title, c.description, c.type, c.level, c.teachers, 
 					c.target, c.require, c.language, c.update_at, fc.user_id
@@ -625,7 +620,7 @@ func (r *CourseRepository) GetListUserCompleteCourses(query dtos.CourseQuery) ([
 	// Get total lessons for the course
 	var totalLessons int
 	totalLessonQuery := `
-		SELECT COUNT(DISTINCT l.id) AS total_lessons
+		SELECT COUNT c.total_lessons
 		FROM courses c
 		LEFT JOIN modules m ON m.course_id = c.id
 		LEFT JOIN lessons l ON l.module_id = m.id
@@ -692,13 +687,16 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
             (SELECT COALESCE(SUM(CASE WHEN la.status = 'present' THEN la.duration ELSE 0 END), 0)
              FROM lesson_attendances la
              JOIN lessons l ON l.id = la.lesson_id
-             JOIN modules m ON m.id = l.module_id
-             WHERE m.course_id = ? AND la.user_id = ?) AS learned,
-            (SELECT COUNT(l.id)
-             FROM lessons l
-             JOIN modules m ON m.id = l.module_id
-             WHERE m.course_id = ?) AS total_lessons
+             WHERE l.course_id = ? AND la.user_id = ?) AS learned,
+			(SELECT total_lessons
+			 FROM courses
+			 WHERE id = ?)
     `
+
+	// (SELECT COUNT(l.id)
+	// FROM lessons l
+	// JOIN modules m ON m.id = l.module_id
+	// WHERE m.course_id = ?) AS total_lessons
 
 	err := r.db.Raw(query, courseID, userID, courseID).Scan(&res).Error
 	if err != nil {
