@@ -189,7 +189,6 @@ func (r *CourseRepository) buildCoursesQuery(query dtos.CourseQuery) (string, []
 		LEFT JOIN course_tags ct ON ct.course_id = c.id
 	`
 
-
 	whereConditions, args := r.buildWhereConditions(query)
 	args = append([]interface{}{query.UserID}, args...) // UserID first for CTE
 
@@ -706,7 +705,6 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
 	return res.Learned, res.TotalLessons, nil
 }
 
-
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
 func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 	userID string,
@@ -770,7 +768,7 @@ func (cr *CourseRepository) GetCourseAverageRate(courseID uuid.UUID) (float64, e
 	var avg float64
 	err := cr.db.
 		Model(&entities.UserRate{}).
-		Where("course_id = ?", courseID).
+		Where("courses_id = ?", courseID).
 		Select("COALESCE(AVG(star), 0)"). // tránh null
 		Scan(&avg).Error
 	return avg, err
@@ -801,7 +799,6 @@ func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.
 	return result.Total, result.Learned, nil
 }
 
-
 // Lấy tags của khóa học
 func (cr *CourseRepository) GetCourseTags(courseID uuid.UUID) []string {
 	var tags []string
@@ -813,7 +810,6 @@ func (cr *CourseRepository) GetCourseTags(courseID uuid.UUID) []string {
 
 	return tags
 }
-
 
 // Lấy danh sách các module và bài học trong khóa học
 func (cr *CourseRepository) GetCourseModulesWithLessons(courseID uuid.UUID, userID uuid.UUID) ([]entities.Module, map[uuid.UUID][]entities.Lesson, map[uuid.UUID]bool, error) {

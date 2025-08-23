@@ -84,7 +84,7 @@ func (s *CourseService) CreateCourse(req dtos.CreateCourseRequest) (uuid.UUID, t
 // 	return page, pageSize
 // }
 
-func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.CourseListResponse, error) {
+func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.PageListResp, error) {
 	// Check user exists
 	if _, err := s.userRepo.GetUserByID(req.UserID.String()); err != nil {
 		return nil, fmt.Errorf("user not found or unauthorized: %w", err)
@@ -118,13 +118,11 @@ func (s *CourseService) GetListCourse(req dtos.CourseQuery) (*dtos.CourseListRes
 
 	// totalPages := (int(total) + pageSize - 1) / pageSize
 
-	return &dtos.CourseListResponse{
-		Courses: courses,
-		PageListResp: dtos.PageListResp{
-			TotalCount: total,
-			Page:       req.Page,
-			PageSize:   req.PageSize,
-		},
+	return &dtos.PageListResp{
+		TotalCount: total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		Items:      courses,
 	}, nil
 }
 
@@ -293,12 +291,11 @@ func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, i
 	return Learned, TotalLessons, nil
 }
 
-
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
-func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.CourseListResponse, error) {
+func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.PageListResp, error) {
 	offset := (page - 1) * pageSize
 	var total int64
-	var result dtos.CourseListResponse
+	var result dtos.PageListResp
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
@@ -338,18 +335,14 @@ func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int)
 		courses[i].Registed = true
 	}
 
-	result = dtos.CourseListResponse{
-		Courses: courses,
-		PageListResp: dtos.PageListResp{
-			Page:       page,
-			PageSize:   pageSize,
-			TotalCount: total,
-			Items:      nil, // có thể để null
-		},
+	result = dtos.PageListResp{
+		Page:       page,
+		PageSize:   pageSize,
+		TotalCount: total,
+		Items:      courses,
 	}
 	return result, nil
 }
-
 
 // Lấy danh sách bài học trong khóa học
 func (cs *CourseService) GetCourseLessons(courseID string, userID string) (dtos.CourseLessonsResponse, error) {

@@ -163,12 +163,6 @@ type CourseGeneralInformationResponse struct {
 	Registed       bool     `json:"registed"`
 }
 
-type CourseListResponse struct {
-	Courses []CourseGeneralInformationResponse `json:"courses"`
-	PageListResp
-	// Pagination PaginationResponse                 `json:"pagination"`
-}
-
 // type PaginationResponse struct {
 // 	CurrentPage  int `json:"current_page"`
 // 	TotalPages   int `json:"total_pages"`
