@@ -336,14 +336,14 @@ func (cs *CourseService) GetRegisteredCourses(
 		courses[i].TimeLearn = totalTime
 	}
 
-	// Wrap response
+	//response
 	result = dtos.CourseListResponse{
 		Courses: courses,
 		PageListResp: dtos.PageListResp{
 			TotalCount: total,
 			Page:       page,
 			PageSize:   pageSize,
-			Items:      nil, // để null theo ý bro
+			Items:      nil,
 		},
 	}
 	return result, nil
