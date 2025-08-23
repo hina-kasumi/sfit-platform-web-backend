@@ -683,15 +683,16 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
 	var res dtos.GetUserProgressInCourseResponse
 
 	query := `
-        SELECT 
-            (SELECT COALESCE(SUM(CASE WHEN la.status = 'present' THEN la.duration ELSE 0 END), 0)
-             FROM lesson_attendances la
-             JOIN lessons l ON l.id = la.lesson_id
-             WHERE l.course_id = ? AND la.user_id = ?) AS learned,
+		SELECT 
+			(SELECT COALESCE(COUNT(DISTINCT la.lesson_id), 0)
+			FROM lesson_attendances la
+			JOIN lessons l ON l.id = la.lesson_id
+			WHERE l.course_id = ? AND la.user_id = ? AND la.status = 'present') AS learned,
 			(SELECT total_lessons
-			 FROM courses
-			 WHERE id = ?)
-    `
+			FROM courses
+			WHERE id = ?)
+	`
+
 
 	// (SELECT COUNT(l.id)
 	// FROM lessons l
