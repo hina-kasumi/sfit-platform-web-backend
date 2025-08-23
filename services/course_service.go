@@ -316,7 +316,10 @@ func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int)
 		courseID, _ := uuid.Parse(courses[i].ID)
 
 		// Đếm tổng số bài học và bài đã học
-		totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseID)
+		totalLessons, learnedLessons, err := cs.courseRepo.CountLessonProgress(userUUID, courseID)
+		if err != nil {
+			return result, err
+		}
 		courses[i].NumberLessons = totalLessons
 		courses[i].LearnedLessons = learnedLessons
 

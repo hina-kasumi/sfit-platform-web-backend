@@ -776,25 +776,31 @@ func (cr *CourseRepository) GetCourseAverageRate(courseID uuid.UUID) (float64, e
 	return avg, err
 }
 
-// Đếm tổng lessons và lessons đã học của user trong course
-func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.UUID) (int, int) {
-	var total, learned int64
+// Đếm số lessons và số lessons đã học của user trong course
+func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.UUID) (int, int, error) {
+	var result struct {
+		Total   int
+		Learned int
+	}
 
-	// tổng số lessons
-	cr.db.
-		Table("lessons").
-		Where("course_id = ?", courseID).
-		Count(&total)
+	query := `
+		SELECT
+			(SELECT COUNT(*) 
+			 FROM lessons l 
+			 WHERE l.course_id = ?) AS total,
+			(SELECT COALESCE(COUNT(DISTINCT la.lesson_id), 0)
+			 FROM lesson_attendances la
+			 JOIN lessons l ON l.id = la.lesson_id
+			 WHERE l.course_id = ? AND la.user_id = ? AND la.status = 'present') AS learned
+	`
 
-	// số lessons đã học
-	cr.db.
-		Table("lesson_attendances").
-		Joins("JOIN lessons ON lesson_attendances.lesson_id = lessons.id").
-		Where("lesson_attendances.user_id = ? AND lessons.course_id = ?", userID, courseID).
-		Count(&learned)
+	if err := cr.db.Raw(query, courseID, courseID, userID).Scan(&result).Error; err != nil {
+		return 0, 0, err
+	}
 
-	return int(total), int(learned)
+	return result.Total, result.Learned, nil
 }
+
 
 // Lấy tags của khóa học
 func (cr *CourseRepository) GetCourseTags(courseID uuid.UUID) []string {
