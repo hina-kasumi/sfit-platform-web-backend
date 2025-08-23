@@ -751,6 +751,28 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 	return courses, nil
 }
 
+// Tính tổng thời gian học của khóa học (tổng Duration các lesson)
+func (cr *CourseRepository) GetCourseTotalTime(courseID uuid.UUID) (int, error) {
+    var totalTime int64
+    err := cr.db.
+        Model(&entities.Lesson{}).
+        Where("course_id = ?", courseID).
+        Select("COALESCE(SUM(duration),0)").
+        Scan(&totalTime).Error
+    return int(totalTime), err
+}
+
+// Tính trung bình rate (sao) của khóa học
+func (cr *CourseRepository) GetCourseAverageRate(courseID uuid.UUID) (float64, error) {
+	var avg float64
+	err := cr.db.
+		Model(&entities.UserRate{}).
+		Where("courses_id = ?", courseID).
+		Select("COALESCE(AVG(star),0)"). // tránh null
+		Scan(&avg).Error
+	return avg, err
+}
+
 // Lấy số bài học và bài học đã học của người dùng trong khóa học
 func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.UUID) (int, int) {
 	var total, learned int64

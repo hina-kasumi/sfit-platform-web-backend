@@ -315,10 +315,14 @@ func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int)
 		courseID, _ := uuid.Parse(courses[i].ID)
 		totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseID)
 		tags := cs.courseRepo.GetCourseTags(courseID)
+		time_learn, _ := cs.courseRepo.GetCourseTotalTime(courseID)
+		rate, _ := cs.courseRepo.GetCourseAverageRate(courseID)
 
 		courses[i].NumberLessons = totalLessons
 		courses[i].LearnedLessons = learnedLessons
 		courses[i].Tags = tags
+		courses[i].TimeLearn = time_learn
+		courses[i].Rate = rate
 	}
 
 	// totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
