@@ -295,11 +295,7 @@ func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, i
 
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
-func (cs *CourseService) GetRegisteredCourses(
-	userID string,
-	page, pageSize int,
-) (dtos.CourseListResponse, error) {
-
+func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.CourseListResponse, error) {
 	offset := (page - 1) * pageSize
 	var total int64
 	var result dtos.CourseListResponse
@@ -309,41 +305,43 @@ func (cs *CourseService) GetRegisteredCourses(
 		return result, err
 	}
 
-	// Core info từ repo
+	// Lấy danh sách course từ repo
 	courses, err := cs.courseRepo.GetCoursesByUserIDWithPagination(userID, offset, pageSize, &total)
 	if err != nil {
 		return result, err
 	}
 
-	//Bổ sung thông tin lessons, tags
+	// Bổ sung dữ liệu động: lessons, tags, time_learn, rate
 	for i := range courses {
-		courseUUID, _ := uuid.Parse(courses[i].ID)
+		courseID, _ := uuid.Parse(courses[i].ID)
 
-		// Lessons
-		totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseUUID)
+		// Đếm tổng số bài học và bài đã học
+		totalLessons, learnedLessons := cs.courseRepo.CountLessonProgress(userUUID, courseID)
 		courses[i].NumberLessons = totalLessons
 		courses[i].LearnedLessons = learnedLessons
 
-		// Tags
-		courses[i].Tags = cs.courseRepo.GetCourseTags(courseUUID)
+		// Lấy tags
+		tags := cs.courseRepo.GetCourseTags(courseID)
+		courses[i].Tags = tags
 
-		// Rate
-		rate, _ := cs.courseRepo.GetCourseAverageRate(courseUUID)
+		// Lấy time_learn (có sẵn ở bảng courses)
+		timeLearn, _ := cs.courseRepo.GetCourseTotalTime(courseID)
+		courses[i].TimeLearn = timeLearn
+
+		// Lấy rate trung bình
+		rate, _ := cs.courseRepo.GetCourseAverageRate(courseID)
 		courses[i].Rate = rate
 
-		// TimeLearn
-		totalTime, _ := cs.courseRepo.GetCourseTotalTime(courseUUID)
-		courses[i].TimeLearn = totalTime
+		courses[i].Registed = true
 	}
 
-	//response
 	result = dtos.CourseListResponse{
 		Courses: courses,
 		PageListResp: dtos.PageListResp{
-			TotalCount: total,
 			Page:       page,
 			PageSize:   pageSize,
-			Items:      nil,
+			TotalCount: total,
+			Items:      nil, // có thể để null
 		},
 	}
 	return result, nil

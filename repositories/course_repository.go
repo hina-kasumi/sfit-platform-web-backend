@@ -716,7 +716,7 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 
 	var courses []dtos.CourseGeneralInformationResponse
 
-	// Đếm tổng
+	// Đếm tổng số courses đã đăng ký
 	if err := cr.db.
 		Table("courses").
 		Joins("JOIN user_courses ON user_courses.course_id = courses.id").
@@ -725,14 +725,13 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 		return nil, err
 	}
 
-	// Core info
+	// Core info của khóa học
 	query := `
         SELECT 
             courses.id,
             courses.title,
             courses.description,
             courses.type,
-            COALESCE(array_to_json(teachers), '[]') AS teachers,
             0 AS number_lessons,
             0 AS time_learn,
             0.0 AS rate,
@@ -752,13 +751,12 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 	return courses, nil
 }
 
-
-//Lấy tổng thời gian học từ cột total_time trong bảng courses
+// Lấy tổng thời gian học (dùng total_time trong courses)
 func (cr *CourseRepository) GetCourseTotalTime(courseID uuid.UUID) (int, error) {
 	var totalTime int
 	err := cr.db.
 		Table("courses").
-		Select("total_time").
+		Select("COALESCE(total_time, 0)").
 		Where("id = ?", courseID).
 		Scan(&totalTime).Error
 	if err != nil {
@@ -772,23 +770,23 @@ func (cr *CourseRepository) GetCourseAverageRate(courseID uuid.UUID) (float64, e
 	var avg float64
 	err := cr.db.
 		Model(&entities.UserRate{}).
-		Where("courses_id = ?", courseID).
-		Select("COALESCE(AVG(star),0)"). // tránh null
+		Where("course_id = ?", courseID).
+		Select("COALESCE(AVG(star), 0)"). // tránh null
 		Scan(&avg).Error
 	return avg, err
 }
 
-// Đếm lessons và số lessons đã học
+// Đếm tổng lessons và lessons đã học của user trong course
 func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.UUID) (int, int) {
 	var total, learned int64
 
-	// tổng lessons (dùng total_lessons đã cache sẵn trong courses nếu muốn)
+	// tổng số lessons
 	cr.db.
 		Table("lessons").
 		Where("course_id = ?", courseID).
 		Count(&total)
 
-	// số lessons user đã học
+	// số lessons đã học
 	cr.db.
 		Table("lesson_attendances").
 		Joins("JOIN lessons ON lesson_attendances.lesson_id = lessons.id").
@@ -798,16 +796,18 @@ func (cr *CourseRepository) CountLessonProgress(userID uuid.UUID, courseID uuid.
 	return int(total), int(learned)
 }
 
-// Lấy danh sách tag theo course_id
+// Lấy tags của khóa học
 func (cr *CourseRepository) GetCourseTags(courseID uuid.UUID) []string {
 	var tags []string
 	cr.db.
-		Table("course_tags").
-		Select("tag").
-		Where("course_id = ?", courseID).
-		Pluck("tag", &tags)
+		Table("tags").
+		Joins("JOIN tag_temps ON tags.id = tag_temps.tag_id").
+		Where("tag_temps.course_id = ?", courseID).
+		Pluck("tags.id", &tags)
+
 	return tags
 }
+
 
 // Lấy danh sách các module và bài học trong khóa học
 func (cr *CourseRepository) GetCourseModulesWithLessons(courseID uuid.UUID, userID uuid.UUID) ([]entities.Module, map[uuid.UUID][]entities.Lesson, map[uuid.UUID]bool, error) {
