@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"sfit-platform-web-backend/utils/response"
 	"strings"
 
@@ -31,6 +32,15 @@ func (bh *BaseHandler) isError(ctx *gin.Context, err error) bool {
 
 func (bh *BaseHandler) canBindJSON(ctx *gin.Context, dto any) bool {
 	if err := ctx.ShouldBindJSON(dto); err != nil {
+		fmt.Printf("Bind JSON Error: %v\n", err)
+		response.Error(ctx, 400, "Invalid input")
+		return false
+	}
+	return true
+}
+
+func (bh *BaseHandler) canBindQuery(ctx *gin.Context, dto any) bool {
+	if err := ctx.ShouldBindQuery(dto); err != nil {
 		response.Error(ctx, 400, "Invalid input")
 		return false
 	}

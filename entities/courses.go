@@ -15,15 +15,18 @@ const (
 )
 
 type Course struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Title       string    `gorm:"type:varchar"`
-	Description string    `gorm:"type:text"`
-	Target      []string  `gorm:"type:text[]"`
-	Require     []string  `gorm:"type:text[]"`
-	Teachers    []string  `gorm:"type:text[]"`
-	Language    string    `gorm:"type:varchar"`
-	Certificate bool      `gorm:"type:boolean"`
-	Level       string    `gorm:"type:varchar;check:level in ('Beginner', 'Intermediate', 'Advanced')"`
-	CreatedAt   time.Time `gorm:"column:create_at"`
-	UpdatedAt   time.Time `gorm:"column:update_at"`
+	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Title        string    `gorm:"type:varchar"`
+	Description  string    `gorm:"type:text"`
+	Type         string    `gorm:"type:varchar"`
+	Target       []string  `gorm:"type:text[]"`
+	Require      []string  `gorm:"type:text[]"`
+	Teachers     []string  `gorm:"type:text[]"`
+	Language     string    `gorm:"type:varchar"`
+	TotalTime    int       `gorm:"column:total_time;default:0"` // đơn vị: giây hoặc phút
+	TotalLessons int       `gorm:"column:total_lessons;default:0"`
+	Certificate  bool      `gorm:"type:boolean"`
+	Level        string    `gorm:"type:varchar;check:level in ('Beginner', 'Intermediate', 'Advanced')"`
+	CreatedAt    time.Time `gorm:"column:create_at"`
+	UpdatedAt    time.Time `gorm:"column:update_at"`
 }

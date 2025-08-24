@@ -1,0 +1,132 @@
+package handlers
+
+import (
+	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
+	"sfit-platform-web-backend/middlewares"
+	"sfit-platform-web-backend/services"
+	"sfit-platform-web-backend/utils/response"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type TeamMembersHandler struct {
+	*BaseHandler
+	service *services.TeamMembersService
+}
+
+func NewTeamMembersHandler(base *BaseHandler, srv *services.TeamMembersService) *TeamMembersHandler {
+	return &TeamMembersHandler{
+		BaseHandler: base,
+		service:     srv,
+	}
+}
+
+func (h *TeamMembersHandler) DeleteMember(ctx *gin.Context) {
+	teamID := ctx.Param("team_id")
+	if teamID == "" {
+		response.Error(ctx, 400, "team_id is required in URL")
+		return
+	}
+
+	userID := ctx.Param("user_id")
+	if userID == "" {
+		response.Error(ctx, 400, "user_id is required in URL")
+		return
+	}
+
+	curUserID := middlewares.GetPrincipal(ctx)
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		role, err := h.service.GetRoleUserInTeam(curUserID, teamID)
+		if h.isError(ctx, err) {
+			return
+		} else if role != string(entities.RoleEnumHead) {
+			response.Error(ctx, 403, "You are not allowed to delete this team member")
+			return
+		}
+	}
+
+	err := h.service.DeleteMember(userID, teamID)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "success", gin.H{"message": "Member removed from team successfully"})
+}
+
+func (h *TeamMembersHandler) SaveMember(ctx *gin.Context) {
+	teamID := ctx.Param("team_id")
+	if teamID == "" {
+		response.Error(ctx, 400, "team_id is required in URL")
+		return
+	}
+
+	userID := ctx.Param("user_id")
+	if userID == "" {
+		response.Error(ctx, 400, "user_id is required in URL")
+		return
+	}
+
+	var req dtos.UpdateTeamMemberRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	curUserID := middlewares.GetPrincipal(ctx)
+	if !middlewares.HasRole(ctx, string(entities.RoleEnumAdmin)) {
+		role, err := h.service.GetRoleUserInTeam(curUserID, teamID)
+		if h.isError(ctx, err) {
+			return
+		} else if role != string(entities.RoleEnumHead) {
+			response.Error(ctx, 403, "You are not allowed to update this team member")
+			return
+		}
+	}
+
+	err := h.service.SaveMember(userID, teamID, req.Role)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "success", gin.H{
+		"message":   "Role updated successfully",
+		"updatedAt": time.Now().Format(time.RFC3339),
+	})
+}
+
+func (h *TeamMembersHandler) GetTeamsJoinedByUser(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	if userID == "" {
+		response.Error(ctx, 400, "user_id is required")
+		return
+	}
+
+	teams, err := h.service.GetTeamsJoinedByUser(userID)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "Get team success", teams)
+}
+
+func (h *TeamMembersHandler) GetTeamMembers(ctx *gin.Context) {
+	teamID := ctx.Param("team_id")
+	if teamID == "" {
+		response.Error(ctx, 400, "team_id path parameter is required")
+		return
+	}
+
+	var query dtos.PageListQuery
+	if !h.canBindQuery(ctx, &query) {
+		return
+	}
+
+	result, err := h.service.GetMembers(teamID, query.Page, query.PageSize)
+	if err != nil {
+		response.Error(ctx, 500, err.Error())
+		return
+	}
+
+	response.Success(ctx, "Get team member success", result)
+}

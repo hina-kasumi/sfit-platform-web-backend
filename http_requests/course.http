@@ -1,0 +1,168 @@
+### Tạo khóa học
+POST http://localhost:8080/course
+Content-Type: application/json
+
+{
+  "title": "Full Stack Web Development với Go và React 3",
+  "description": "Khóa học toàn diện về phát triển web với Go backend và React frontend.",
+  "type": "Web Development",
+  "targets": [
+    "Hiểu được kiến trúc REST API",
+    "Xây dựng backend với Go và Gin framework",
+    "Tích hợp cơ sở dữ liệu PostgreSQL",
+    "Phát triển frontend với React",
+    "Deploy ứng dụng lên cloud"
+  ],
+  "requires": [
+    "Kiến thức cơ bản về lập trình",
+    "Hiểu biết về HTML, CSS, JavaScript",
+    "Máy tính có kết nối internet"
+  ],
+  "teachers": [
+    "Nguyễn Văn A",
+    "Trần Thị B"
+  ],
+  "language": "Vietnamese",
+  "certificate": true,
+  "level": "Intermediate",
+  "tags": [
+    "golang",
+    "react",
+    "postgresql",
+    "rest-api",
+    "fullstack"
+  ]
+}
+
+###
+
+### Lấy danh sách khóa học
+GET http://localhost:8080/course?page=1&pageSize=1
+Content-Type: application/json
+
+###
+
+### Xem chi tiết 1 khóa học
+GET http://localhost:8080/course/{course_id}
+Content-Type: application/json
+
+### 
+
+### Đánh dấu 1 khóa học yêu thích
+POST http://localhost:8080/course/favourite
+Content-Type: application/json
+
+{
+  "course_id": "..."
+}
+
+###
+
+### Hủy đánh dấu 1 khóa học yêu thích
+DELETE http://localhost:8080/course/favourite
+Content-Type: application/json
+
+{
+  "course_id": "..."
+}
+
+###
+
+### Cập nhật thông tin khóa học
+PUT http://localhost:8080/course
+Content-Type: application/json
+
+{
+  "id": "...",
+  "title": "Full Stack Web Development với Go và React 5",
+  "description": "Khóa học toàn diện về phát triển web với Go backend và React frontend.",
+  "type": "Web Development",
+  "targets": [
+    "Hiểu được kiến trúc REST API",
+    "Xây dựng backend với Go và Gin framework",
+    "Tích hợp cơ sở dữ liệu PostgreSQL",
+    "Phát triển frontend với React"
+  ],
+  "requires": [
+    "Kiến thức cơ bản về lập trình",
+    "Hiểu biết về HTML, CSS, JavaScript",
+    "Máy tính có kết nối internet"
+  ],
+  "teachers": [
+    "Nguyễn Văn A"
+  ],
+  "language": "Vietnamese",
+  "certificate": true,
+  "level": "Intermediate",
+  "tags": [
+    "golang",
+    "react",
+    "postgresql",
+    "Không bug"
+  ]
+}
+
+###
+
+### Lấy danh sách người dùng đã hoàn thành 1 khóa học
+GET http://localhost:8080/course/list-user-complete?course_id=...&page=1&pageSize=1
+Content-Type: application/json
+
+###
+
+### Thêm module cho khóa học
+POST http://localhost:8080/course/module
+Content-Type: application/json
+
+{
+    "course_id": "...",
+    "module_title": "Hello"
+}
+
+###
+
+### Lấy tiến độ
+GET http://localhost:8080/users/user_id/courses/course_id/progress
+Content-Type: application/json
+
+### Đăng ký người dùng vào khóa học
+POST http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/courses
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+{
+  "course_id": "dae0c147-2da5-40b3-9018-1e113be179eb"
+}
+
+### Lấy danh sách khóa học của người dùng
+GET http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/courses
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUwNTk4ODQsImp0aSI6Ijc4YTIwOGFkLTA0NmItNGQ2MC1hMTVlLWRiODhlOWUxYTM3YSIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.3A4yunNgC16h8Tq19cr7TFv6enaRMJ7vyrC7wpc_CGY
+
+### Lấy danh sách bai hoc cua khoa hoc
+GET http://localhost:8080/course/dae0c147-2da5-40b3-9018-1e113be179eb/lessons
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUwNTk4ODQsImp0aSI6Ijc4YTIwOGFkLTA0NmItNGQ2MC1hMTVlLWRiODhlOWUxYTM3YSIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.3A4yunNgC16h8Tq19cr7TFv6enaRMJ7vyrC7wpc_CGY
+
+### Đánh giá khóa học
+POST http://localhost:8080/users/7d54335b-dfe6-4d97-839d-d47c207a594e/rate/courses/020cbd1b-d41d-4d76-bc86-8ca90453de3d
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTUwNTk4ODQsImp0aSI6Ijc4YTIwOGFkLTA0NmItNGQ2MC1hMTVlLWRiODhlOWUxYTM3YSIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.3A4yunNgC16h8Tq19cr7TFv6enaRMJ7vyrC7wpc_CGY
+
+{
+ "course" : "020cbd1b-d41d-4d76-bc86-8ca90453de3d",
+  "star": 5,
+  "comment": "Khóa học rất hay!"
+}
+
+
+###role ADMIN , HEAD
+### Xóa khóa học 
+DELETE http://localhost:8080/course/3d003944-0be2-41d1-8777-c463342d977c
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
+
+### Lấy danh sách người dùng đã đăng ký khóa học
+GET http://localhost:8080/course/3d003944-0be2-41d1-8777-c463342d977c/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTQ5NjgxOTIsImp0aSI6IjgzNTI1NDAzLTQ1NjAtNDJmNS1iMWI3LWUxNDQ3MmI2ZDUwYiIsInJvbGVzIjpbIlVTRVIiXSwic3ViIjoiN2Q1NDMzNWItZGZlNi00ZDk3LTgzOWQtZDQ3YzIwN2E1OTRlIn0.DuXuA05PTRvEsrqZNa2QQp8UawoCKnJ5OeARCLHrcVg
