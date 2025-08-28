@@ -45,6 +45,7 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 	socialLinkJSON, _ := json.Marshal(req.SocialLink)
 
 	profile := entities.UserProfile{
+		Avatar:       req.Avatar,
 		UserID:       userID,
 		FullName:     req.FullName,
 		ClassName:    req.ClassName,
@@ -119,6 +120,7 @@ func (profileHandler *UserProfileHandler) CreateUserProfile(ctx *gin.Context) {
 
 	socialLinkJSON, _ := json.Marshal(req.SocialLink)
 	profile := entities.UserProfile{
+		Avatar:       req.Avatar,
 		UserID:       userID,
 		FullName:     req.FullName,
 		ClassName:    req.ClassName,

@@ -692,7 +692,6 @@ func (r *UserCourseRepository) GetUserProgressInCourse(courseID, userID string) 
 			WHERE id = ?)
 	`
 
-
 	// (SELECT COUNT(l.id)
 	// FROM lessons l
 	// JOIN modules m ON m.id = l.module_id
@@ -897,25 +896,33 @@ func (cr *CourseRepository) GetRegisteredUsersByCourseID(courseID uuid.UUID, off
 }
 
 // Đăng ký người dùng vào khóa học
-func (cr *CourseRepository) RegisterUserToCourse(userID uuid.UUID, courseID uuid.UUID) error {
-	var count int64
-	err := cr.db.Model(&entities.UserCourse{}).
-		Where("user_id = ? AND course_id = ?", userID, courseID).
-		Count(&count).Error
-	if err != nil {
-		return err
+func (cr *CourseRepository) RegisterUserToCourse(userIDs []uuid.UUID, courseID uuid.UUID) error {
+	// Kiểm tra và thêm nhiều user vào khóa học một lần
+	var userCourses []entities.UserCourse
+
+	for _, userID := range userIDs {
+		var count int64
+		err := cr.db.Model(&entities.UserCourse{}).
+			Where("user_id = ? AND course_id = ?", userID, courseID).
+			Count(&count).Error
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			// Nếu đã đăng ký thì bỏ qua user này
+			continue
+		}
+		userCourses = append(userCourses, entities.UserCourse{
+			UserID:   userID,
+			CourseID: courseID,
+		})
 	}
 
-	if count > 0 {
-		return gorm.ErrDuplicatedKey
+	if len(userCourses) == 0 {
+		return nil // Không có user nào cần thêm
 	}
 
-	userCourse := entities.UserCourse{
-		UserID:   userID,
-		CourseID: courseID,
-	}
-
-	return cr.db.Create(&userCourse).Error
+	return cr.db.Create(&userCourses).Error
 }
 
 // Kiểm tra xem khóa học có tồn tại hay không

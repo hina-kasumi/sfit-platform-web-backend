@@ -486,12 +486,6 @@ func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
 func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 	// Lấy userID từ JWT token
 	// userID := middlewares.GetPrincipal(c)
-	userID := c.Param("user_id")
-	if userID == "" {
-		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
-		response.Error(c, http.StatusUnauthorized, "User   ID is required")
-		return
-	}
 
 	var req dtos.CourseRegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -500,7 +494,7 @@ func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 	}
 
 	// Gọi service để đăng ký người dùng vào khóa học
-	err := ch.courseService.RegisterUserToCourse(userID, req.CourseID)
+	err := ch.courseService.RegisterUserToCourse(req.UserIDs, req.CourseID)
 	if err != nil {
 		if err.Error() == "record not found" {
 			response.Error(c, http.StatusNotFound, "Course not found")

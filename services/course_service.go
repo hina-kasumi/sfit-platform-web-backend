@@ -476,11 +476,15 @@ func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int)
 }
 
 // Đăng ký người dùng vào khóa học
-func (cs *CourseService) RegisterUserToCourse(userID string, courseID string) error {
+func (cs *CourseService) RegisterUserToCourse(userIDs []string, courseID string) error {
 	// Lấy userID và courseID từ chuỗi
-	userUUID, err := uuid.Parse(userID)
-	if err != nil {
-		return err
+	var userUUIDs []uuid.UUID
+	for i := 0; i < len(userIDs); i++ {
+		userUUID, err := uuid.Parse(userIDs[i])
+		if err != nil {
+			return err
+		}
+		userUUIDs = append(userUUIDs, userUUID)
 	}
 
 	courseUUID, err := uuid.Parse(courseID)
@@ -498,7 +502,7 @@ func (cs *CourseService) RegisterUserToCourse(userID string, courseID string) er
 	}
 
 	// Đăng ký người dùng vào khóa học
-	return cs.courseRepo.RegisterUserToCourse(userUUID, courseUUID)
+	return cs.courseRepo.RegisterUserToCourse(userUUIDs, courseUUID)
 }
 
 func (s *CourseService) UpdateTotalTime(module_id string, time int) error {
