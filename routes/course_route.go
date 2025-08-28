@@ -30,7 +30,7 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
 		publicCourse.GET("/users/:user_id/courses", r.handler.GetRegisteredCourses)
 		publicCourse.GET("/courses/:course_id/lessons", r.handler.GetCourseLessons)
 		publicCourse.POST("/users/:user_id/rate/courses/:course_id", r.handler.RateCourse)
-		publicCourse.POST("/users/:user_id/courses", r.handler.RegisterUserToCourse)
+		publicCourse.POST("/users/courses", r.handler.RegisterUserToCourse)
 	}
 
 	protectedCourse := router.Group("/courses")

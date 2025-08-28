@@ -48,7 +48,8 @@ type SetFavouriteCourseRequest struct {
 }
 
 type CourseRegisterRequest struct {
-	CourseID string `json:"course_id" binding:"required"`
+	CourseID string   `json:"course_id" binding:"required"`
+	UserIDs  []string `json:"user_ids"`
 }
 
 type CourseRateRequest struct {
