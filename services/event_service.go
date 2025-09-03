@@ -20,8 +20,8 @@ func NewEventService(eventRepo *repositories.EventRepository) *EventService {
 }
 
 // ==== Event Querry ====
-func (eventSer *EventService) GetEvents(page int, size int, title string, status string, userEventStatus string, userID string) ([]entities.Event, int64, error) {
-	return eventSer.eventRepo.GetEvents(page, size, title, status, userEventStatus, userID)
+func (eventSer *EventService) GetEvents(page int, size int, title string, eventType string, status string, userEventStatus string, userID string) ([]entities.Event, int64, error) {
+	return eventSer.eventRepo.GetEvents(page, size, title, eventType, status, userEventStatus, userID)
 }
 
 func (eventSer *EventService) GetEventByID(id string) (*entities.Event, error) {

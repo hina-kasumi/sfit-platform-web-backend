@@ -9,9 +9,10 @@ import (
 
 type ListEventReq struct {
 	PageListQuery
-	Title  string `form:"title"`
-	Type   string `form:"type"`
-	Status string `form:"status"`
+	Title           string `form:"title"`
+	Type            string `form:"type"`
+	Status          string `form:"status"`
+	UserEventStatus string `form:"user_event_status"`
 }
 
 type QueryUsersInEvent struct {

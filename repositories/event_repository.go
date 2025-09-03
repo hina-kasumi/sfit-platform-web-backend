@@ -21,20 +21,22 @@ func NewEventRepository(db *gorm.DB) *EventRepository {
 }
 
 // lấy danh sách event (lọc có điều kiện)
-func (er *EventRepository) GetEvents(page int, size int, title string, status string, userEventStatus string, userID string) ([]entities.Event, int64, error) {
+func (er *EventRepository) GetEvents(page int, size int, title string, eventType string, status string, userEventStatus string, userID string) ([]entities.Event, int64, error) {
 	var events []entities.Event
 	query := er.db.Model(&entities.Event{})
 	if title != "" {
 		query = query.Where("title ILIKE ?", "%"+title+"%")
 	}
+	if eventType != "" {
+		query = query.Where("type ILIKE ?", eventType)
+	}
 	if status != "" {
 		query = query.Where("status ILIKE ?", status)
 	}
 	if userEventStatus != "" {
-		userID, _ := uuid.Parse(userID)
-		query = query.
-			Joins("JOIN event_attendances ue ON ue.event_id = events.id").
-			Where("ue.user_id = ? AND ue.status = ?", userID, userEventStatus)
+		var eventsIDs []string
+		er.db.Model(&entities.EventAttendance{}).Select("event_id").Where("user_id = ? AND status = ?", userID, userEventStatus).Scan(&eventsIDs)
+		query = query.Where("id IN ?", eventsIDs)
 	}
 	var count int64
 	query.Count(&count)
