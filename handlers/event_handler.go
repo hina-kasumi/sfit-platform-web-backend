@@ -49,7 +49,7 @@ func (eventHandler *EventHandler) GetEventList(ctx *gin.Context) {
 
 	events, total, err := eventHandler.EventSer.
 		GetEvents(
-			rq.Page, rq.PageSize, rq.Title, rq.Type, rq.Status, userID,
+			rq.Page, rq.PageSize, rq.Title, rq.Type, rq.Status, rq.UserEventStatus, userID,
 		)
 
 	if eventHandler.isError(ctx, err) {
