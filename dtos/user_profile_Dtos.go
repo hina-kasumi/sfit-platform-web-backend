@@ -8,6 +8,7 @@ import (
 
 type UpdateUserProfileRequest struct {
 	Avatar       string            `json:"avatar"`
+	CoverImage   string            `json:"cover_image"`
 	FullName     string            `json:"full_name"`
 	ClassName    string            `json:"class_name"`
 	Khoa         string            `json:"khoa"`
@@ -20,6 +21,7 @@ type UpdateUserProfileRequest struct {
 type GetUserProfileResponse struct {
 	UserID          uuid.UUID         `json:"user_id"`
 	Avatar          string            `json:"avatar"`
+	CoverImage      string            `json:"cover_image"`
 	FullName        string            `json:"full_name"`
 	ClassName       string            `json:"class_name"`
 	Khoa            string            `json:"khoa"`
@@ -38,6 +40,7 @@ type CreateUserProfileRequest struct {
 	FullName        string            `json:"full_name"`
 	ClassName       string            `json:"class_name"`
 	Avatar          string            `json:"avatar"`
+	CoverImage      string            `json:"cover_image"`
 	Khoa            string            `json:"khoa"`
 	Phone           string            `json:"phone"`
 	Introduction    string            `json:"introduction"`

@@ -92,6 +92,8 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 
 	return &dtos.GetUserProfileResponse{
 		UserID:          profile.UserID,
+		Avatar:          profile.Avatar,
+		CoverImage:      profile.CoverImage,
 		FullName:        profile.FullName,
 		ClassName:       profile.ClassName,
 		Khoa:            profile.Khoa,
