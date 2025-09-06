@@ -84,7 +84,7 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 	var socialLink map[string]string
 	_ = json.Unmarshal([]byte(profile.SocialLink), &socialLink)
 
-	_, joinedEvents, _ := profileSer.eventSer.GetEvents(1, 10, "", "", string(entities.Attended), "", profile.UserID.String())
+	_, joinedEvents, _ := profileSer.eventSer.GetEvents(1, 10, "", "", "", string(entities.Attended), profile.UserID.String())
 
 	isCompleted := true
 	_, completedTasks, _ := profileSer.taskSer.ListTasksByUserID(profile.UserID.String(), 1, 10, &isCompleted)
