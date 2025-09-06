@@ -50,6 +50,8 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 	existing.Phone = profile.Phone
 	existing.Introduction = profile.Introduction
 	existing.SocialLink = profile.SocialLink
+	existing.Avatar = profile.Avatar
+	existing.CoverImage = profile.CoverImage
 	existing.UpdatedAt = time.Now()
 
 	// Cập nhật email trong bảng Users
