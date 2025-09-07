@@ -24,9 +24,6 @@ func (ts *TaskService) GetTasks(page, pageSize int, name, eventID string, isComp
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 {
-		pageSize = 10
-	}
 	return ts.taskRepo.GetTasks(page, pageSize, name, eventID, isCompleted)
 }
 
