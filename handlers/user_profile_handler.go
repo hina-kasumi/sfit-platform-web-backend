@@ -26,7 +26,11 @@ func NewUserProfileHandler(baseHandler *BaseHandler, userProfileService *service
 }
 
 func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
-	userIDStr := middlewares.GetPrincipal(ctx)
+	userIDStr := ctx.Param("user_id")
+	if userIDStr == "" {
+		userIDStr = middlewares.GetPrincipal(ctx)
+	}
+
 	if userIDStr == "" {
 		response.Error(ctx, 401, "unauthorized")
 		return
