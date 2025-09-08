@@ -9,12 +9,14 @@ import (
 type UpdateUserProfileRequest struct {
 	Avatar       string            `json:"avatar"`
 	CoverImage   string            `json:"cover_image"`
+	Msv          string            `json:"msv"`
 	FullName     string            `json:"full_name"`
 	ClassName    string            `json:"class_name"`
 	Khoa         string            `json:"khoa"`
 	Phone        string            `json:"phone"`
 	Email        string            `json:"email"`
 	Introduction string            `json:"introduction"`
+	Location     string            `json:"location"`
 	SocialLink   map[string]string `json:"social_link"`
 }
 
@@ -34,6 +36,8 @@ type GetUserProfileResponse struct {
 	SocialLink      map[string]string `json:"social_link"`
 	CreatedAt       time.Time         `json:"created_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
+	Location        string            `json:"location"`
+	Msv             string            `json:"msv"`
 }
 
 type CreateUserProfileRequest struct {
@@ -48,4 +52,6 @@ type CreateUserProfileRequest struct {
 	JoinedEvent     int64             `json:"joined_event"`
 	CompletedTask   int64             `json:"completed_task"`
 	SocialLink      map[string]string `json:"social_link"`
+	Location        string            `json:"location"`
+	Msv             string            `json:"msv"`
 }

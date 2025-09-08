@@ -54,6 +54,8 @@ func (profileHandler *UserProfileHandler) UpdateUserProfile(ctx *gin.Context) {
 		CoverImage:   req.CoverImage,
 		Introduction: req.Introduction,
 		SocialLink:   string(socialLinkJSON),
+		Location:     req.Location,
+		MSV:          req.Msv,
 		UpdatedAt:    time.Now(),
 		Email:        req.Email,
 	}
@@ -130,6 +132,8 @@ func (profileHandler *UserProfileHandler) CreateUserProfile(ctx *gin.Context) {
 		Phone:        req.Phone,
 		Introduction: req.Introduction,
 		SocialLink:   string(socialLinkJSON),
+		Location:     req.Location,
+		MSV:          req.Msv,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}

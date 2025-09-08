@@ -52,6 +52,8 @@ func (profileSer *UserProfileService) UpdateUserProfile(profile *entities.UserPr
 	existing.SocialLink = profile.SocialLink
 	existing.Avatar = profile.Avatar
 	existing.CoverImage = profile.CoverImage
+	existing.MSV = profile.MSV
+	existing.Location = profile.Location
 	existing.UpdatedAt = time.Now()
 
 	// Cập nhật email trong bảng Users
@@ -106,6 +108,8 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 		JoinedEvent:     joinedEvents,
 		CompletedTask:   completedTasks,
 		SocialLink:      socialLink,
+		Location:        profile.Location,
+		Msv:             profile.MSV,
 		CreatedAt:       profile.CreatedAt,
 		UpdatedAt:       profile.UpdatedAt,
 	}, nil
