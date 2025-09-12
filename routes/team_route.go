@@ -18,6 +18,7 @@ func NewTeamRoute(teamHandler *handlers.TeamHandler) *TeamRoute {
 
 func (r *TeamRoute) RegisterRoutes(router *gin.Engine) {
 	group := router.Group("/teams")
+	group.GET("", r.teamHandler.GetTeamList)
 	group.Use(middlewares.EnforceAuthenticatedMiddleware())
 	group.Use(middlewares.RequireRoles(string(entities.RoleEnumAdmin), string(entities.RoleEnumHead)))
 

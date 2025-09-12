@@ -20,6 +20,10 @@ func NewTeamService(teamRepo *repositories.TeamRepository, teamMembersSer *TeamM
 	}
 }
 
+func (s *TeamService) GetTeamList() ([]entities.Teams, error) {
+	return s.teamRepo.FindAll()
+}
+
 func (s *TeamService) CreateTeam(name string, description string) (*entities.Teams, error) {
 
 	team := entities.Teams{

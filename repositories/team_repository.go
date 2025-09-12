@@ -14,6 +14,16 @@ type TeamRepository struct {
 func NewTeamRepository(db *gorm.DB) *TeamRepository {
 	return &TeamRepository{db: db}
 }
+
+func (r *TeamRepository) FindAll() ([]entities.Teams, error) {
+	var teams []entities.Teams
+	result := r.db.Find(&teams)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return teams, nil
+}
+
 func (r *TeamRepository) Create(team entities.Teams) (*entities.Teams, error) {
 	err := r.db.Create(&team).Error
 	return &team, err

@@ -26,6 +26,15 @@ func NewTeamHandler(base *BaseHandler, teamService *services.TeamService, teamMe
 	}
 }
 
+func (h *TeamHandler) GetTeamList(ctx *gin.Context) {
+	teams, err := h.teamService.GetTeamList()
+	if h.isError(ctx, err) {
+		return
+	}
+
+	response.Success(ctx, "get team list success", teams)
+}
+
 func (h *TeamHandler) CreateTeam(ctx *gin.Context) {
 	var req dtos.CreateTeamRequest
 	if !h.canBindJSON(ctx, &req) {
