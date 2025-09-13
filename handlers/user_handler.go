@@ -28,7 +28,7 @@ func (userHandler *UserHandler) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	userID := ctx.Param("id")
+	userID := ctx.Param("user_id")
 	if userID == "" {
 		response.Error(ctx, 401, "Unauthorized")
 		return

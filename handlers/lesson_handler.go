@@ -32,9 +32,6 @@ func (h *LessonHandler) GetLessonByID(ctx *gin.Context) {
 }
 
 func (h *LessonHandler) CreateLesson(ctx *gin.Context) {
-	if middlewares.HasRole(ctx, string(entities.RoleEnumMember)) {
-
-	}
 	moduleID := ctx.Param("module_id")
 	if h.isNilOrWhiteSpaceWithMessage(ctx, moduleID, "Module ID is required") {
 		return
