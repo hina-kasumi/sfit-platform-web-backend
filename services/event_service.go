@@ -109,3 +109,8 @@ func (eventSer *EventService) GetUsersInEvent(eventID string, page int, size int
 func (eventSer *EventService) CheckRegisted(userID string, event entities.Event) (bool, error) {
 	return eventSer.eventRepo.CheckRegisted(userID, event)
 }
+
+// Auto update status event
+func (eventSer *EventService) AutoUpdateStatusEvent() error {
+	return eventSer.eventRepo.AutoUpdateStatusEvent()
+}

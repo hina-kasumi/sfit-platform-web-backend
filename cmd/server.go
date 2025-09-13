@@ -66,6 +66,9 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 	RegisterRoutes(r)
 	RegisterValidation()
 
+	// khởi động server
+	go depInject.Worker.Start()
+
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Không thể khởi động server:", err)
 	}

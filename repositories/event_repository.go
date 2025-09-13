@@ -228,3 +228,23 @@ func (er *EventRepository) GetUsersInEvent(page int, size int, eventID string, s
 	}
 	return users, total, nil
 }
+
+// Auto update status event
+func (er *EventRepository) AutoUpdateStatusEvent() error {
+	// Cập nhật các sự kiện đang diễn ra
+	currentTime := time.Now()
+	if err := er.db.Model(&entities.Event{}).
+		Where("begin_at <= ? AND status = ?", currentTime, entities.StatusUpcoming).
+		Update("status", entities.StatusOngoing).Error; err != nil {
+		return err
+	}
+
+	// Cập nhật các sự kiện đã kết thúc
+	if err := er.db.Model(&entities.Event{}).
+		Where("end_at < ? AND status = ?", currentTime, entities.StatusOngoing).
+		Update("status", entities.StatusCompleted).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

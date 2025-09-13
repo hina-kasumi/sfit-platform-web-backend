@@ -5,6 +5,7 @@ import (
 	"sfit-platform-web-backend/handlers"
 	"sfit-platform-web-backend/repositories"
 	"sfit-platform-web-backend/services"
+	"sfit-platform-web-backend/worker"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -58,6 +59,9 @@ type DI struct {
 	TaskHandler        *handlers.TaskHandler
 	RoleHandler        *handlers.RoleHandler
 	LessonHandler      *handlers.LessonHandler
+
+	//worker
+	Worker *worker.Worker
 }
 
 func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI {
@@ -110,6 +114,9 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	roleHandler := handlers.NewRoleHandler(baseHandler, roleSer)
 	lessonHandler := handlers.NewLessonHandler(baseHandler, lessonSer)
 
+	// Khởi tạo Worker
+	worker := worker.NewWorker(eventSer)
+
 	return &DI{
 		RoleRepo:        roleRepo,
 		UserRepo:        userRepo,
@@ -151,5 +158,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		UserHandler:        userHandler,
 		TaskHandler:        taskHandler,
 		RoleHandler:        roleHandler,
+
+		Worker: worker,
 	}
 }
