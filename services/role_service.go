@@ -32,3 +32,7 @@ func (rs *RoleService) RemoveUserRole(userID string, roleIDs ...string) error {
 func (rs *RoleService) SyncRoles(userID string) error {
 	return rs.roleRepo.SyncRoles(userID)
 }
+
+func (rs *RoleService) GetUserRoles(userID string) ([]entities.RoleEnum, error) {
+	return rs.roleRepo.GetUserRoles(userID)
+}
