@@ -92,7 +92,7 @@ func (r *TeamMembersRepository) FindMembersByTeamID(teamID string, page, pageSiz
 	}
 
 	err = query.
-		Select("u.id, u.username, u.email").
+		Select("u.id, u.username, u.email, tm.role").
 		Joins("JOIN users u ON tm.user_id = u.id").
 		Where("tm.team_id = ?", teamID).
 		Offset(offset).
