@@ -24,3 +24,8 @@ type TeamMemberUserResponse struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
+
+type GetTeamMembersRequest struct {
+	*PageListQuery
+	Role string `form:"role"`
+}

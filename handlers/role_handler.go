@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
 
@@ -27,7 +28,8 @@ func (rh *RoleHandler) DeleteUserRole(ctx *gin.Context) {
 		return
 	}
 
-	err := rh.roleService.RemoveUserRole(userID, roles...)
+	currUser := middlewares.GetPrincipal(ctx)
+	err := rh.roleService.RemoveUserRole(currUser, userID, roles...)
 	if rh.isErrorWithMessage(ctx, err, 500, "Failed to remove user roles") {
 		return
 	}
@@ -59,5 +61,3 @@ func (rh *RoleHandler) GetUserRoles(ctx *gin.Context) {
 	}
 	response.Success(ctx, "Get user roles successfully", roles)
 }
-
-

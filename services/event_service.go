@@ -7,8 +7,6 @@ import (
 	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/repositories"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type EventService struct {
@@ -36,14 +34,14 @@ func (eventSer *EventService) CreateEvent(eventReq *dtos.NewEventRequest) (*enti
 	return eventSer.eventRepo.CreateEvent(eventReq)
 }
 
-func (eventSer *EventService) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
-	if eventReq.ID == uuid.Nil {
+func (eventSer *EventService) UpdateEvent(id string, eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
+	if id == "" {
 		return nil, errors.New("event id is required")
 	}
 	if eventReq.EndAt.Before(eventReq.BeginAt) {
 		return nil, errors.New("end time must be after begin time")
 	}
-	return eventSer.eventRepo.UpdateEvent(eventReq)
+	return eventSer.eventRepo.UpdateEvent(id, eventReq)
 }
 
 func (eventSer *EventService) DeleteEvent(id string) error {

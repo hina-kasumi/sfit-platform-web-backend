@@ -34,7 +34,7 @@ func (eventRou *EventRoutes) RegisterRoutes(router *gin.Engine) {
 		string(entities.RoleEnumVice),
 	))
 	taskAuth.POST("", eventHandler.CreateEvent)
-	taskAuth.PUT("", eventHandler.UpdateEvent)
+	taskAuth.PUT("/:event_id", eventHandler.UpdateEvent)
 	taskAuth.DELETE("/:event_id", eventHandler.DeleteEvent)
 
 	attendEvent := router.Group("/users/:user_id/events/:event_id")

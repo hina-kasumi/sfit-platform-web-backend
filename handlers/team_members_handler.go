@@ -117,12 +117,12 @@ func (h *TeamMembersHandler) GetTeamMembers(ctx *gin.Context) {
 		return
 	}
 
-	var query dtos.PageListQuery
+	var query dtos.GetTeamMembersRequest
 	if !h.canBindQuery(ctx, &query) {
 		return
 	}
 
-	result, err := h.service.GetMembers(teamID, query.Page, query.PageSize)
+	result, err := h.service.GetMembers(teamID, query.Page, query.PageSize, query.Role)
 	if err != nil {
 		response.Error(ctx, 500, err.Error())
 		return

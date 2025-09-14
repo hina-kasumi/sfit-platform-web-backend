@@ -3,8 +3,6 @@ package dtos
 import (
 	"sfit-platform-web-backend/entities"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type ListEventReq struct {
@@ -39,7 +37,6 @@ type NewEventRequest struct {
 }
 
 type UpdateEventRequest struct {
-	ID          uuid.UUID            `json:"id"`
 	Title       string               `json:"title"`
 	Type        string               `json:"type"`
 	Description string               `json:"description"`

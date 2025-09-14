@@ -30,7 +30,7 @@ func (authHandler *AuthHandler) Register(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := authHandler.authSer.Register(userDto.Username, userDto.Email, userDto.Password)
+	accessToken, refreshToken, err := authHandler.authSer.Register(userDto)
 	if authHandler.isError(ctx, err) {
 		return
 	}

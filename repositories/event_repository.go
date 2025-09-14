@@ -148,9 +148,13 @@ func (er *EventRepository) CreateEvent(eventReq *dtos.NewEventRequest) (*entitie
 }
 
 // câp nhật event
-func (er *EventRepository) UpdateEvent(eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
+func (er *EventRepository) UpdateEvent(id string, eventReq *dtos.UpdateEventRequest) (*entities.Event, error) {
+	eventID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
 	var event = entities.Event{
-		ID:          eventReq.ID,
+		ID:          eventID,
 		Title:       eventReq.Title,
 		Type:        eventReq.Type,
 		Description: eventReq.Description,

@@ -84,7 +84,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	taskRepo := repositories.NewTaskRepository(db)
 
 	// Khởi tạo Service
-	roleSer := services.NewRoleService(roleRepo)
+	roleSer := services.NewRoleService(roleRepo, userRepo)
 	userSer := services.NewUserService(userRepo, roleSer)
 	tagSer := services.NewTagService(tagRepo)
 	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo, roleSer)
@@ -92,12 +92,12 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	redisSer := services.NewRedisService(redisClient, redisCtx)
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
-	authSer := services.NewAuthService(userSer, jwtSer, refreshSer)
 	tagTempSer := services.NewTagTempService(tagTempRepo)
 	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
 	eventSer := services.NewEventService(eventRepo)
 	taskSer := services.NewTaskService(taskRepo)
 	profileSer := services.NewUserProfileService(userProfileRepo, userSer, eventSer, courseSer, taskSer)
+	authSer := services.NewAuthService(userSer, jwtSer, refreshSer, profileSer)
 	lessonSer := services.NewLessonService(lessonRepo, courseSer)
 
 	// Khởi tạo Hander

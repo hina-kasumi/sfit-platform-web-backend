@@ -188,8 +188,13 @@ func (eventHandler *EventHandler) UpdateEvent(ctx *gin.Context) {
 		response.Error(ctx, http.StatusBadRequest, "Invalid input")
 		return
 	}
+	eventID := ctx.Param("event_id")
+	if eventID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Missing event_id")
+		return
+	}
 	// Gọi service cập nhật event
-	eventResponse, err := eventHandler.EventSer.UpdateEvent(&eventReq)
+	eventResponse, err := eventHandler.EventSer.UpdateEvent(eventID, &eventReq)
 	if eventHandler.isError(ctx, err) {
 		return
 	}
