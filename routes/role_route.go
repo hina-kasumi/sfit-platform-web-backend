@@ -19,12 +19,14 @@ func NewRoleRoutes(handler *handlers.RoleHandler) *RoleRoutes {
 }
 
 func (r *RoleRoutes) RegisterRoutes(router *gin.Engine) {
-	roleRoutes := router.Group("/users/:user_id/roles")
-	roleRoutes.Use(middlewares.EnforceAuthenticatedMiddleware())
-	roleRoutes.Use(middlewares.RequireRoles(
-		string(entities.RoleEnumAdmin),
-	))
-
-	roleRoutes.POST("", r.Handler.AddUserRole)
-	roleRoutes.DELETE("", r.Handler.DeleteUserRole)
+	public := router.Group("/users/:user_id/roles")
+	public.GET("", r.Handler.GetUserRoles)
+	
+	admin := router.Group("/users/:user_id/roles")
+	admin.Use(middlewares.EnforceAuthenticatedMiddleware())
+	admin.Use(middlewares.RequireRoles(string(entities.RoleEnumAdmin)))
+	admin.POST("", r.Handler.AddUserRole)
+	admin.DELETE("", r.Handler.DeleteUserRole)
 }
+
+

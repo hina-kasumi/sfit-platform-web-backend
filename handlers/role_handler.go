@@ -50,3 +50,14 @@ func (rh *RoleHandler) AddUserRole(ctx *gin.Context) {
 
 	response.Success(ctx, "User roles added successfully", nil)
 }
+
+func (rh *RoleHandler) GetUserRoles(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	roles, err := rh.roleService.GetUserRoles(userID)
+	if rh.isErrorWithMessage(ctx, err, 500, "Failed to get user roles") {
+		return
+	}
+	response.Success(ctx, "Get user roles successfully", roles)
+}
+
+
