@@ -4,16 +4,9 @@ import (
 	"os"
 	"sfit-platform-web-backend/cmd"
 	"sfit-platform-web-backend/infrastructures"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		return
-	} // khai báo để đọc từ .env
-
 	username := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")

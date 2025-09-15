@@ -1,5 +1,5 @@
-# .env
-# *.env
+.env
+*.env
 .git
 node_modules
 README.md

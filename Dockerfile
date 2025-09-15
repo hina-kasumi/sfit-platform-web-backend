@@ -16,17 +16,16 @@ RUN go build -o /go-app .
 # RUN rm -f /src/.env
 
 # ---- Final stage ----
-# FROM alpine:latest
-# WORKDIR /app
+FROM alpine:latest
 
-# # copy binary từ builder
-# COPY --from=builder /go-app .
+# copy binary từ builder
+COPY --from=builder /go-app .
 
 # # expose port Gin dùng
 EXPOSE 8080
 
 # # chạy binary
-ENTRYPOINT ["/go-app"]
+ENTRYPOINT ["./go-app"]
 # CMD ["sleep", "infinity"]
 
 
