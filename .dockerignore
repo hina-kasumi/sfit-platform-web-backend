@@ -1,0 +1,6 @@
+# .env
+# *.env
+.git
+node_modules
+README.md
+# Thêm các file khác không cần thiết

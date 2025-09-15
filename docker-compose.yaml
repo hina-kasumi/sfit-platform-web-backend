@@ -4,33 +4,47 @@ services:
     container_name: sfit-redis-postgresDB
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: sfit-db-2016
       POSTGRES_DB: sfit-backend-go
     ports:
       - "5432:5432"
-    # volumes:
-    #   - ./initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:latest
     container_name: sfit-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   backend:
-    build: 
+    build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: sfit-backend-go
-    environment:
-      - DB_HOST=postgres
-      - REDIS_ADDRESS=redis:6379
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
-      - redis
-    volumes:
-      - .:/app
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: on-failure
 
-  
+volumes:
+  pgdata:
+  redisdata:
