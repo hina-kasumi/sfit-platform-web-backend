@@ -150,8 +150,8 @@ func (eventHandler *EventHandler) UpdateStatusUserAttendance(ctx *gin.Context) {
 // Tạo sự kiện mới
 func (eventHandler *EventHandler) CreateEvent(ctx *gin.Context) {
 	var eventReq dtos.NewEventRequest
-	if err := ctx.ShouldBindJSON(&eventReq); err != nil {
-		response.Error(ctx, http.StatusBadRequest, "Invalid input")
+	if !eventHandler.canBindJSON(ctx, &eventReq) {
+		// response.Error(ctx, http.StatusBadRequest, "Invalid input")
 		return
 	}
 

@@ -5,11 +5,11 @@ import (
 )
 
 type CreateTaskReq struct {
-	Name        string    `json:"name" bind:"required"`
-	Description string    `json:"description" bind:"required"`
+	Name        string    `json:"name" binding:"required"`
+	Description string    `json:"description" binding:"required"`
 	EventID     string    `json:"event_id"`
-	StartDate   time.Time `json:"start_date" bind:"required"`
-	Deadline    time.Time `json:"deadline" bind:"required"`
+	StartDate   time.Time `json:"start_date" binding:"required"`
+	Deadline    time.Time `json:"deadline" binding:"required"`
 }
 
 type UpdateTaskReq struct {
