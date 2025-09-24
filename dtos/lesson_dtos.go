@@ -17,6 +17,7 @@ type LessonRequest struct {
 	Location       string              `json:"location"`
 	Date           time.Time           `json:"date"`
 	ReadingContent string              `json:"reading_content"`
+	Position       float32             `json:"position"`
 }
 
 type UpdateStatusLessonAttendanceReq struct {

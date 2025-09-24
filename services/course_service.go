@@ -384,6 +384,9 @@ func (cs *CourseService) GetCourseLessons(courseID string, userID string) (dtos.
 			case "Offline":
 				title = lesson.OfflineContent.Data.Location
 				duration = lesson.Duration
+			case "Reading":
+				title = lesson.Title
+				duration = lesson.Duration
 			}
 
 			totalTime += duration

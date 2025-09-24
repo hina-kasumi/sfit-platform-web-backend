@@ -827,7 +827,7 @@ func (cr *CourseRepository) GetCourseModulesWithLessons(courseID uuid.UUID, user
 
 	for _, module := range modules {
 		var lessons []entities.Lesson
-		err := cr.db.Where("module_id = ?", module.ID).Find(&lessons).Error
+		err := cr.db.Where("module_id = ?", module.ID).Order("position, create_at").Find(&lessons).Error
 		if err != nil {
 			return nil, nil, nil, err
 		}

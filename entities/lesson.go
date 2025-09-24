@@ -30,6 +30,7 @@ type Lesson struct {
 	ReadingContent converter.JSONB[ReadingContentStruct] `gorm:"type:jsonb;column:reading_content;default:null"`
 	CreatedAt      time.Time                             `gorm:"column:create_at"`
 	UpdatedAt      time.Time                             `gorm:"column:update_at"`
+	Position       float32                               `gorm:"type:real;column:position;default:0"`
 }
 
 type QuizContentStruct struct {
@@ -55,7 +56,7 @@ type ReadingContentStruct struct {
 	Content string `json:"content"`
 }
 
-func newLesson(courseID, moduleID uuid.UUID, title, description string, duration int, lessonType LessonType) *Lesson {
+func newLesson(courseID, moduleID uuid.UUID, title, description string, position float32, duration int, lessonType LessonType) *Lesson {
 	return &Lesson{
 		ID:          uuid.New(),
 		ModuleID:    moduleID,
@@ -64,25 +65,26 @@ func newLesson(courseID, moduleID uuid.UUID, title, description string, duration
 		CourseID:    courseID,
 		Duration:    duration,
 		Type:        lessonType,
+		Position:    position,
 	}
 }
 
-func NewQuizLesson(courseID, moduleID uuid.UUID, title, description string, duration int, quiz []Quiz) *Lesson {
-	lesson := newLesson(courseID, moduleID, title, description, duration, QuizLesson)
+func NewQuizLesson(courseID, moduleID uuid.UUID, title, description string, position float32, duration int, quiz []Quiz) *Lesson {
+	lesson := newLesson(courseID, moduleID, title, description, position, duration, QuizLesson)
 	lesson.QuizContent = converter.JSONB[[]Quiz]{Data: quiz}
 	return lesson
 }
 
-func NewOnlineLesson(courseID, moduleID uuid.UUID, title, description string, duration int, videoURL string) *Lesson {
-	lesson := newLesson(courseID, moduleID, title, description, duration, OnlineLesson)
+func NewOnlineLesson(courseID, moduleID uuid.UUID, title, description string, position float32, duration int, videoURL string) *Lesson {
+	lesson := newLesson(courseID, moduleID, title, description, position, duration, OnlineLesson)
 	lesson.OnlineContent = converter.JSONB[OnlineContentStruct]{Data: OnlineContentStruct{
 		VideoURL: videoURL,
 	}}
 	return lesson
 }
 
-func NewOfflineLesson(courseID, moduleID uuid.UUID, title, description string, duration int, location string, date time.Time) *Lesson {
-	lesson := newLesson(courseID, moduleID, title, description, duration, OfflineLesson)
+func NewOfflineLesson(courseID, moduleID uuid.UUID, title, description string, position float32, duration int, location string, date time.Time) *Lesson {
+	lesson := newLesson(courseID, moduleID, title, description, position, duration, OfflineLesson)
 	lesson.OfflineContent = converter.JSONB[OfflineContentStruct]{Data: OfflineContentStruct{
 		Location: location,
 		Date:     date,
@@ -90,8 +92,8 @@ func NewOfflineLesson(courseID, moduleID uuid.UUID, title, description string, d
 	return lesson
 }
 
-func NewReadingLesson(courseID, moduleID uuid.UUID, title, description string, duration int, content string) *Lesson {
-	lesson := newLesson(courseID, moduleID, title, description, duration, ReadingLesson)
+func NewReadingLesson(courseID, moduleID uuid.UUID, title, description string, position float32, duration int, content string) *Lesson {
+	lesson := newLesson(courseID, moduleID, title, description, position, duration, ReadingLesson)
 	lesson.ReadingContent = converter.JSONB[ReadingContentStruct]{Data: ReadingContentStruct{
 		Content: content,
 	}}
