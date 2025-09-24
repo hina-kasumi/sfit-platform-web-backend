@@ -51,3 +51,17 @@ func (r *ModuleRepository) AddModuleToCourse(courseID string, moduleTitle string
 	}
 	return module.ID, module.CreatedAt, nil
 }
+
+func (r *ModuleRepository) DeleteModule(moduleId uuid.UUID) error {
+	result := r.db.Delete(&entities.Module{}, moduleId)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if err := r.db.Where("module_id = ?", moduleId).Delete(&entities.Lesson{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

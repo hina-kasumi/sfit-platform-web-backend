@@ -45,6 +45,7 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
 		protectedCourse.POST("", r.handler.CreateCourse)
 		protectedCourse.PUT("/:course_id", r.handler.UpdateCourse)
 		protectedCourse.POST("/:course_id/modules", r.handler.AddModuleToCourse)
+		protectedCourse.DELETE("/modules/:module_id", r.handler.DeleteModuleInCourse)
 		protectedCourse.DELETE("/:course_id", r.handler.DeleteCourse)
 		protectedCourse.GET("/:course_id/users", r.handler.GetRegisteredUsers)
 	}

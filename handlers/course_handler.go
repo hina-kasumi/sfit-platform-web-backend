@@ -270,6 +270,24 @@ func (h *CourseHandler) AddModuleToCourse(ctx *gin.Context) {
 	response.Success(ctx, "Module added to course successfully", addResponse)
 }
 
+func (h *CourseHandler) DeleteModuleInCourse(ctx *gin.Context) {
+	moduleIdStr := ctx.Param("module_id")
+	if moduleIdStr == "" {
+		response.Error(ctx, http.StatusBadRequest, "Module ID is required")
+		return
+	}
+	moduleId, err := uuid.Parse(moduleIdStr)
+	if err != nil {
+		response.Error(ctx, http.StatusBadRequest, "Invalid Module ID format")
+		return
+	}
+	if err := h.courseService.DeleteModule(moduleId); err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to delete module")
+		return
+	}
+	response.Success(ctx, "Module deleted successfully", nil)
+}
+
 //
 // Helper
 //
