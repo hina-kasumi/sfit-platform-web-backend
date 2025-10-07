@@ -51,6 +51,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			module.ID,
 			req.Title,
 			req.Description,
+			req.Position,
 			req.Duration,
 			req.QuizContent,
 		)
@@ -76,6 +77,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			module.ID,
 			req.Title,
 			req.Description,
+			req.Position,
 			req.Duration,
 			req.VideoURL,
 		)
@@ -91,6 +93,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			module.ID,
 			req.Title,
 			req.Description,
+			req.Position,
 			req.Duration,
 			req.Location,
 			req.Date,
@@ -101,6 +104,7 @@ func (s *LessonService) createLesson(moduleID string, req dtos.LessonRequest) (*
 			module.ID,
 			req.Title,
 			req.Description,
+			req.Position,
 			req.Duration,
 			req.ReadingContent,
 		)

@@ -384,6 +384,9 @@ func (cs *CourseService) GetCourseLessons(courseID string, userID string) (dtos.
 			case "Offline":
 				title = lesson.OfflineContent.Data.Location
 				duration = lesson.Duration
+			case "Reading":
+				title = lesson.Title
+				duration = lesson.Duration
 			}
 
 			totalTime += duration
@@ -534,4 +537,8 @@ func (s *CourseService) GetModuleByID(moduleID string) (*entities.Module, error)
 
 func (s *CourseService) GetCourseUserCompletion(userID uuid.UUID) ([]string, error) {
 	return s.courseRepo.GetCourseUserCompletion(userID)
+}
+
+func (s *CourseService) DeleteModule(moduleId uuid.UUID) error {
+	return s.moduleRepo.DeleteModule(moduleId)
 }
