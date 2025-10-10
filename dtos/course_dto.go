@@ -111,6 +111,7 @@ type LessonResponse struct {
 	Title     string `json:"title"`
 	Learned   bool   `json:"learned"`
 	StudyTime int    `json:"study_time"`
+	Type      string `json:"type"`
 }
 
 type RateResponse struct {

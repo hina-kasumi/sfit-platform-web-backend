@@ -514,10 +514,11 @@ func (r *CourseRepository) getCourseContent(courseID, userID string) ([]dtos.Cou
 // getModuleLessons retrieves lessons for a specific module
 func (r *CourseRepository) getModuleLessons(moduleID, userID string) ([]dtos.LessonResponse, error) {
 	type LessonRaw struct {
-		ID        string `json:"id"`
-		Title     string `json:"title"`
-		Learned   bool   `json:"learned"`
-		StudyTime int    `json:"study_time"`
+		ID        string              `json:"id"`
+		Title     string              `json:"title"`
+		Learned   bool                `json:"learned"`
+		StudyTime int                 `json:"study_time"`
+		Type      entities.LessonType `json:"type"`
 	}
 
 	var lessons []LessonRaw
@@ -526,6 +527,7 @@ func (r *CourseRepository) getModuleLessons(moduleID, userID string) ([]dtos.Les
 		SELECT 
 			l.id,
 			l.title AS title,
+			l.lesson_type AS type,
 
 			CASE WHEN la.user_id IS NOT NULL THEN true ELSE false END as learned,
 			l.duration as study_time
@@ -546,6 +548,7 @@ func (r *CourseRepository) getModuleLessons(moduleID, userID string) ([]dtos.Les
 			Title:     lesson.Title,
 			Learned:   lesson.Learned,
 			StudyTime: lesson.StudyTime,
+			Type:      string(lesson.Type),
 		})
 	}
 
