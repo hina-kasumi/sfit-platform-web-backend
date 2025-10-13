@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type CourseRepository struct {
@@ -713,16 +714,21 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
 	userID string,
 	offset, limit int,
 	total *int64,
+	status *entities.UserCourseStatus,
 ) ([]dtos.CourseGeneralInformationResponse, error) {
 
 	var courses []dtos.CourseGeneralInformationResponse
-
-	// Đếm tổng số courses đã đăng ký
-	if err := cr.db.
-		Table("courses").
+	db := cr.db.Table("courses").
 		Joins("JOIN user_courses ON user_courses.course_id = courses.id").
-		Where("user_courses.user_id = ?", userID).
-		Count(total).Error; err != nil {
+		Where("user_courses.user_id = ?", userID)
+
+	// Nếu có status thì lọc thêm
+	if status != nil {
+		db = db.Where("user_courses.status = ?", *status)
+	}
+
+	// Đếm tổng số courses
+	if err := db.Count(total).Error; err != nil {
 		return nil, err
 	}
 
@@ -742,10 +748,20 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
         FROM courses
         JOIN user_courses ON user_courses.course_id = courses.id
         WHERE user_courses.user_id = ?
-        OFFSET ? LIMIT ?
     `
 
-	if err := cr.db.Raw(query, userID, offset, limit).Scan(&courses).Error; err != nil {
+	// Thêm điều kiện status nếu có
+	var args []interface{}
+	args = append(args, userID)
+	if status != nil {
+		query += " AND user_courses.status = ?"
+		args = append(args, *status)
+	}
+
+	query += " OFFSET ? LIMIT ?"
+	args = append(args, offset, limit)
+
+	if err := cr.db.Raw(query, args...).Scan(&courses).Error; err != nil {
 		return nil, err
 	}
 
@@ -883,49 +899,71 @@ func (cr *CourseRepository) DeleteCourse(courseID uuid.UUID) error {
 }
 
 // Dùng để lấy danh sách người dùng đã đăng ký khóa học với phân trang
-func (cr *CourseRepository) GetRegisteredUsersByCourseID(courseID uuid.UUID, offset, limit int, total *int64) ([]entities.Users, error) {
+func (cr *CourseRepository) GetRegisteredUsersByCourseID(
+	courseID uuid.UUID,
+	status *entities.UserCourseStatus,
+	offset, limit int,
+	total *int64,
+) ([]entities.Users, error) {
 	var users []entities.Users
 
-	err := cr.db.
+	query := cr.db.
 		Table("users").
 		Joins("JOIN user_courses ON user_courses.user_id = users.id").
-		Where("user_courses.course_id = ?", courseID).
-		Count(total).
+		Where("user_courses.course_id = ?", courseID)
+
+	// Nếu status != nil thì thêm điều kiện
+	if status != nil {
+		query = query.Where("user_courses.status = ?", *status)
+	}
+
+	// Đếm tổng số dòng (total)
+	if err := query.Count(total).Error; err != nil {
+		return nil, err
+	}
+
+	// Lấy danh sách users với phân trang
+	err := query.
 		Offset(offset).
 		Limit(limit).
 		Find(&users).Error
 
-	return users, err
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 // Đăng ký người dùng vào khóa học
-func (cr *CourseRepository) RegisterUserToCourse(userIDs []uuid.UUID, courseID uuid.UUID) error {
-	// Kiểm tra và thêm nhiều user vào khóa học một lần
-	var userCourses []entities.UserCourse
+func (cr *CourseRepository) RegisterUserToCourse(userIDs []uuid.UUID, courseID uuid.UUID, status entities.UserCourseStatus) error {
+	if len(userIDs) == 0 {
+		return nil
+	}
 
-	for _, userID := range userIDs {
-		var count int64
-		err := cr.db.Model(&entities.UserCourse{}).
-			Where("user_id = ? AND course_id = ?", userID, courseID).
-			Count(&count).Error
-		if err != nil {
+	// Mở transaction
+	return cr.db.Transaction(func(tx *gorm.DB) error {
+		var userCourses []entities.UserCourse
+		for _, uid := range userIDs {
+			userCourses = append(userCourses, entities.UserCourse{
+				UserID:   uid,
+				CourseID: courseID,
+				Status:   status,
+			})
+		}
+
+		// UPSERT: nếu trùng user_id + course_id → cập nhật status
+		if err := tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}, {Name: "course_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"status"}),
+		}).Create(&userCourses).Error; err != nil {
+			// Lỗi bất kỳ → rollback tự động
 			return err
 		}
-		if count > 0 {
-			// Nếu đã đăng ký thì bỏ qua user này
-			continue
-		}
-		userCourses = append(userCourses, entities.UserCourse{
-			UserID:   userID,
-			CourseID: courseID,
-		})
-	}
 
-	if len(userCourses) == 0 {
-		return nil // Không có user nào cần thêm
-	}
-
-	return cr.db.Create(&userCourses).Error
+		// Nếu mọi thứ ổn → commit tự động
+		return nil
+	})
 }
 
 // Kiểm tra xem khóa học có tồn tại hay không
@@ -1012,3 +1050,12 @@ func (cr *CourseRepository) GetCourseUserCompletion(userID uuid.UUID) ([]string,
 
 // 	return count
 // }
+
+func (cr *CourseRepository) IsCanLearn(userID, courseID uuid.UUID) bool {
+	var userCourse entities.UserCourse
+	err := cr.db.Where("user_id = ? AND course_id = ?", userID, courseID).First(&userCourse).Error
+	if err != nil {
+		return false
+	}
+	return userCourse.Status == entities.UserCourseStatusLearn
+}

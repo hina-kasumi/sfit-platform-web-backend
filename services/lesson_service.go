@@ -149,11 +149,27 @@ func (s *LessonService) UpdateLesson(moduleID string, lessonID string, req dtos.
 	return s.lessonRepo.UpdateLesson(lesson)
 }
 
-func (s *LessonService) GetLessonByID(id string) (*entities.Lesson, error) {
-	lesson, err := s.lessonRepo.GetLessonByID(id)
+func (s *LessonService) GetLessonByID(userID, courseID string, roles []string) (*entities.Lesson, error) {
+	// Check if the user has permission to learn the course
+	hasRole := false
+	for _, role := range roles {
+		switch role {
+		case string(entities.RoleEnumAdmin), string(entities.RoleEnumHead), string(entities.RoleEnumVice), string(entities.RoleEnumTeacher):
+			hasRole = true
+		}
+	}
+	canLearn := false
+	if !hasRole {
+		canLearn = s.courseSer.IsCanLearn(userID, courseID)
+	}
+	if !hasRole && !canLearn {
+		return nil, errors.New("you do not have permission to access this lesson")
+	}
+	lesson, err := s.lessonRepo.GetLessonByID(courseID)
 	if err != nil {
 		return nil, err
 	}
+
 	return lesson, nil
 }
 

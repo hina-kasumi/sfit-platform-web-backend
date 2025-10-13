@@ -19,6 +19,7 @@ const (
 
 type CourseService struct {
 	userRepo             *repositories.UserRepository
+	userProfileRepo      *repositories.UserProfileRepository
 	courseRepo           *repositories.CourseRepository
 	favorCourseRepo      *repositories.FavoriteCourseRepository
 	lessonRepo           *repositories.LessonRepository
@@ -39,6 +40,7 @@ func NewCourseService(
 	userRateRepo *repositories.UserRateRepository,
 	lessonAttendanceRepo *repositories.LessonAttendanceRepository,
 	moduleRepo *repositories.ModuleRepository,
+	userProfileRepo *repositories.UserProfileRepository,
 ) *CourseService {
 	return &CourseService{
 		userRepo:             userRepo,
@@ -50,6 +52,7 @@ func NewCourseService(
 		userRateRepo:         userRateRepo,
 		lessonAttendanceRepo: lessonAttendanceRepo,
 		moduleRepo:           moduleRepo,
+		userProfileRepo:      userProfileRepo,
 	}
 }
 
@@ -292,7 +295,7 @@ func (s *CourseService) GetUserProgressInCourse(courseID, userID string) (int, i
 }
 
 // Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
-func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int) (dtos.PageListResp, error) {
+func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int, status *entities.UserCourseStatus) (dtos.PageListResp, error) {
 	offset := (page - 1) * pageSize
 	var total int64
 	var result dtos.PageListResp
@@ -303,7 +306,7 @@ func (cs *CourseService) GetRegisteredCourses(userID string, page, pageSize int)
 	}
 
 	// Lấy danh sách course từ repo
-	courses, err := cs.courseRepo.GetCoursesByUserIDWithPagination(userID, offset, pageSize, &total)
+	courses, err := cs.courseRepo.GetCoursesByUserIDWithPagination(userID, offset, pageSize, &total, status)
 	if err != nil {
 		return result, err
 	}
@@ -441,7 +444,7 @@ func (cs *CourseService) DeleteCourse(courseID string) error {
 }
 
 // Lấy danh sách người dùng đã đăng ký khóa học
-func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int) (dtos.RegisteredUsersResponse, error) {
+func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int, status *entities.UserCourseStatus) (dtos.RegisteredUsersResponse, error) {
 	offset := (page - 1) * pageSize
 	var total int64
 	var result dtos.RegisteredUsersResponse
@@ -452,7 +455,7 @@ func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int)
 	}
 
 	// kiểm tra xem khóa học có tồn tại không
-	users, err := cs.courseRepo.GetRegisteredUsersByCourseID(courseUUID, offset, pageSize, &total)
+	users, err := cs.courseRepo.GetRegisteredUsersByCourseID(courseUUID, status, offset, pageSize, &total)
 	if err != nil {
 		return result, err
 	}
@@ -479,15 +482,29 @@ func (cs *CourseService) GetRegisteredUsers(courseID string, page, pageSize int)
 }
 
 // Đăng ký người dùng vào khóa học
-func (cs *CourseService) RegisterUserToCourse(userIDs []string, courseID string) error {
+func (cs *CourseService) RegisterUserToCourse(userIDs []string, msvs []string, courseID string, status entities.UserCourseStatus) error {
 	// Lấy userID và courseID từ chuỗi
 	var userUUIDs []uuid.UUID
-	for i := 0; i < len(userIDs); i++ {
-		userUUID, err := uuid.Parse(userIDs[i])
+	if userIDs != nil || len(userIDs) > 0 {
+		for i := range userIDs {
+			userUUID, err := uuid.Parse(userIDs[i])
+			if err != nil {
+				return err
+			}
+			userUUIDs = append(userUUIDs, userUUID)
+		}
+	} else if msvs != nil || len(msvs) > 0 {
+		var users []entities.UserProfile
+		users, err := cs.userProfileRepo.GetUsersByMsvs(msvs)
 		if err != nil {
 			return err
 		}
-		userUUIDs = append(userUUIDs, userUUID)
+		if len(users) == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		for i := range users {
+			userUUIDs = append(userUUIDs, users[i].UserID)
+		}
 	}
 
 	courseUUID, err := uuid.Parse(courseID)
@@ -505,7 +522,7 @@ func (cs *CourseService) RegisterUserToCourse(userIDs []string, courseID string)
 	}
 
 	// Đăng ký người dùng vào khóa học
-	return cs.courseRepo.RegisterUserToCourse(userUUIDs, courseUUID)
+	return cs.courseRepo.RegisterUserToCourse(userUUIDs, courseUUID, status)
 }
 
 func (s *CourseService) UpdateTotalTime(module_id string, time int) error {
@@ -541,4 +558,16 @@ func (s *CourseService) GetCourseUserCompletion(userID uuid.UUID) ([]string, err
 
 func (s *CourseService) DeleteModule(moduleId uuid.UUID) error {
 	return s.moduleRepo.DeleteModule(moduleId)
+}
+
+func (s *CourseService) IsCanLearn(userID, courseID string) bool {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return false
+	}
+	courseUUID, err := uuid.Parse(courseID)
+	if err != nil {
+		return false
+	}
+	return s.courseRepo.IsCanLearn(userUUID, courseUUID)
 }

@@ -2,6 +2,7 @@ package dtos
 
 import (
 	"encoding/json"
+	"sfit-platform-web-backend/entities"
 	"time"
 
 	"github.com/google/uuid"
@@ -48,14 +49,26 @@ type SetFavouriteCourseRequest struct {
 }
 
 type CourseRegisterRequest struct {
-	CourseID string   `json:"course_id" binding:"required"`
-	UserIDs  []string `json:"user_ids"`
+	CourseID string                    `json:"course_id" binding:"required"`
+	UserIDs  []string                  `json:"user_ids"`
+	Msvs     []string                  `json:"msvs"`
+	Status   entities.UserCourseStatus `json:"status" binding:"required"`
 }
 
 type CourseRateRequest struct {
 	Course  string `json:"course" binding:"required"`
 	Star    int    `json:"star" binding:"required,min=1,max=5"`
 	Comment string `json:"comment"`
+}
+
+type GetCourseUserRegisted struct {
+	PageListQuery
+	Status *entities.UserCourseStatus `form:"status"`
+}
+
+type GetUsersInCourse struct {
+	PageListQuery
+	Status *entities.UserCourseStatus `form:"status"`
 }
 
 // ===================== RESPONSE DTOs =====================

@@ -24,7 +24,10 @@ func NewLessonHandler(baseHandler *BaseHandler, lessonService *services.LessonSe
 
 func (h *LessonHandler) GetLessonByID(ctx *gin.Context) {
 	lessonID := ctx.Param("lesson_id")
-	lesson, err := h.lessonService.GetLessonByID(lessonID)
+	roles := middlewares.GetRoles(ctx)
+	userID := middlewares.GetPrincipal(ctx)
+
+	lesson, err := h.lessonService.GetLessonByID(userID, lessonID, roles)
 	if h.isError(ctx, err) {
 		return
 	}
@@ -88,7 +91,8 @@ func (h *LessonHandler) UpdateStatusLessonAttendance(ctx *gin.Context) {
 	}
 
 	currentUserID := middlewares.GetPrincipal(ctx)
-	lesson, err := h.lessonService.GetLessonByID(lessonID)
+	roles := middlewares.GetRoles(ctx)
+	lesson, err := h.lessonService.GetLessonByID(currentUserID, lessonID, roles)
 	if h.isError(ctx, err) {
 		return
 	}

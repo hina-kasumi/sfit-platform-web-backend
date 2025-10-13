@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"sfit-platform-web-backend/dtos"
+	"sfit-platform-web-backend/entities"
 	"sfit-platform-web-backend/middlewares"
 	"sfit-platform-web-backend/services"
 	"sfit-platform-web-backend/utils/response"
@@ -357,28 +358,17 @@ func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
 	userID := c.Param("user_id")
 	if userID == "" {
 		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
-		response.Error(c, http.StatusUnauthorized, "User   ID is required")
+		response.Error(c, http.StatusUnauthorized, "UserID is required")
 		return
 	}
 
-	// Lấy page và pageSize từ query parameters
-	pageStr := c.DefaultQuery("page", "1")
-	pageSizeStr := c.DefaultQuery("page_size", "10")
-
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		response.Error(c, http.StatusBadRequest, "Invalid page parameter")
-		return
-	}
-
-	pageSize, err := strconv.Atoi(pageSizeStr)
-	if err != nil || pageSize < 1 || pageSize > 100 {
-		response.Error(c, http.StatusBadRequest, "Invalid page_size parameter")
+	var req dtos.GetCourseUserRegisted
+	if !ch.canBindQuery(c, &req) {
 		return
 	}
 
 	// Gọi service để lấy danh sách course
-	result, err := ch.courseService.GetRegisteredCourses(userID, page, pageSize)
+	result, err := ch.courseService.GetRegisteredCourses(userID, req.Page, req.PageSize, req.Status)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to get registered courses")
 		return
@@ -474,24 +464,13 @@ func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
 		return
 	}
 
-	// Lấy page và pageSize từ query parameters
-	pageStr := c.DefaultQuery("page", "1")
-	pageSizeStr := c.DefaultQuery("pageSize", "10")
-
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		response.Error(c, http.StatusBadRequest, "Invalid page parameter")
-		return
-	}
-
-	pageSize, err := strconv.Atoi(pageSizeStr)
-	if err != nil || pageSize < 1 || pageSize > 100 {
-		response.Error(c, http.StatusBadRequest, "Invalid pageSize parameter")
+	var req dtos.GetUsersInCourse
+	if !ch.canBindQuery(c, &req) {
 		return
 	}
 
 	// Gọi service để lấy danh sách người dùng đã đăng ký
-	result, err := ch.courseService.GetRegisteredUsers(courseID, page, pageSize)
+	result, err := ch.courseService.GetRegisteredUsers(courseID, req.Page, req.PageSize, req.Status)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, "Failed to get registered users")
 		return
@@ -511,8 +490,19 @@ func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 		return
 	}
 
+	if !middlewares.HasRole(c, string(entities.RoleEnumAdmin), string(entities.RoleEnumHead), string(entities.RoleEnumVice), string(entities.RoleEnumTeacher)) &&
+		req.Status == entities.UserCourseStatusLearn {
+		response.Error(c, http.StatusForbidden, "You do not have permission to accept users to courses")
+		return
+	}
+
+	if (req.Msvs != nil || len(req.Msvs) > 0) && (req.UserIDs != nil || len(req.UserIDs) > 0) {
+		response.Error(c, http.StatusBadRequest, "Cannot provide both UserIDs and Msvs")
+		return
+	}
+
 	// Gọi service để đăng ký người dùng vào khóa học
-	err := ch.courseService.RegisterUserToCourse(req.UserIDs, req.CourseID)
+	err := ch.courseService.RegisterUserToCourse(req.UserIDs, req.Msvs, req.CourseID, req.Status)
 	if err != nil {
 		if err.Error() == "record not found" {
 			response.Error(c, http.StatusNotFound, "Course not found")

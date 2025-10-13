@@ -81,3 +81,12 @@ func (repo *UserProfileRepository) UpdateUserProfile(profile *entities.UserProfi
 	}
 	return profile, nil
 }
+
+func (ur *UserProfileRepository) GetUsersByMsvs(msvs []string) ([]entities.UserProfile, error) {
+	var users []entities.UserProfile
+	result := ur.db.Where("msv IN ?", msvs).Find(&users)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return users, nil
+}

@@ -93,7 +93,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	jwtSer := services.NewJwtService(redisSer)
 	refreshSer := services.NewRefreshTokenService()
 	tagTempSer := services.NewTagTempService(tagTempRepo)
-	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo)
+	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo, userProfileRepo)
 	eventSer := services.NewEventService(eventRepo)
 	taskSer := services.NewTaskService(taskRepo)
 	profileSer := services.NewUserProfileService(userProfileRepo, userSer, eventSer, courseSer, taskSer)
