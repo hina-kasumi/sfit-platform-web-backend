@@ -1059,3 +1059,12 @@ func (cr *CourseRepository) IsCanLearn(userID, courseID uuid.UUID) bool {
 	}
 	return userCourse.Status == entities.UserCourseStatusLearn
 }
+
+func (cr *CourseRepository) GetTotalCourseOfUser(userID uuid.UUID, status entities.UserCourseStatus) (int64, error) {
+	var total int64
+	var course entities.UserCourse
+	err := cr.db.Model(&course).
+		Where("user_id = ? AND status = ?", userID, status).
+		Count(&total).Error
+	return total, err
+}

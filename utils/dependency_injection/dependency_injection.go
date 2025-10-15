@@ -43,6 +43,7 @@ type DI struct {
 	RoleService        *services.RoleService
 	TaskService        *services.TaskService
 	LessonService      *services.LessonService
+	NewFeedService     *services.NewFeedService
 
 	EventService       *services.EventService
 	UserProfileService *services.UserProfileService
@@ -59,6 +60,7 @@ type DI struct {
 	TaskHandler        *handlers.TaskHandler
 	RoleHandler        *handlers.RoleHandler
 	LessonHandler      *handlers.LessonHandler
+	NewFeedHandler     *handlers.NewFeedHandler
 
 	//worker
 	Worker *worker.Worker
@@ -99,6 +101,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	profileSer := services.NewUserProfileService(userProfileRepo, userSer, eventSer, courseSer, taskSer)
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer, profileSer)
 	lessonSer := services.NewLessonService(lessonRepo, courseSer)
+	newfeedSer := services.NewNewFeedService(courseSer, userSer, taskSer, eventSer)
 
 	// Khởi tạo Hander
 	baseHandler := handlers.NewBaseHandler()
@@ -113,6 +116,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	taskHandler := handlers.NewTaskHandler(baseHandler, taskSer)
 	roleHandler := handlers.NewRoleHandler(baseHandler, roleSer)
 	lessonHandler := handlers.NewLessonHandler(baseHandler, lessonSer)
+	newFeedHandler := handlers.NewNewFeedHandler(newfeedSer)
 
 	// Khởi tạo Worker
 	worker := worker.NewWorker(eventSer)
@@ -144,6 +148,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		UserProfileService: profileSer,
 		CourseService:      courseSer,
 		TaskService:        taskSer,
+		NewFeedService:     newfeedSer,
 
 		BaseHandler:        baseHandler,
 		AuthHandler:        authHandler,
@@ -158,6 +163,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 		UserHandler:        userHandler,
 		TaskHandler:        taskHandler,
 		RoleHandler:        roleHandler,
+		NewFeedHandler:     newFeedHandler,
 
 		Worker: worker,
 	}

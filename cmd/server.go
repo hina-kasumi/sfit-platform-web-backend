@@ -54,6 +54,7 @@ func StartServer(db *gorm.DB, redisClient *redis.Client, redisCtx context.Contex
 		routes.NewTaskRouter(depInject.TaskHandler),
 		routes.NewRoleRoutes(depInject.RoleHandler),
 		routes.NewLessonRoute(depInject.LessonHandler),
+		routes.NewNewFeedRoute(depInject.NewFeedHandler),
 
 		// Đắng ký router
 		routes.NewCourseRoute(depInject.CourseHandler),

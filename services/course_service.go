@@ -571,3 +571,7 @@ func (s *CourseService) IsCanLearn(userID, courseID string) bool {
 	}
 	return s.courseRepo.IsCanLearn(userUUID, courseUUID)
 }
+
+func (s *CourseService) GetTotalCourseOfUser(userID uuid.UUID, status entities.UserCourseStatus) (int64, error) {
+	return s.courseRepo.GetTotalCourseOfUser(userID, status)
+}
