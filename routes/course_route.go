@@ -23,6 +23,8 @@ func (r *CourseRoute) RegisterRoutes(router *gin.Engine) {
 	{
 		publicCourse.GET("/courses", r.handler.GetListCourse)
 		publicCourse.GET("/courses/:course_id", r.handler.GetCourseDetailByID)
+		publicCourse.GET("/courses-v2/:course_id", r.handler.GetCourseDetailByIDV2)
+		publicCourse.GET("/courses-v2", r.handler.GetListCourseV2)
 		publicCourse.POST("courses/:course_id/favourite", r.handler.MarkCourseAsFavourite)
 		publicCourse.DELETE("courses/:course_id/favourite", r.handler.UnmarkCourseAsFavourite)
 		publicCourse.GET("users/:user_id/courses/:course_id/progress", r.handler.GetUserProgressInCourse)

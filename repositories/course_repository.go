@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sfit-platform-web-backend/dtos"
 	"sfit-platform-web-backend/entities"
+	"sort"
 	"strings"
 	"time"
 
@@ -744,7 +745,8 @@ func (cr *CourseRepository) GetCoursesByUserIDWithPagination(
             0.0 AS rate,
             '{}'::text[] AS tags,
             0 AS learned_lessons,
-            TRUE AS registed
+            TRUE AS registed,
+			user_courses.status AS status
         FROM courses
         JOIN user_courses ON user_courses.course_id = courses.id
         WHERE user_courses.user_id = ?
@@ -831,34 +833,42 @@ func (cr *CourseRepository) GetCourseTags(courseID uuid.UUID) []string {
 }
 
 // Lấy danh sách các module và bài học trong khóa học
-func (cr *CourseRepository) GetCourseModulesWithLessons(courseID uuid.UUID, userID uuid.UUID) ([]entities.Module, map[uuid.UUID][]entities.Lesson, map[uuid.UUID]bool, error) {
+func (cr *CourseRepository) GetCourseModulesWithLessons(courseID uuid.UUID, userID uuid.UUID) ([]entities.Module, map[uuid.UUID][]entities.Lesson, map[uuid.UUID]string, error) {
 	var modules []entities.Module
 
 	// Lấy tất cả các module của khóa học
-	err := cr.db.Where("course_id = ?", courseID).Find(&modules).Error
+	err := cr.db.Model(&entities.Module{}).
+		Preload("Lessons").
+		Where("course_id = ?", courseID).
+		Find(&modules).Error
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	// Lấy tất cả các bài học cho mỗi module
 	lessonsByModule := make(map[uuid.UUID][]entities.Lesson)
-	learnedLessons := make(map[uuid.UUID]bool)
+	learnedLessons := make(map[uuid.UUID]string)
 
 	for _, module := range modules {
-		var lessons []entities.Lesson
-		err := cr.db.Where("module_id = ?", module.ID).Order("position, create_at").Find(&lessons).Error
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		lessonsByModule[module.ID] = lessons
+		sort.Slice(module.Lessons, func(i, j int) bool {
+			if module.Lessons[i].Position == module.Lessons[j].Position {
+				return module.Lessons[i].CreatedAt.Before(module.Lessons[j].CreatedAt)
+			}
+			return module.Lessons[i].Position < module.Lessons[j].Position
+		})
+		lessonsByModule[module.ID] = module.Lessons
 
 		// Kiểm tra bài học nào đã được người dùng học
-		for _, lesson := range lessons {
-			var count int64
-			cr.db.Model(&entities.LessonAttendance{}).
+		for _, lesson := range module.Lessons {
+			var lesson_attendance entities.LessonAttendance
+			err = cr.db.Model(&entities.LessonAttendance{}).
 				Where("user_id = ? AND lesson_id = ?", userID, lesson.ID).
-				Count(&count)
-			learnedLessons[lesson.ID] = count > 0
+				Find(&lesson_attendance).Error
+			if err != nil && err != gorm.ErrRecordNotFound {
+				return nil, nil, nil, err
+			}
+
+			learnedLessons[lesson.ID] = string(lesson_attendance.Status)
 		}
 	}
 
@@ -878,8 +888,39 @@ func (cr *CourseRepository) CreateOrUpdateCourseRating(userID uuid.UUID, courseI
 	result := cr.db.Where("user_id = ? AND courses_id = ?", userID, courseID).
 		Assign(entities.UserRate{Star: star, Comment: comment}).
 		FirstOrCreate(&rating)
+	if result.Error != nil {
+		return result.Error
+	}
 
-	return result.Error
+	var stars []int
+	err := cr.db.Model(&entities.UserRate{}).
+		Where("courses_id = ?", courseID).
+		Pluck("star", &stars).Error
+	if err != nil {
+		return err
+	}
+
+	// Cập nhật lại trường rate trong bảng courses
+	var avg float64
+	err = cr.db.Model(&entities.UserRate{}).
+		Select("AVG(star)").
+		Where("courses_id = ?", courseID).
+		Row().Scan(&avg)
+	if err != nil {
+		return err
+	}
+
+	// Cập nhật rate của khóa học
+	res := cr.db.Model(&entities.Course{}).
+		Where("id = ?", courseID).
+		Update("rate", float32(avg))
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return fmt.Errorf("không tìm thấy khóa học với id %s", courseID)
+	}
+	return nil
 }
 
 // Xóa khóa học
@@ -995,21 +1036,36 @@ func (cr *CourseRepository) UpdateTotalTime(moduleID uuid.UUID, time int) error 
 	if time < 0 {
 		time = 0
 	}
+	err = cr.db.Model(&entities.Module{}).
+		Where("id = ?", moduleID).
+		Update("total_time", gorm.Expr("GREATEST(total_time + ?, 0)", time)).Error
 	return cr.db.Model(&entities.Course{}).
 		Where("id = ?", courseID).
 		Update("total_time", gorm.Expr("GREATEST(total_time + ?, 0)", time)).Error
 }
 
-func (cr *CourseRepository) UpdateTotalLesson(courseID uuid.UUID, lessonCount int) (*entities.Course, error) {
+func (cr *CourseRepository) UpdateTotalLesson(moduleID uuid.UUID, lessonCount int) (*entities.Course, error) {
 	var course entities.Course
-	err := cr.db.Model(&course).
+	var courseID string
+	err := cr.db.Model(&entities.Module{}).Where("id = ?", moduleID).Select("course_id").Scan(&courseID).Error
+	if err != nil {
+		return nil, err
+	}
+	err = cr.db.Model(&entities.Module{}).
+		Where("id = ?", moduleID).
+		Update("total_lessons", gorm.Expr("GREATEST(total_lessons + ?, 0)", lessonCount)).Error
+
+	if err != nil {
+		return nil, err
+	}
+	err = cr.db.Model(&course).
 		Where("id = ?", courseID).
 		Update("total_lessons", gorm.Expr("GREATEST(total_lessons + ?, 0)", lessonCount)).Error
 	if err != nil {
 		return nil, err
 	}
-	return &course, nil
 
+	return &course, nil
 }
 
 func (cr *CourseRepository) GetModuleByID(moduleID uuid.UUID) (*entities.Module, error) {

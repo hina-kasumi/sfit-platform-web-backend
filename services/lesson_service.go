@@ -126,7 +126,7 @@ func (s *LessonService) CreateNewLesson(moduleID string, req dtos.LessonRequest)
 	if err != nil {
 		return nil, err
 	}
-	err = s.courseSer.UpdateTotalLessons(lesson.CourseID.String(), 1)
+	err = s.courseSer.UpdateTotalLessons(lesson.ModuleID.String(), 1)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *LessonService) DeleteLessonByID(id string) error {
 	if err != nil {
 		return err
 	}
-	err = s.courseSer.UpdateTotalLessons(lesson.CourseID.String(), -1)
+	err = s.courseSer.UpdateTotalLessons(lesson.ModuleID.String(), -1)
 	if err != nil {
 		return err
 	}

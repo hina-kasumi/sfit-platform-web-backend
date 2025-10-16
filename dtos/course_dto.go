@@ -125,6 +125,7 @@ type LessonResponse struct {
 	Learned   bool   `json:"learned"`
 	StudyTime int    `json:"study_time"`
 	Type      string `json:"type"`
+	Status    string `json:"status"`
 }
 
 type RateResponse struct {
@@ -162,6 +163,8 @@ type LessonInfo struct {
 	Title     string `json:"title"`
 	Learned   bool   `json:"learned"`
 	StudyTime int    `json:"study_time"`
+	Type      string `json:"type"`
+	Status    string `json:"status"`
 }
 
 type CourseGeneralInformationResponse struct {
@@ -176,6 +179,7 @@ type CourseGeneralInformationResponse struct {
 	Tags           []string `json:"tags"`
 	LearnedLessons int      `json:"learned_lessons"`
 	Registed       bool     `json:"registed"`
+	Status         string   `json:"status"`
 }
 
 // type PaginationResponse struct {

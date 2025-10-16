@@ -411,7 +411,7 @@ func (ch *CourseHandler) RateCourse(c *gin.Context) {
 	userID := c.Param("user_id")
 	if userID == "" {
 		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
-		response.Error(c, http.StatusUnauthorized, "User   ID is required")
+		response.Error(c, http.StatusUnauthorized, "UserID is required")
 		return
 	}
 

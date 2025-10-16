@@ -397,8 +397,10 @@ func (cs *CourseService) GetCourseLessons(courseID string, userID string) (dtos.
 			lessons = append(lessons, dtos.LessonInfo{
 				ID:        lesson.ID.String(),
 				Title:     title,
-				Learned:   learnedLessons[lesson.ID],
+				Learned:   learnedLessons[lesson.ID] != "",
 				StudyTime: duration,
+				Type:      string(lesson.Type),
+				Status:    learnedLessons[lesson.ID],
 			})
 		}
 
@@ -426,6 +428,10 @@ func (cs *CourseService) RateCourse(userID string, courseID string, star int, co
 	courseUUID, err := uuid.Parse(courseID)
 	if err != nil {
 		return err
+	}
+
+	if star < 0 || star > 5 {
+		return fmt.Errorf("star must be between 0 and 5")
 	}
 
 	// Đánh giá khóa học của người dùng
