@@ -491,7 +491,7 @@ func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
 	}
 
 	if !middlewares.HasRole(c, string(entities.RoleEnumAdmin), string(entities.RoleEnumHead), string(entities.RoleEnumVice), string(entities.RoleEnumTeacher)) &&
-		req.Status == entities.UserCourseStatusLearn {
+		(req.Status == entities.UserCourseStatusLearn || req.Status == entities.UserCourseStatusBlocked) {
 		response.Error(c, http.StatusForbidden, "You do not have permission to accept users to courses")
 		return
 	}
