@@ -12,14 +12,13 @@ import (
 func GetRequest(urlApi string, params map[string]string) (dtos.ApiCallerRp, error) {
 	apiCallerRp := dtos.ApiCallerRp{}
 
-	// Parse the URL
+	// Parse URL
 	apiURL, err := url.Parse(urlApi)
 	if err != nil {
-		apiCallerRp.StatusCode = 400
 		return apiCallerRp, fmt.Errorf("error parsing URL: %w", err)
 	}
 
-	// Add query parameters if provided
+	// Add query parameters
 	if params != nil {
 		query := apiURL.Query()
 		for key, value := range params {
@@ -28,18 +27,29 @@ func GetRequest(urlApi string, params map[string]string) (dtos.ApiCallerRp, erro
 		apiURL.RawQuery = query.Encode()
 	}
 
-	// Make the GET request
+	// Make request
 	rp, err := http.Get(apiURL.String())
 	if err != nil {
-		fmt.Println("Error making request:", err)
+		return apiCallerRp, fmt.Errorf("error making request: %w", err)
 	}
 	defer rp.Body.Close()
 
 	apiCallerRp.StatusCode = rp.StatusCode
-	apiCallerRp.Body, _ = io.ReadAll(rp.Body)
 
+	// Read body
+	body, err := io.ReadAll(rp.Body)
+	if err != nil {
+		return apiCallerRp, fmt.Errorf("read response body failed: %w", err)
+	}
+	apiCallerRp.Body = body
+
+	// Check status code
 	if rp.StatusCode != http.StatusOK {
-		return apiCallerRp, fmt.Errorf("received status code %d", rp.StatusCode)
+		return apiCallerRp, fmt.Errorf(
+			"received status code %d: %s",
+			rp.StatusCode,
+			string(body),
+		)
 	}
 
 	return apiCallerRp, nil

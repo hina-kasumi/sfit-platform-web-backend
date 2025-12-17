@@ -103,7 +103,7 @@ func NewDI(db *gorm.DB, redisClient *redis.Client, redisCtx context.Context) *DI
 	lessonSer := services.NewLessonService(lessonRepo, courseSer)
 	newfeedSer := services.NewNewFeedService(courseSer, userSer, taskSer, eventSer)
 
-	// Khởi tạo Hander
+	// Khởi tạo Handler
 	baseHandler := handlers.NewBaseHandler()
 	authHandler := handlers.NewAuthHandler(baseHandler, authSer, jwtSer, refreshSer)
 	courseHandler := handlers.NewCourseHandler(baseHandler, courseSer, tagSer, tagTempSer)

@@ -1,0 +1,8 @@
+{
+    "image" : "golang:1.24.4",
+    "runArgs": [
+    "--env-file",
+    "./.env"
+  ],
+  "postCreateCommand": "go mod tidy"
+}

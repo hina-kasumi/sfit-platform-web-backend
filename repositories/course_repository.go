@@ -918,7 +918,7 @@ func (cr *CourseRepository) CreateOrUpdateCourseRating(userID uuid.UUID, courseI
 		return res.Error
 	}
 	if res.RowsAffected == 0 {
-		return fmt.Errorf("không tìm thấy khóa học với id %s", courseID)
+		return fmt.Errorf("course with id %s not found", courseID)
 	}
 	return nil
 }

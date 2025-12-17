@@ -17,14 +17,14 @@ type RefreshTokenService struct {
 }
 
 func NewRefreshTokenService() *RefreshTokenService {
-	tokenExpiration := os.Getenv("REFRESH_EXPARIATION")
+	tokenExpiration := os.Getenv("REFRESH_EXPIRATION")
 	if tokenExpiration == "" {
-		fmt.Println("REFRESH_EXPARIATION is not set")
+		fmt.Println("REFRESH_EXPIRATION is not set")
 		os.Exit(1)
 	}
 	exp, err := strconv.ParseInt(tokenExpiration, 10, 64)
 	if err != nil {
-		fmt.Println("JWT_EXPIRATION is not set or invalid")
+		fmt.Println("REFRESH_EXPIRATION is not set or invalid")
 		os.Exit(1)
 	}
 

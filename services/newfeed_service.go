@@ -11,7 +11,7 @@ type NewFeedService struct {
 	courseSer *CourseService
 	userSer   *UserService
 	taskSer   *TaskService
-	evenetSer *EventService
+	eventSer  *EventService
 }
 
 func NewNewFeedService(courseSer *CourseService, userSer *UserService, taskSer *TaskService, evenetSer *EventService) *NewFeedService {
@@ -19,12 +19,12 @@ func NewNewFeedService(courseSer *CourseService, userSer *UserService, taskSer *
 		courseSer: courseSer,
 		userSer:   userSer,
 		taskSer:   taskSer,
-		evenetSer: evenetSer,
+		eventSer:  evenetSer,
 	}
 }
 
 func (n *NewFeedService) GetNewFeed(userID uuid.UUID) (*dtos.NewFeedResponse, error) {
-	events, totalEvents, err := n.evenetSer.GetEvents(1, 3, "", "", string(entities.StatusUpcoming), "", userID.String())
+	events, totalEvents, err := n.eventSer.GetEvents(1, 3, "", "", string(entities.StatusUpcoming), "", userID.String())
 	if err != nil {
 		return nil, err
 	}

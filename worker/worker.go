@@ -2,6 +2,7 @@ package worker
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sfit-platform-web-backend/services"
 	"strconv"
@@ -29,7 +30,7 @@ func (w *Worker) Start() {
 	for range ticker.C {
 		err := w.eventService.AutoUpdateStatusEvent()
 		if err != nil {
-			_ = fmt.Errorf("auto update status event error: %v", err)
+			log.Printf("auto update status event error: %v", err)
 		}
 	}
 }

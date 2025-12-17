@@ -39,7 +39,7 @@ func (rs *RoleService) RemoveUserRole(curUser, userID string, roleIDs ...string)
 
 	if curUser == user.ID.String() {
 		if slices.Contains(roleIDs, string(entities.RoleEnumAdmin)) {
-			return fmt.Errorf("Cannot remove admin role from yourself")
+			return fmt.Errorf("cannot remove admin role from yourself")
 		}
 	}
 	return rs.roleRepo.RemoveUserRole(userID, roleIDs...)
