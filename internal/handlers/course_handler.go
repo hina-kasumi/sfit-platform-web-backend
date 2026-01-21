@@ -1,0 +1,519 @@
+package handlers
+
+import (
+	"log"
+	"net/http"
+	"sfit-platform-web-backend/internal/dtos"
+	middlewares "sfit-platform-web-backend/internal/middleware"
+	"sfit-platform-web-backend/internal/model"
+	"sfit-platform-web-backend/internal/services"
+	"sfit-platform-web-backend/internal/utils/response"
+	"strconv"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type CourseHandler struct {
+	*BaseHandler
+	courseService  *services.CourseService
+	tagService     *services.TagService
+	tagTempService *services.TagTempService
+}
+
+func NewCourseHandler(base *BaseHandler, course *services.CourseService, tag *services.TagService, tagTemp *services.TagTempService) *CourseHandler {
+	return &CourseHandler{
+		BaseHandler:    base,
+		courseService:  course,
+		tagService:     tag,
+		tagTempService: tagTemp,
+	}
+}
+
+// POST /courses
+func (h *CourseHandler) CreateCourse(ctx *gin.Context) {
+	var req dtos.CreateCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	tags, err := h.tagService.EnsureTags(req.Tags)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	courseID, createdAt, err := h.courseService.CreateCourse(req)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	for i, tag := range tags {
+		if _, err := h.tagTempService.CreateTagTemp(tag.ID, courseID); err != nil {
+			log.Printf("Failed to create TagTemp for tag %s (index %d) and course %s: %v",
+				tag.ID, i, courseID.String(), err)
+			if h.isError(ctx, err) {
+				return
+			}
+		}
+	}
+
+	resp := dtos.CreateCourseResponse{
+		ID:        courseID.String(),
+		CreatedAt: createdAt.Format(time.RFC3339),
+	}
+	response.Success(ctx, "Course created successfully", resp)
+}
+
+// GET /courses
+func (h *CourseHandler) GetListCourse(ctx *gin.Context) {
+	userID, _ := uuid.Parse(middlewares.GetPrincipal(ctx))
+
+	// pageNum, pageSizeNum, valid := parsePagination(ctx)
+	// if !valid {
+	// 	return
+	// }
+
+	// title := ctx.Query("title")
+	// onlyRegisted := ctx.Query("onlyRegisted") == "true"
+	// courseType := ctx.Query("type")
+	// level := ctx.Query("level")
+
+	var req dtos.CourseQuery
+	if !h.canBindQuery(ctx, &req) {
+		return
+	}
+	req.UserID = userID
+
+	courses, err := h.courseService.GetListCourse(req)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get courses")
+		return
+	}
+
+	response.Success(ctx, "Courses retrieved successfully", courses)
+}
+
+// GET /courses/:course_id
+func (h *CourseHandler) GetCourseDetailByID(ctx *gin.Context) {
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
+	courseID := ctx.Param("course_id")
+
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	courseDetail, err := h.courseService.GetCourseDetailByID(courseID, userID)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get course detail")
+		return
+	}
+
+	response.Success(ctx, "Course detail retrieved successfully", courseDetail)
+}
+
+// POST /courses/favourite
+func (h *CourseHandler) MarkCourseAsFavourite(ctx *gin.Context) {
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
+	if userID == "" {
+		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// var req dtos.SetFavouriteCourseRequest
+	// if !h.canBindJSON(ctx, &req) {
+	// 	return
+	// }
+
+	courseID := ctx.Param("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	if err := h.courseService.MarkCourseAsFavourite(userID, courseID); err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to mark course as favourite")
+		return
+	}
+
+	response.Success(ctx, "Course marked as favourite successfully", nil)
+}
+
+// DELETE /courses/favourite
+func (h *CourseHandler) UnmarkCourseAsFavourite(ctx *gin.Context) {
+	// userID := utils.GetUserIDFromContext(ctx)
+	userID := middlewares.GetPrincipal(ctx)
+	if userID == "" {
+		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// var req dtos.SetFavouriteCourseRequest
+	// if !h.canBindJSON(ctx, &req) {
+	// 	return
+	// }
+
+	courseID := ctx.Param("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	if err := h.courseService.UnmarkCourseAsFavourite(userID, courseID); err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to unmark course as favourite")
+		return
+	}
+
+	response.Success(ctx, "Course unmarked as favourite successfully", nil)
+}
+
+// PUT /courses/:course_id
+func (h *CourseHandler) UpdateCourse(ctx *gin.Context) {
+	courseID := ctx.Param("course_id")
+	userID := middlewares.GetPrincipal(ctx)
+	if userID == "" {
+		response.Error(ctx, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req dtos.UpdateCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	tags, err := h.tagService.EnsureTags(req.Tags)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	updatedAt, err := h.courseService.UpdateCourse(
+		courseID, req.Title, req.Description, req.Type, req.Target,
+		req.Require, req.Teachers, req.Language, req.Certificate, req.Level,
+	)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	err = h.tagTempService.UpdateTagTemp(courseID, tags)
+	if h.isError(ctx, err) {
+		return
+	}
+
+	resp := dtos.UpdateCourseResponse{
+		// ID:        req.ID,
+		UpdatedAt: updatedAt.Format(time.RFC3339),
+	}
+	response.Success(ctx, "Course update successfully", resp)
+}
+
+// GET /course/list-user-complete
+func (h *CourseHandler) GetListUserCompleteCourse(ctx *gin.Context) {
+	page, pageSize, valid := parsePagination(ctx)
+	if !valid {
+		return
+	}
+
+	// courseID := ctx.Query("course_id")
+	// if courseID == "" {
+	// 	response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+	// 	return
+	// }
+	courseID := ctx.Param("course_id")
+	if courseID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	listUser, err := h.courseService.GetListUserCompleteCourse(
+		courseID, page, pageSize,
+	)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get user complete courses")
+		return
+	}
+
+	response.Success(ctx, "Courses retrieved successfully", listUser)
+}
+
+// GET /course/module
+func (h *CourseHandler) AddModuleToCourse(ctx *gin.Context) {
+	courseID := ctx.Param("course_id")
+	var req dtos.AddModuleToCourseRequest
+	if !h.canBindJSON(ctx, &req) {
+		return
+	}
+
+	if courseID == "" || req.ModuleTitle == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID and Module Title are required")
+		return
+	}
+
+	moduleID, create_at, err := h.courseService.AddModuleToCourse(courseID, req.ModuleTitle)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to add module to course")
+		return
+	}
+	addResponse := dtos.AddModuleToCourseResponse{
+		ModuleID:    moduleID.String(),
+		CourseID:    courseID,
+		ModuleTitle: req.ModuleTitle,
+		CreatedAt:   create_at.Format(time.RFC3339),
+	}
+	response.Success(ctx, "Module added to course successfully", addResponse)
+}
+
+func (h *CourseHandler) DeleteModuleInCourse(ctx *gin.Context) {
+	moduleIdStr := ctx.Param("module_id")
+	if moduleIdStr == "" {
+		response.Error(ctx, http.StatusBadRequest, "Module ID is required")
+		return
+	}
+	moduleId, err := uuid.Parse(moduleIdStr)
+	if err != nil {
+		response.Error(ctx, http.StatusBadRequest, "Invalid Module ID format")
+		return
+	}
+	if err := h.courseService.DeleteModule(moduleId); err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to delete module")
+		return
+	}
+	response.Success(ctx, "Module deleted successfully", nil)
+}
+
+//
+// Helper
+//
+
+func parsePagination(ctx *gin.Context) (page, pageSize int, ok bool) {
+	pageStr := ctx.Query("page")
+	pageSizeStr := ctx.Query("pageSize")
+
+	if pageStr == "" || pageSizeStr == "" {
+		response.Error(ctx, http.StatusBadRequest, "Page and pageSize are required")
+		return 0, 0, false
+	}
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		response.Error(ctx, http.StatusBadRequest, "Invalid page number")
+		return 0, 0, false
+	}
+
+	pageSize, err = strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		response.Error(ctx, http.StatusBadRequest, "Invalid page size")
+		return 0, 0, false
+	}
+
+	return page, pageSize, true
+}
+
+// POST /course/user-progress
+func (h *CourseHandler) GetUserProgressInCourse(ctx *gin.Context) {
+	// var req dtos.GetUserProgressInCourseRequest
+	// if !h.canBindJSON(ctx, &req) {
+	// 	return
+	// }
+
+	// if req.CourseID == "" || req.UserID == "" {
+	// 	response.Error(ctx, http.StatusBadRequest, "Course ID and User ID are required")
+	// 	return
+	// }
+
+	userID := ctx.Param("user_id")
+	courseID := ctx.Param("course_id")
+	if courseID == "" || userID == "" {
+		response.Error(ctx, http.StatusBadRequest, "Course ID and User ID are required")
+		return
+	}
+
+	// Learned, TotalLessons, err := h.courseService.GetUserProgressInCourse(req.CourseID, req.UserID)
+
+	Learned, TotalLessons, err := h.courseService.GetUserProgressInCourse(courseID, userID)
+	if err != nil {
+		response.Error(ctx, http.StatusInternalServerError, "Failed to get user progress in course")
+		return
+	}
+
+	resp := dtos.GetUserProgressInCourseResponse{
+		Learned:      Learned,
+		TotalLessons: TotalLessons,
+	}
+	response.Success(ctx, "User progress retrieved successfully", resp)
+}
+
+// Lấy danh sách khóa học đã đăng ký của người dùng với phân trang
+func (ch *CourseHandler) GetRegisteredCourses(c *gin.Context) {
+	// Lấy userID từ JWT token
+	// userID := middlewares.GetPrincipal(c)
+	userID := c.Param("user_id")
+	if userID == "" {
+		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusUnauthorized, "UserID is required")
+		return
+	}
+
+	var req dtos.GetCourseUserRegisted
+	if !ch.canBindQuery(c, &req) {
+		return
+	}
+
+	// Gọi service để lấy danh sách course
+	result, err := ch.courseService.GetRegisteredCourses(userID, req.Page, req.PageSize, req.Status)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get registered courses")
+		return
+	}
+
+	response.Success(c, "Get registered courses successfully", result)
+}
+
+// Lấy danh sách bài học của khóa học
+func (ch *CourseHandler) GetCourseLessons(c *gin.Context) {
+	// Lấy course_id từ URL parameter
+	courseID := c.Param("course_id")
+	if courseID == "" {
+		response.Error(c, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	// Lấy userID từ JWT token
+	userID := middlewares.GetPrincipal(c)
+	if userID == "" {
+		response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Gọi service để lấy thông tin lessons
+	result, err := ch.courseService.GetCourseLessons(courseID, userID)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get course lessons")
+		return
+	}
+
+	response.Success(c, "Get course lessons successfully", result)
+}
+
+// Đánh giá khóa học
+func (ch *CourseHandler) RateCourse(c *gin.Context) {
+
+	// Lấy userID từ JWT token
+	// userID := middlewares.GetPrincipal(c)
+	userID := c.Param("user_id")
+	if userID == "" {
+		// response.Error(c, http.StatusUnauthorized, "Unauthorized")
+		response.Error(c, http.StatusUnauthorized, "UserID is required")
+		return
+	}
+
+	var req dtos.CourseRateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Gọi service để rate course
+	err := ch.courseService.RateCourse(userID, req.Course, req.Star, req.Comment)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to rate course")
+		return
+	}
+
+	response.Success(c, "Course rated successfully", nil)
+}
+
+// Xóa khóa học theo ID
+func (ch *CourseHandler) DeleteCourse(c *gin.Context) {
+	// Lấy course_id từ URL parameter
+	courseID := c.Param("course_id")
+	if courseID == "" {
+		response.Error(c, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	// Gọi service để delete course
+	err := ch.courseService.DeleteCourse(courseID)
+	if err != nil {
+		if err.Error() == "record not found" {
+			response.Error(c, http.StatusNotFound, "Course not found")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to delete course")
+		return
+	}
+
+	response.Success(c, "Course deleted successfully", nil)
+}
+
+// Lấy danh sách người dùng đã đăng ký khóa học với phân trang
+func (ch *CourseHandler) GetRegisteredUsers(c *gin.Context) {
+	// Lấy course_id từ query parameter
+	// courseID := c.Query("course_id")
+	courseID := c.Param("course_id")
+	if courseID == "" {
+		response.Error(c, http.StatusBadRequest, "Course ID is required")
+		return
+	}
+
+	var req dtos.GetUsersInCourse
+	if !ch.canBindQuery(c, &req) {
+		return
+	}
+
+	// Gọi service để lấy danh sách người dùng đã đăng ký
+	result, err := ch.courseService.GetRegisteredUsers(courseID, req.Page, req.PageSize, req.Status)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Failed to get registered users")
+		return
+	}
+
+	response.Success(c, "Get registered users successfully", result)
+}
+
+// Đăng ký người dùng vào khóa học
+func (ch *CourseHandler) RegisterUserToCourse(c *gin.Context) {
+	// Lấy userID từ JWT token
+	// userID := middlewares.GetPrincipal(c)
+
+	var req dtos.CourseRegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if !middlewares.HasRole(c, string(model.RoleEnumAdmin), string(model.RoleEnumHead), string(model.RoleEnumVice), string(model.RoleEnumTeacher)) &&
+		(req.Status == model.UserCourseStatusLearn || req.Status == model.UserCourseStatusBlocked) {
+		response.Error(c, http.StatusForbidden, "You do not have permission to accept users to courses")
+		return
+	}
+
+	if (req.Msvs != nil || len(req.Msvs) > 0) && (req.UserIDs != nil || len(req.UserIDs) > 0) {
+		response.Error(c, http.StatusBadRequest, "Cannot provide both UserIDs and Msvs")
+		return
+	}
+
+	// Gọi service để đăng ký người dùng vào khóa học
+	err := ch.courseService.RegisterUserToCourse(req.UserIDs, req.Msvs, req.CourseID, req.Status)
+	if err != nil {
+		if err.Error() == "record not found" {
+			response.Error(c, http.StatusNotFound, "Course not found")
+			return
+		}
+		if err.Error() == "UNIQUE constraint failed" || err.Error() == "duplicated key not allowed" {
+			response.Error(c, http.StatusConflict, "User already registered for this course")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "Failed to register for course")
+		return
+	}
+
+	response.Success(c, "Successfully registered for course", nil)
+}

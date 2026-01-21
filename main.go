@@ -1,22 +1,19 @@
 package main
 
 import (
-	"os"
-	"sfit-platform-web-backend/cmd"
-	"sfit-platform-web-backend/infrastructures"
+	"sfit-platform-web-backend/internal/config"
+	"sfit-platform-web-backend/internal/server"
 )
 
 func main() {
-	username := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	host := os.Getenv("DB_HOST")
+	cfg, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
 
-	// Connect to database, configure database
-	db := infrastructures.OpenDbConnection(username, password, dbName, host)
+	server := server.NewServer(cfg)
 
-	// Connect to Redis
-	redisClient, redisCtx := infrastructures.InitRedis(os.Getenv("REDIS_ADDRESS"))
-
-	cmd.StartServer(db, redisClient, redisCtx)
+	if err := server.Run(); err != nil {
+		panic(err)
+	}
 }
