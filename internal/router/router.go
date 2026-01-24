@@ -39,17 +39,18 @@ func Register(r *gin.Engine, cfg *config.Config, db *gorm.DB, redisClient *redis
 
 	// services
 	roleSer := services.NewRoleService(roleRepo, userRepo)
-	userSer := services.NewUserService(userRepo, userProfileRepo, roleSer)
+	userSer := services.NewUserService(ctx, redisClient, userRepo, userProfileRepo, roleSer)
 	tagSer := services.NewTagService(tagRepo)
-	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo, roleSer)
-	teamSer := services.NewTeamService(teamRepo, teamMembersService)
+	teamMembersService := services.NewTeamMembersService(teamMembersRepo, userRepo, roleSer, redisClient, ctx)
+	teamSer := services.NewTeamService(teamRepo, teamMembersService, redisClient, ctx)
 	jwtSer := services.NewJwtService(&cfg.Jwt, redisClient, ctx)
 	refreshSer := services.NewRefreshTokenService(cfg.RefreshToken)
 	tagTempSer := services.NewTagTempService(tagTempRepo)
-	courseSer := services.NewCourseService(userRepo, courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo, userProfileRepo)
+	courseSer := services.NewCourseService(redisClient, ctx, userRepo,
+		courseRepo, favorCourseRepo, lessonRepo, tagTempRepo, userCourseRepo, userRateRepo, lessonAttendanceRepo, moduleRepo, userProfileRepo)
 	eventSer := services.NewEventService(eventRepo)
 	taskSer := services.NewTaskService(taskRepo)
-	profileSer := services.NewUserProfileService(userProfileRepo, userSer, eventSer, courseSer, taskSer)
+	profileSer := services.NewUserProfileService(userProfileRepo, userSer, eventSer, courseSer, taskSer, redisClient, ctx)
 	authSer := services.NewAuthService(userSer, jwtSer, refreshSer, profileSer)
 	lessonSer := services.NewLessonService(cfg.Youtube, lessonRepo, courseSer)
 	newfeedSer := services.NewNewFeedService(courseSer, userSer, taskSer, eventSer)

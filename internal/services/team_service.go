@@ -1,20 +1,26 @@
 package services
 
 import (
+	"context"
 	"sfit-platform-web-backend/internal/model"
 	"sfit-platform-web-backend/internal/repositories"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type TeamService struct {
+	redisClient    *redis.Client
+	ctx            context.Context
 	teamRepo       *repositories.TeamRepository
 	teamMembersSer *TeamMembersService
 }
 
-func NewTeamService(teamRepo *repositories.TeamRepository, teamMembersSer *TeamMembersService) *TeamService {
+func NewTeamService(teamRepo *repositories.TeamRepository, teamMembersSer *TeamMembersService, redisClient *redis.Client, ctx context.Context) *TeamService {
 	return &TeamService{
+		redisClient:    redisClient,
+		ctx:            ctx,
 		teamRepo:       teamRepo,
 		teamMembersSer: teamMembersSer,
 	}

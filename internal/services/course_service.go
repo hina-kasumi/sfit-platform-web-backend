@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"sfit-platform-web-backend/internal/dtos"
 	"sfit-platform-web-backend/internal/model"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +20,8 @@ const (
 )
 
 type CourseService struct {
+	redisClient          *redis.Client
+	ctx                  context.Context
 	userRepo             *repositories.UserRepository
 	userProfileRepo      *repositories.UserProfileRepository
 	courseRepo           *repositories.CourseRepository
@@ -31,6 +35,8 @@ type CourseService struct {
 }
 
 func NewCourseService(
+	redisClient *redis.Client,
+	ctx context.Context,
 	userRepo *repositories.UserRepository,
 	courseRepo *repositories.CourseRepository,
 	favorCourseRepo *repositories.FavoriteCourseRepository,
@@ -43,6 +49,8 @@ func NewCourseService(
 	userProfileRepo *repositories.UserProfileRepository,
 ) *CourseService {
 	return &CourseService{
+		redisClient:          redisClient,
+		ctx:                  ctx,
 		userRepo:             userRepo,
 		courseRepo:           courseRepo,
 		favorCourseRepo:      favorCourseRepo,

@@ -1,7 +1,9 @@
 package services
 
 import (
+	"context"
 	"errors"
+	"log"
 	"sfit-platform-web-backend/internal/dtos"
 	"sfit-platform-web-backend/internal/model"
 	"sfit-platform-web-backend/internal/repositories"
@@ -9,10 +11,13 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type UserProfileService struct {
+	redisClient     *redis.Client
+	ctx             context.Context
 	userSer         *UserService
 	userProfileRepo *repositories.UserProfileRepository
 	eventSer        *EventService
@@ -20,8 +25,17 @@ type UserProfileService struct {
 	taskSer         *TaskService
 }
 
-func NewUserProfileService(userProfileRepo *repositories.UserProfileRepository, userSer *UserService, eventSer *EventService, courseSer *CourseService, taskSer *TaskService) *UserProfileService {
+func NewUserProfileService(userProfileRepo *repositories.UserProfileRepository,
+	userSer *UserService,
+	eventSer *EventService,
+	courseSer *CourseService,
+	taskSer *TaskService,
+	redisClient *redis.Client,
+	ctx context.Context,
+) *UserProfileService {
 	return &UserProfileService{
+		redisClient:     redisClient,
+		ctx:             ctx,
 		userSer:         userSer,
 		eventSer:        eventSer,
 		courseSer:       courseSer,
@@ -78,6 +92,13 @@ func (profileSer *UserProfileService) DeleteUser(userID uuid.UUID) error {
 }
 
 func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.GetUserProfileResponse, error) {
+	// try to get from cache
+	cachedProfile, err := profileSer.getCachedUserProfile(userID)
+	if err == nil && cachedProfile != nil {
+		return cachedProfile, nil
+	}
+	// if not found in cache, get from database
+
 	profile, err := profileSer.userProfileRepo.GetUserProfileByID(userID)
 	if err != nil {
 		return nil, err
@@ -94,7 +115,7 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 	listCourse, _ := profileSer.courseSer.GetCourseUserCompletion(profile.UserID)
 	lenCourse := len(listCourse)
 
-	return &dtos.GetUserProfileResponse{
+	result := &dtos.GetUserProfileResponse{
 		UserID:          profile.UserID,
 		Avatar:          profile.Avatar,
 		CoverImage:      profile.CoverImage,
@@ -112,7 +133,46 @@ func (profileSer *UserProfileService) GetUserProfile(userID uuid.UUID) (*dtos.Ge
 		Msv:             profile.MSV,
 		CreatedAt:       profile.CreatedAt,
 		UpdatedAt:       profile.UpdatedAt,
-	}, nil
+	}
+	if err := profileSer.setCachedUserProfile(profile.UserID, result); err != nil {
+		log.Printf("Failed to cache user profile: %v", err)
+	}
+	return result, nil
+}
+
+func (profileSer *UserProfileService) buildCacheKey(userID uuid.UUID) string {
+	return "user_profile:" + userID.String()
+}
+
+// cache user profile
+func (profileSer *UserProfileService) getCachedUserProfile(userID uuid.UUID) (*dtos.GetUserProfileResponse, error) {
+	cacheKey := profileSer.buildCacheKey(userID)
+	cachedData, err := profileSer.redisClient.Get(profileSer.ctx, cacheKey).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil // Cache miss
+		}
+		return nil, err
+	}
+
+	var profile dtos.GetUserProfileResponse
+	if err := json.Unmarshal([]byte(cachedData), &profile); err != nil {
+		return nil, err
+	}
+
+	return &profile, nil
+}
+
+// set user profile to cache
+func (profileSer *UserProfileService) setCachedUserProfile(userID uuid.UUID, profile *dtos.GetUserProfileResponse) error {
+	cacheKey := profileSer.buildCacheKey(userID)
+	data, err := json.Marshal(profile)
+	if err != nil {
+		return err
+	}
+
+	// Set cache with an expiration time of 10 minutes
+	return profileSer.redisClient.Set(profileSer.ctx, cacheKey, data, 10*time.Minute).Err()
 }
 
 func (profileSer *UserProfileService) CreateUserProfile(profile *model.UserProfile) error {
